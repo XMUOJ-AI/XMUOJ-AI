@@ -6,6 +6,7 @@
   "private": true,
   "scripts": {
     "dev": "node build/dev-server.js",
+    "dev:mock": "node build/mock-dev.js",
     "start": "npm run dev",
     "build": "node build/build.js",
     "build:dll": "webpack --config=build/webpack.dll.conf.js",

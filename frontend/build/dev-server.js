@@ -48,7 +48,12 @@ const hotMiddleware = require('webpack-hot-middleware')(compiler, {
 app.use(hotMiddleware)
 
 // proxy api requests
-Object.keys(proxyTable).forEach(function (context) {
+if (process.env.MOCK === '1') {
+  app.use('/api', require('./mock-api')())
+  app.use('/public', (req, res) => res.status(404).end())
+  console.log('> MOCK mode: local fixtures only; submissions are simulated.')
+}
+Object.keys(process.env.MOCK === '1' ? {} : proxyTable).forEach(function (context) {
   let options = proxyTable[context]
   if (typeof options === 'string') {
     options = { target: options }
@@ -99,7 +104,7 @@ devMiddleware.waitUntilValid(() => {
     if (autoOpenBrowser && process.env.NODE_ENV !== 'testing') {
       opn(uri)
     }
-    server = app.listen(port)
+    server = app.listen(port, process.env.MOCK === '1' ? '127.0.0.1' : undefined)
     _resolve()
   })
 })
