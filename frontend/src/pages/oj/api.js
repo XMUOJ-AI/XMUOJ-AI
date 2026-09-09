@@ -349,7 +349,11 @@ function ajax (url, method, options) {
 
 function learningRequest (method, url, options) {
   return axios({ method, url, timeout: 15000, ...options }).then(res => {
-    if (res.data.error !== null) throw new Error('Learning path request failed')
+    if (res.data.error !== null) {
+      throw Object.assign(new Error('Learning path request failed'), {
+        code: res.data.error, status: res.status, response: res
+      })
+    }
     return res
   })
 }

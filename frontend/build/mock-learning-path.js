@@ -36,23 +36,37 @@ module.exports = function (router, problems, submissions, isLoggedIn) {
     if (!authorize(res)) return
     const scenario = req.query.mock_path || 'ready'
     setTimeout(() => {
+      if (scenario === 'unauthenticated') return res.status(401).json({ error: 'not_authenticated', data: 'Mock session expired' })
+      if (scenario === 'expired' && req.query.revision) return res.status(410).json({ error: 'version_expired', data: 'Mock version expired' })
       if (scenario === 'error') return res.status(503).json({ error: 'unavailable', data: 'Mock path load failure' })
       if (['insufficient_data', 'empty', 'generating'].includes(scenario)) {
         return ok(res, { status: scenario, reason_code: scenario === 'empty' ? 'no_eligible_problems' : scenario, message: { insufficient_data: '完成一些题目后，我们会根据练习记录生成路径。', empty: '当前没有适合且可访问的推荐题目，可以先去题库自主练习。', generating: '正在分析已有练习记录，请稍候。' }[scenario], retry_after_seconds: 10 })
       }
       const data = makePath(scenario, req.query.revision === '2' ? 2 : 1)
       if (scenario === 'new_version' && data.revision === 1) data.latest_path = makePath(scenario, 2)
+      if (scenario === 'compatibility') {
+        data.steps[0].step_id = 1
+        data.steps[0].problems.push({ ...data.steps[1].problems[0], problem_id: '2' })
+        data.steps[0].status = 'future_status'
+        data.focus_points[0].assessment = 'mastered'
+        data.focus_points[1].assessment = 'future_assessment'
+        data.next_step_id = '1'
+        data.next_problem_id = 2
+        delete data.evidence
+      }
+      if (scenario === 'invalid_data') data.next_problem_id = 'missing-problem'
       ok(res, data)
     }, 500)
   })
   router.post('/learning-path/explanation', (req, res) => {
     if (!authorize(res)) return
     const data = makePath(req.body.mock_path, Number(req.body.revision))
-    const step = data.steps.find(s => s.step_id === req.body.step_id)
+    const stepID = req.body.mock_path === 'compatibility' && String(req.body.step_id) === '1' ? 'step-1' : req.body.step_id
+    const step = data.steps.find(s => s.step_id === stepID)
     if (req.body.path_id !== 'mock-path' || ![1, 2].includes(data.revision) || !step) return res.status(409).json({ error: 'version_mismatch', data: 'Unknown path version or step' })
     setTimeout(() => {
       if (req.body.mock_path === 'explanation_error') return res.status(503).json({ error: 'unavailable', data: 'Mock explanation failure' })
-      ok(res, { path_id: data.path_id, revision: data.revision, step_id: step.step_id, status: 'ready', generated_at: new Date().toISOString(), text: '模拟解释（未调用 AI）：' + (req.body.mock_path === 'starter' ? '目前练习数据不足，本步骤属于通用入门训练。' : '根据模拟练习记录，这一步帮助你巩固对应知识点。') + '训练目标是：' + step.objective + '。题目和顺序由规则程序确定，解释不会改变这条路径。' })
+      ok(res, { path_id: data.path_id, revision: data.revision, step_id: req.body.step_id, status: 'ready', generated_at: new Date().toISOString(), text: '模拟解释（未调用 AI）：' + (req.body.mock_path === 'starter' ? '目前练习数据不足，本步骤属于通用入门训练。' : '根据模拟练习记录，这一步帮助你巩固对应知识点。') + '训练目标是：' + step.objective + '。题目和顺序由规则程序确定，解释不会改变这条路径。' })
     }, 800)
   })
 }
