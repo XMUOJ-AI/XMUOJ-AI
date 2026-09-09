@@ -8,6 +8,13 @@ axios.defaults.xsrfHeaderName = 'X-CSRFToken'
 axios.defaults.xsrfCookieName = 'csrftoken'
 
 export default {
+  // Learning-path errors are rendered locally so practice remains usable.
+  getLearningPath (params) {
+    return learningRequest('get', 'learning-path', { params })
+  },
+  explainLearningStep (data) {
+    return learningRequest('post', 'learning-path/explanation', { data })
+  },
   getWebsiteConf (params) {
     return ajax('website', 'get', {
       params
@@ -337,5 +344,12 @@ function ajax (url, method, options) {
       reject(res)
       Vue.prototype.$error(res.data.data)
     })
+  })
+}
+
+function learningRequest (method, url, options) {
+  return axios({ method, url, timeout: 15000, ...options }).then(res => {
+    if (res.data.error !== null) throw new Error('Learning path request failed')
+    return res
   })
 }

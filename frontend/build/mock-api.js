@@ -50,6 +50,7 @@ module.exports = function () {
   router.get('/contests', (req, res) => ok(res, page(req, [])))
   router.get('/profile/contests', (req, res) => ok(res, { total: 0, results: [], summary: {} }))
   router.get('/user_rank', (req, res) => ok(res, page(req, [profile])))
+  require('./mock-learning-path')(router, problems, submissions, () => loggedIn)
   router.use((req, res) => fail(res, `Mock 尚未实现 ${req.method} ${req.path}`))
   return router
 }

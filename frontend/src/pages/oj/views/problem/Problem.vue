@@ -1,6 +1,9 @@
 <template>
   <div class="flex-container">
     <div id="problem-main">
+      <div v-if="$route.query.from === 'learning-path'" style="margin-bottom: 16px">
+        <router-link :to="{name: 'user-home', query: {tab: 'learning-path', step: $route.query.step, path: $route.query.path, revision: $route.query.revision, mock_path: $route.query.mock_path}}">← 返回学习路径</router-link>
+      </div>
       <!--problem main-->
       <Panel :padding="40" shadow>
         <div slot="title">{{problem.title}}</div>

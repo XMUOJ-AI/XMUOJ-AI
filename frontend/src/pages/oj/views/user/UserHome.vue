@@ -52,7 +52,7 @@
 
       <!-- 右侧主内容区 -->
       <div class="uh-main">
-        <Tabs v-model="activeTab" class="uh-tabs">
+        <Tabs v-model="activeTab" :animated="false" class="uh-tabs">
 
           <!-- Tab: 已解决题目 -->
           <TabPane label="公共题库" name="problems">
@@ -123,6 +123,9 @@
             </div>
           </TabPane>
 
+          <TabPane v-if="isOwnHome" label="学习路径" name="learning-path">
+            <LearningPath v-if="activeTab === 'learning-path'" />
+          </TabPane>
         </Tabs>
       </div>
 
@@ -175,12 +178,14 @@
 </template>
 <script>
   import { mapActions, mapGetters } from 'vuex'
+  import LearningPath from './LearningPath.vue'
   import time from '@/utils/time'
   import api from '@oj/api'
 
   const SHOW_LIMIT = 30
 
   export default {
+    components: { LearningPath },
     data () {
       return {
         username: '',
@@ -248,6 +253,9 @@
     },
     computed: {
       ...mapGetters(['isSuperAdmin', 'user']),
+      isOwnHome () {
+        return !this.$route.query.username || this.$route.query.username === this.user.username
+      },
       displayedProblems () {
         return this.showAll ? this.problems : this.problems.slice(0, this.showLimit)
       },
@@ -257,11 +265,18 @@
         return false
       }
     },
+    created () {
+      this.syncTab()
+    },
     mounted () {
       this.init()
     },
     methods: {
       ...mapActions(['changeDomTitle']),
+      syncTab () {
+        const tab = this.$route.query.tab
+        this.activeTab = ['problems', 'contests', ...(this.isOwnHome ? ['learning-path'] : [])].includes(tab) ? tab : 'problems'
+      },
       init () {
         const qUsername = this.$route.query.username
         // Permission gate: only SuperAdmin may view other people's home page.
@@ -315,7 +330,7 @@
           // Reload contest detail to show updated data
           this.showContestDetail(contestID)
         }).catch(err => {
-          this.$error('配准失败：' + (err.data && err.data.data || err.data || '未知错误'))
+          this.$error('配准失败：' + ((err.data && err.data.data) || err.data || '未知错误'))
         }).finally(() => {
           this.calibrateLoading = false
         })
@@ -367,7 +382,14 @@
     },
     watch: {
       '$route' (newVal, oldVal) {
-        if (newVal !== oldVal) this.init()
+        this.syncTab()
+        if (newVal.query.username !== oldVal.query.username) this.init()
+      },
+      activeTab (tab) {
+        if (tab === this.$route.query.tab || (!this.$route.query.tab && tab === 'problems')) return
+        const query = { ...this.$route.query, tab }
+        if (tab !== 'learning-path') delete query.step
+        this.$router.replace({ name: 'user-home', query })
       }
     }
   }
