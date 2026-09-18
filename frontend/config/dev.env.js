@@ -8,5 +8,6 @@ module.exports = {
   NODE_ENV: '"development"',
   VERSION: version,
   USE_SENTRY: '0',
-  LEARNING_PATH_MOCK: JSON.stringify(process.env.MOCK === '1')
+  LEARNING_PATH_MOCK: JSON.stringify(process.env.MOCK === '1'),
+  AI_FEATURES_MOCK: JSON.stringify(process.env.MOCK === '1')
 }
