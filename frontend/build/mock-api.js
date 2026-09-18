@@ -51,6 +51,10 @@ module.exports = function () {
   router.get('/profile/contests', (req, res) => ok(res, { total: 0, results: [], summary: {} }))
   router.get('/user_rank', (req, res) => ok(res, page(req, [profile])))
   require('./mock-learning-path')(router, problems, submissions, () => loggedIn)
+  const aiContext = { user, isLoggedIn: () => loggedIn, problems, submissions }
+  require('./mock-learning-feedback')(router, aiContext)
+  require('./mock-problem-guidance')(router, aiContext)
+  require('./mock-submission-analysis')(router, aiContext)
   router.use((req, res) => fail(res, `Mock 尚未实现 ${req.method} ${req.path}`))
   return router
 }
