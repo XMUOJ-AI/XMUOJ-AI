@@ -3,14 +3,14 @@
     <CollapsePanel name="analysis">
       提交代码解读 <Tag v-if="mockEnabled" color="blue">模拟演示</Tag>
       <div slot="content" aria-live="polite">
-        <p class="notice">解读仅提供可能的思路与排查方向，以原判题结果为准；一次 AC 不能证明已掌握相关知识点。不提供完整替代代码。</p>
-        <p v-if="mockEnabled" class="notice">以下为固定示例，未调用真实 AI。权限、竞赛与实验限制为拟定服务端契约。</p>
+        <p class="notice">结合本次代码与判题记录，提供思路或排查建议，请自行验证。</p>
+        <p v-if="mockEnabled" class="notice">当前为固定模拟示例。</p>
         <Alert v-if="state !== 'ready'" :type="alertType" show-icon>{{message}}</Alert>
         <template v-if="state === 'ready' && result">
           <Alert :type="result.scope.truncated ? 'warning' : 'info'" show-icon>
             分析范围：第 {{result.scope.start_line}}–{{result.scope.end_line}} 行，共 {{result.scope.total_lines}} 行。
             <span v-if="result.scope.truncated">代码已截断，仅讨论所列范围，无法对完整程序下结论。</span>
-            <span v-else>范围覆盖本次提交的全部代码；结论仍可能有误。</span>
+            <span v-else>已覆盖本次提交的全部代码。</span>
           </Alert>
           <p class="summary">{{result.summary}}</p>
           <section v-for="(section, index) in result.sections" :key="index" class="analysis-section">
@@ -18,7 +18,7 @@
             <p>{{section.body}}</p>
             <p class="evidence">依据：{{section.evidence}}</p>
           </section>
-          <p class="notice">当前结果已保留，折叠后再展开不会重复生成。分析版本：{{version}}</p>
+          <p class="notice">折叠后再展开会保留当前结果。</p>
         </template>
         <Button v-if="state === 'idle'" type="primary" @click="generate">生成本次提交解读</Button>
         <Button v-if="state === 'generating' || state === 'checking'" :loading="true" disabled>{{state === 'checking' ? '检查权限中' : '生成中'}}</Button>
