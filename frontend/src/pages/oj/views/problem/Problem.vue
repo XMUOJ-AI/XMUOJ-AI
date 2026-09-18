@@ -59,6 +59,7 @@
         </div>
       </Panel>
       <!--problem main end-->
+      <ProblemGuidance :problem-id="$route.params.problemID" :contest-id="$route.params.contestID"></ProblemGuidance>
       <Card :padding="20" id="submit-code" dis-hover>
         <CodeMirror :value.sync="code"
                     :languages="problem.languages"
@@ -220,6 +221,7 @@
   import {mapGetters, mapActions} from 'vuex'
   import {types} from '../../../../store'
   import CodeMirror from '@oj/components/CodeMirror.vue'
+  import ProblemGuidance from './ProblemGuidance.vue'
   import storage from '@/utils/storage'
   import {FormMixin} from '@oj/components/mixins'
   import {JUDGE_STATUS, CONTEST_STATUS, buildProblemCodeKey} from '@/utils/constants'
@@ -233,7 +235,8 @@
   export default {
     name: 'Problem',
     components: {
-      CodeMirror
+      CodeMirror,
+      ProblemGuidance
     },
     mixins: [FormMixin],
     data () {
@@ -533,8 +536,8 @@
       next()
     },
     watch: {
-      '$route' () {
-        this.init()
+      '$route' (to, from) {
+        if (to.params.problemID !== from.params.problemID || to.params.contestID !== from.params.contestID) this.init()
       }
     }
   }
@@ -653,4 +656,3 @@
     height: 440px;
   }
 </style>
-
