@@ -126,6 +126,9 @@
           <TabPane v-if="isOwnHome" label="学习路径" name="learning-path">
             <LearningPath v-if="activeTab === 'learning-path'" />
           </TabPane>
+          <TabPane v-if="isOwnHome && user.id" label="学习反馈" name="learning-feedback">
+            <LearningFeedback v-if="activeTab === 'learning-feedback'" />
+          </TabPane>
         </Tabs>
       </div>
 
@@ -179,13 +182,14 @@
 <script>
   import { mapActions, mapGetters } from 'vuex'
   import LearningPath from './LearningPath.vue'
+  import LearningFeedback from './LearningFeedback.vue'
   import time from '@/utils/time'
   import api from '@oj/api'
 
   const SHOW_LIMIT = 30
 
   export default {
-    components: { LearningPath },
+    components: { LearningPath, LearningFeedback },
     data () {
       return {
         username: '',
@@ -275,7 +279,7 @@
       ...mapActions(['changeDomTitle']),
       syncTab () {
         const tab = this.$route.query.tab
-        this.activeTab = ['problems', 'contests', ...(this.isOwnHome ? ['learning-path'] : [])].includes(tab) ? tab : 'problems'
+        this.activeTab = ['problems', 'contests', ...(this.isOwnHome ? ['learning-path'] : []), ...(this.isOwnHome && this.user.id ? ['learning-feedback'] : [])].includes(tab) ? tab : 'problems'
       },
       init () {
         const qUsername = this.$route.query.username
@@ -381,6 +385,7 @@
       }
     },
     watch: {
+      'user.id' () { this.syncTab() },
       '$route' (newVal, oldVal) {
         this.syncTab()
         if (newVal.query.username !== oldVal.query.username) this.init()
