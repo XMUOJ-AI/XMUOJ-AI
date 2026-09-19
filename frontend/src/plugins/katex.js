@@ -17,6 +17,10 @@ const defaultOptions = {
 }
 
 function render (el, binding) {
+  // Own only v-html content or explicitly supplied text, never Vue's child nodes.
+  if (binding.value && Object.prototype.hasOwnProperty.call(binding.value, 'text')) {
+    el.textContent = binding.value.text || ''
+  }
   let options = {}
   if (binding.value) {
     options = binding.value.options || {}
@@ -26,10 +30,10 @@ function render (el, binding) {
 }
 
 export default {
-  install: function (Vue, options) {
-    Vue.directive('katex', {
-      bind: render,
-      componentUpdated: render
+  install: function (app) {
+    app.directive('katex', {
+      mounted: render,
+      updated: render
     })
   }
 }

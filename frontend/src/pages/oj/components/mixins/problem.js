@@ -1,3 +1,5 @@
+
+  import { resolveComponent } from 'vue'
 import utils from '@/utils/utils'
 
 export default {
@@ -30,11 +32,11 @@ export default {
           if (status === null || status === undefined) {
             return undefined
           }
-          return h('Icon', {
-            props: {
+          return h(resolveComponent('Icon'), {
+
               type: status === 0 ? 'checkmark-round' : 'minus-round',
               size: '16'
-            },
+            ,
             style: {
               color: status === 0 ? '#19be6b' : '#ed3f14'
             }

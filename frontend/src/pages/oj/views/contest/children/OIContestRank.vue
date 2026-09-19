@@ -1,11 +1,11 @@
 <template>
   <Panel v-if="canViewContestRank" shadow>
-    <div slot="title">{{ contest.title }}</div>
-    <div slot="extra">
+    <template #title><div>{{ contest.title }}</div></template>
+    <template #extra><div>
       <screen-full :height="18" :width="18" class="screen-full"></screen-full>
       <Poptip trigger="hover" placement="left-start">
         <Icon type="android-settings" size="20"></Icon>
-        <div slot="content" id="switches">
+        <template #content><div id="switches">
           <p>
             <span>{{$t('m.Menu')}}</span>
             <i-switch v-model="showMenu"></i-switch>
@@ -23,9 +23,9 @@
           <p>
             <Button type="primary" size="small" @click="downloadRankCSV">{{$t('m.download_csv')}}</Button>
           </p>
-        </div>
+        </div></template>
       </Poptip>
-    </div>
+    </div></template>
     <div v-show="showChart" class="echarts">
       <ECharts :options="options" ref="chart" auto-resize></ECharts>
     </div>
@@ -36,8 +36,8 @@
           disabled-hover
           height="600"></Table>
     <Pagination :total="total"
-                :page-size.sync="limit"
-                :current.sync="page"
+                v-model:page-size="limit"
+                v-model:current="page"
                 @on-change="getContestRankData"
                 @on-page-size-change="getContestRankData(1)"
                 show-sizer></Pagination>
@@ -61,6 +61,8 @@
         total: 0,
         page: 1,
         contestID: '',
+        rankColumnsReady: false,
+        rankProblemSequence: 0,
         columns: [
           {
             align: 'center',
@@ -81,15 +83,15 @@
                 style: {
                   display: 'inline-block'
                 },
-                on: {
-                  click: () => {
-                    this.$router.push(
-                      {
-                        name: 'user-home',
-                        query: {username: params.row.user.username}
-                      })
-                  }
+
+                onClick: () => {
+                  this.$router.push(
+                    {
+                      name: 'user-home',
+                      query: {username: params.row.user.username}
+                    })
                 }
+
               }, params.row.user.username)
             }
           },
@@ -101,14 +103,14 @@
             render: (h, params) => {
               return h('a', {
                 class: 'rank-score-link',
-                on: {
-                  click: () => {
-                    this.$router.push({
-                      name: 'contest-submission-list',
-                      query: {username: params.row.user.username}
-                    })
-                  }
+
+                onClick: () => {
+                  this.$router.push({
+                    name: 'contest-submission-list',
+                    query: {username: params.row.user.username}
+                  })
                 }
+
               }, params.row.total_score)
             }
           }
@@ -173,14 +175,18 @@
       }
     },
     mounted () {
-      this.contestID = this.$route.params.contestID
-      this.getContestRankData(1)
-      if (this.contestProblems.length === 0) {
-        this.getContestProblems().then((res) => {
-          this.addTableColumns(res.data.data)
-        })
-      } else {
-        this.addTableColumns(this.contestProblems)
+      this.initializeRank()
+    },
+    watch: {
+      canViewContestRank (allowed) {
+        this.rankRequestSequence++
+        this.rankProblemSequence++
+        if (allowed) this.$nextTick(() => this.initializeRank())
+        else {
+          clearInterval(this.refreshFunc)
+          this.dataRank = []
+          this.total = 0
+        }
       }
     },
     computed: {
@@ -190,6 +196,23 @@
     },
     methods: {
       ...mapActions(['getContestProblems']),
+      initializeRank () {
+        if (!this.rankMounted || !this.canViewContestRank) return
+        this.contestID = this.$route.params.contestID
+        this.getContestRankData(1)
+        if (this.rankColumnsReady) return
+        const sequence = ++this.rankProblemSequence
+        if (this.contestProblems.length) {
+          this.addTableColumns(this.contestProblems)
+          this.rankColumnsReady = true
+        } else {
+          this.getContestProblems().then(res => {
+            if (!this.rankMounted || !this.canViewContestRank || sequence !== this.rankProblemSequence) return
+            this.addTableColumns(res.data.data)
+            this.rankColumnsReady = true
+          }).catch(() => {})
+        }
+      },
       getProblemColumnWidth (problemCount) {
         return problemCount > 15 ? 72 : 90
       },
@@ -228,17 +251,17 @@
                 'class': {
                   'emphasis': true
                 },
-                on: {
-                  click: () => {
-                    this.$router.push({
-                      name: 'contest-problem-details',
-                      params: {
-                        contestID: this.contestID,
-                        problemID: problem._id
-                      }
-                    })
-                  }
+
+                onClick: () => {
+                  this.$router.push({
+                    name: 'contest-problem-details',
+                    params: {
+                      contestID: this.contestID,
+                      problemID: problem._id
+                    }
+                  })
                 }
+
               }, problem._id)
             },
             render: (h, params) => {
@@ -276,7 +299,7 @@
     }
   }
 
-  .contest-rank-table /deep/ .ivu-table-cell {
+  .contest-rank-table :deep(.ivu-table-cell) {
     white-space: nowrap;
     word-break: normal;
     overflow: visible;
@@ -285,19 +308,19 @@
     padding-right: 6px;
   }
 
-  .contest-rank-table /deep/ th,
-  .contest-rank-table /deep/ td {
+  .contest-rank-table :deep(th),
+  .contest-rank-table :deep(td) {
     height: 36px;
   }
 
-  .contest-rank-table /deep/ th > .ivu-table-cell,
-  .contest-rank-table /deep/ td > .ivu-table-cell {
+  .contest-rank-table :deep(th > .ivu-table-cell),
+  .contest-rank-table :deep(td > .ivu-table-cell) {
     padding-top: 6px;
     padding-bottom: 6px;
   }
 
-  .contest-rank-table /deep/ .rank-user-link,
-  .contest-rank-table /deep/ .rank-score-link {
+  .contest-rank-table :deep(.rank-user-link),
+  .contest-rank-table :deep(.rank-score-link) {
     display: inline-block;
     white-space: nowrap;
     word-break: normal;

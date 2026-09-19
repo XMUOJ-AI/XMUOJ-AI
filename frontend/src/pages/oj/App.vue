@@ -2,9 +2,9 @@
   <div>
     <NavBar></NavBar>
     <div class="content-app">
-      <transition name="fadeInUp" mode="out-in">
-        <router-view></router-view>
-      </transition>
+      <router-view v-slot="{ Component }">
+        <transition name="fadeInUp" mode="out-in"><component :is="Component" /></transition>
+      </router-view>
       <div class="footer">
         <p v-html="website.website_footer"></p>
         <p>Powered by <a href="https://github.com/QingdaoU/OnlineJudge">OnlineJudge</a>

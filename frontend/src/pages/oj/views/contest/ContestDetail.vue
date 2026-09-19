@@ -2,22 +2,21 @@
   <div class="flex-container">
     <div id="contest-main">
       <!--children-->
-      <transition name="fadeInUp">
-        <router-view></router-view>
-      </transition>
+      <router-view v-slot="{ Component }">
+        <transition name="fadeInUp"><component :is="Component" /></transition>
+      </router-view>
       <!--children end-->
       <div class="flex-container" v-if="route_name === 'contest-details'">
-        <template>
           <div id="contest-desc">
             <Panel :padding="20" shadow>
-              <div slot="title">
+              <template #title><div>
                 {{contest.title}}
-              </div>
-              <div slot="extra">
+              </div></template>
+              <template #extra><div>
                 <Tag type="dot" :color="countdownColor">
                   <span id="countdown">{{countdown}}</span>
                 </Tag>
-              </div>
+              </div></template>
               <div v-html="contest.description" class="markdown-body"></div>
               <div v-if="passwordFormVisible" class="contest-password">
                 <Input v-model="contestPassword" type="password"
@@ -28,7 +27,6 @@
             </Panel>
             <Table :columns="columns" :data="contest_table" disabled-hover style="margin-bottom: 40px;"></Table>
           </div>
-        </template>
       </div>
 
     </div>
@@ -170,12 +168,13 @@
       }),
       ...mapGetters(
         ['contestMenuDisabled', 'contestRuleType', 'contestStatus', 'countdown', 'isContestAdmin', 'canViewContestRank',
-          'OIContestRealTimePermission', 'passwordFormVisible']
+         'OIContestRealTimePermission', 'passwordFormVisible']
       ),
       countdownColor () {
         if (this.contestStatus) {
           return CONTEST_STATUS_REVERSE[this.contestStatus].color
         }
+        return undefined
       },
       showAdminHelper () {
         return this.isContestAdmin && this.contestRuleType === 'ACM'
@@ -188,7 +187,7 @@
         this.changeDomTitle({title: this.contest.title})
       }
     },
-    beforeDestroy () {
+    beforeUnmount () {
       clearInterval(this.timer)
       this.$store.commit(types.CLEAR_CONTEST)
     }

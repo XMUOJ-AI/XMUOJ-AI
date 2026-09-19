@@ -3,13 +3,12 @@
     <div style="padding-bottom: 10px;">
     </div>
     <panel title="Export Problems (beta)">
-      <div slot="header">
+      <template #header><div>
         <el-input
           v-model="keyword"
-          prefix-icon="el-icon-search"
-          placeholder="Keywords">
+          placeholder="Keywords"><template #prefix><i class="el-icon-search" aria-hidden="true"></i></template>
         </el-input>
-      </div>
+      </div></template>
       <el-table :data="problems"
                 v-loading="loadingProblems" @selection-change="handleSelectionChange">
         <el-table-column
@@ -37,22 +36,22 @@
         <el-table-column
           prop="create_time"
           label="Create Time">
-          <template slot-scope="scope">
-            {{scope.row.create_time | localtime }}
+          <template #default="scope">
+            {{$filters.localtime(scope.row.create_time)}}
           </template>
         </el-table-column>
       </el-table>
 
       <div class="panel-options">
         <el-button type="primary" size="small" v-show="selected_problems.length"
-                   @click="exportProblems" icon="el-icon-fa-arrow-down">Export
+                   @click="exportProblems"><template #icon><i class="el-icon-fa-arrow-down" aria-hidden="true"></i></template>Export
         </el-button>
         <el-pagination
           class="page"
           layout="prev, pager, next, sizes"
           @current-change="getProblems"
           @size-change="handlePageSizeChange"
-          :current-page="page"
+          v-model:current-page="page"
           :page-size="limit"
           :page-sizes="pageSizes"
           :total="total">
@@ -79,7 +78,7 @@
         :auto-upload="false"
         :on-success="uploadSucceeded"
         :on-error="uploadFailed">
-        <el-button size="small" type="primary" icon="el-icon-fa-upload" slot="trigger">Choose File</el-button>
+        <template #trigger><el-button size="small" type="primary"><template #icon><i class="el-icon-fa-upload" aria-hidden="true"></i></template>Choose File</el-button></template>
         <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload('QDU')">Upload</el-button>
       </el-upload>
     </panel>
@@ -104,7 +103,7 @@
         :auto-upload="false"
         :on-success="uploadSucceeded"
         :on-error="uploadFailed">
-        <el-button size="small" type="primary" icon="el-icon-fa-upload" slot="trigger">Choose File</el-button>
+        <template #trigger><el-button size="small" type="primary"><template #icon><i class="el-icon-fa-upload" aria-hidden="true"></i></template>Choose File</el-button></template>
         <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload('FPS')">Upload</el-button>
       </el-upload>
     </panel>

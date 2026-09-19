@@ -1,0 +1,67 @@
+// Restore iView 2 internal glyphs while retaining View UI Plus interactions.
+// Compare the matching component templates in iView 2 and View UI Plus.
+// Glyph/font license: ../assets/legacy-icons/LICENSE-iview.txt
+.legacy-library-icon(@glyph) {
+  font-family: LegacyIonicons;
+  vertical-align: baseline;
+  &:before { content: @glyph; }
+}
+
+.ivu-icon.ivu-icon-ios-arrow-down { .legacy-library-icon("\f3d0"); }
+.ivu-icon.ivu-icon-ios-arrow-up { .legacy-library-icon("\f3d8"); }
+.ivu-icon.ivu-icon-ios-arrow-back { .legacy-library-icon("\f3d2"); }
+.ivu-icon.ivu-icon-ios-arrow-forward { .legacy-library-icon("\f3d3"); }
+.ivu-icon.ivu-icon-ios-close { .legacy-library-icon("\f404"); }
+.ivu-icon.ivu-icon-ios-close-circle,
+.ivu-icon.ivu-icon-ios-close-circle-outline { .legacy-library-icon("\f128"); }
+.ivu-icon.ivu-icon-ios-checkmark-circle,
+.ivu-icon.ivu-icon-ios-checkmark-circle-outline { .legacy-library-icon("\f120"); }
+.ivu-icon.ivu-icon-ios-information-circle,
+.ivu-icon.ivu-icon-ios-information-circle-outline { .legacy-library-icon("\f149"); }
+.ivu-icon.ivu-icon-ios-alert,
+.ivu-icon.ivu-icon-ios-alert-outline { .legacy-library-icon("\f35b"); }
+.ivu-icon.ivu-icon-ios-help-circle,
+.ivu-icon.ivu-icon-ios-help-circle-outline { .legacy-library-icon("\f142"); }
+.ivu-icon.ivu-icon-ios-loading { .legacy-library-icon("\f29c"); }
+.ivu-icon.ivu-icon-ios-checkmark { .legacy-library-icon("\f3fd"); }
+.ivu-icon.ivu-icon-md-arrow-dropup { .legacy-library-icon("\f10d"); }
+.ivu-icon.ivu-icon-md-arrow-dropdown { .legacy-library-icon("\f104"); }
+.ivu-icon.ivu-icon-ios-funnel { .legacy-library-icon("\f31b"); }
+.ivu-icon.ivu-icon-ios-more { .legacy-library-icon("\f46a"); }
+.ivu-icon.ivu-icon-ios-document-outline { .legacy-library-icon("\f12f"); }
+.ivu-icon.ivu-icon-md-document { .legacy-library-icon("\f12e"); }
+.ivu-icon.ivu-icon-ios-image { .legacy-library-icon("\f147"); }
+.ivu-icon.ivu-icon-ios-film { .legacy-library-icon("\f42b"); }
+.ivu-icon.ivu-icon-ios-musical-notes { .legacy-library-icon("\f46c"); }
+.ivu-icon.ivu-icon-ios-stats { .legacy-library-icon("\f2b5"); }
+.ivu-icon.ivu-icon-ios-videocam { .legacy-library-icon("\f4cd"); }
+.ivu-icon.ivu-icon-md-return-left { .legacy-library-icon("\f265"); }
+.ivu-icon.ivu-icon-ios-eye-outline { .legacy-library-icon("\f133"); }
+.ivu-icon.ivu-icon-ios-eye-off-outline { .legacy-library-icon("\f306"); }
+
+// Identically named new icons had different predecessors in these components.
+.ivu-select .ivu-select-arrow.ivu-icon-ios-arrow-down { .legacy-library-icon("\f104"); }
+.ivu-select .ivu-select-arrow.ivu-icon-ios-close-circle,
+.ivu-input-icon-clear.ivu-icon-ios-close-circle { .legacy-library-icon("\f406"); }
+.ivu-tabs-nav-prev .ivu-icon-ios-arrow-back,
+.ivu-carousel-arrow .ivu-icon-ios-arrow-back { .legacy-library-icon("\f124"); }
+.ivu-tabs-nav-next .ivu-icon-ios-arrow-forward,
+.ivu-carousel-arrow .ivu-icon-ios-arrow-forward { .legacy-library-icon("\f125"); }
+.ivu-collapse-header .ivu-icon-ios-arrow-forward { .legacy-library-icon("\f10a"); }
+.ivu-back-top .ivu-icon-ios-arrow-up { .legacy-library-icon("\f126"); }
+
+// These icons are generated directly by component CSS rather than Icon nodes.
+.ivu-select-multiple .ivu-select-item-selected:after {
+  font-family: LegacyIonicons;
+  content: "\f3fd";
+  vertical-align: baseline;
+  right: 16px;
+}
+.ivu-page-item-jump-prev:hover i:first-child:after {
+  content: "\f3d2";
+  margin-left: 0;
+}
+.ivu-page-item-jump-next:hover i:first-child:after {
+  content: "\f3d3";
+  margin-left: 0;
+}

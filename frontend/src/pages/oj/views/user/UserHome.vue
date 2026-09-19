@@ -41,10 +41,10 @@
           <div class="uh-refresh-wrap" v-if="refreshVisible">
             <Poptip trigger="hover" placement="right-start">
               <a class="uh-refresh-link"><Icon type="ios-refresh"></Icon> 刷新题目 ID</a>
-              <div slot="content">
+              <template #content><div>
                 <p>如果题号不存在，可点击重新生成。</p>
                 <Button type="info" size="small" @click="freshProblemDisplayID">重新生成</Button>
-              </div>
+              </div></template>
             </Poptip>
           </div>
         </div>
@@ -140,19 +140,19 @@
       width="820"
       :footer-hide="true"
     >
-      <div slot="header" class="uh-modal-header">
+      <template #header><div class="uh-modal-header">
         <span>实验详情</span>
-        <Button 
-          v-if="contestDetail && !contestDetailLoading" 
-          type="text" 
-          size="small" 
+        <Button
+          v-if="contestDetail && !contestDetailLoading"
+          type="text"
+          size="small"
           @click="calibrateContest(contestDetail.contest_id)"
           :loading="calibrateLoading"
           class="uh-refresh-btn"
         >
           <Icon type="ios-refresh"></Icon> 刷新数据
         </Button>
-      </div>
+      </div></template>
       <div v-if="contestDetailLoading" style="text-align:center;padding:40px 0;">
         <Spin></Spin>
       </div>
@@ -214,9 +214,9 @@
             minWidth: 220,
             render: (h, params) => {
               return h('a', {
-                on: {
-                  click: () => this.goContestProblem(this.contestDetail.contest_id, params.row.display_id)
-                }
+
+                onClick: () => this.goContestProblem(this.contestDetail.contest_id, params.row.display_id)
+
               }, `${params.row.display_id} - ${params.row.title}`)
             }
           },
@@ -525,10 +525,10 @@
   }
 
   .uh-tabs {
-    /deep/ .ivu-tabs-nav-scroll {
+    :deep(.ivu-tabs-nav-scroll) {
       padding: 0 20px;
     }
-    /deep/ .ivu-tabs-bar {
+    :deep(.ivu-tabs-bar) {
       margin-bottom: 0;
       border-bottom: 1px solid #f0f0f0;
     }
@@ -718,6 +718,6 @@
   }
 
   .uh-detail-table {
-    /deep/ a { color: #2d8cf0; cursor: pointer; }
+    :deep(a) { color: #2d8cf0; cursor: pointer; }
   }
 </style>

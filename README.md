@@ -13,7 +13,7 @@ XMUOJ-AI/
 ├── frontend/              # Vue 前端
 │   ├── README.md
 │   ├── package.json
-│   ├── config/
+│   ├── vite.config.mjs
 │   ├── build/
 │   └── src/
 └── backend/               # Django 后端
@@ -29,11 +29,11 @@ XMUOJ-AI/
 
 ## 技术与环境
 
-- 前端：Vue 2、Vuex 3、Webpack 3，命令定义在 `frontend/package.json`。
+- 前端：Vue 3、Vue Router 4、Vuex 4、Vite；学生端使用 View UI Plus，管理端使用 Element Plus。命令定义在 `frontend/package.json`。
 - 后端：Django 3.2.25、Django REST Framework 3.14、Dramatiq，依赖清单为 `backend/deploy/requirements.txt`。
 - 后端 Dockerfile 当前采用 Python 3.12 Alpine 基础镜像。
 
-这是包含历史依赖的项目。前端上游 README 指定 Node.js 8.12.0，而现有本地部署脚本使用 `--openssl-legacy-provider` 兼容选项；这些信息不构成所有 Node.js 版本均可使用的保证。本次目录整理未完成依赖安装或运行环境兼容性验证。仓库保留历史 `yarn.lock`，以下命令沿用现有 npm 脚本。
+前端统一使用 Node.js 24 和 npm，按 `frontend/package-lock.json` 安装锁定依赖。无需 DLL 构建或 OpenSSL 兼容参数。浏览器范围为 Chrome、Edge、Firefox 最近两个版本及 Safari 16.4+，不支持 IE。CodeMirror 5、ECharts 3 和 Simditor 核心保留；Simditor 的三个历史 Git 依赖及其许可固定在 `frontend/vendor/`。
 
 ## 前端开发
 
@@ -41,22 +41,21 @@ XMUOJ-AI/
 
 ```bash
 cd frontend
-npm install --legacy-peer-deps
-NODE_ENV=development npm run build:dll
+npm ci
 TARGET=http://127.0.0.1:8000 npm run dev
 ```
 
-`TARGET` 指向后端服务。首次开发及 DLL 依赖变化后需要重新执行 `build:dll`。若所用 Node.js 版本因旧版 Webpack 出现 OpenSSL 兼容错误，可参照 `redeploy_local.sh` 中的 `NODE_OPTIONS` 设置处理。
+`TARGET` 指向后端服务；可用 `PORT=8090 npm run dev` 指定端口。学生端入口为 `/`，管理端为 `/admin/`，登录页为 `/admin/login`。
 
 生产构建和代码检查，在 `frontend/` 执行：
 
 ```bash
-NODE_ENV=production npm run build:dll
 npm run build
 npm run lint
+npm test
 ```
 
-构建产物位于 `frontend/dist/`。
+构建产物位于 `frontend/dist/`，保留 `index.html`、`admin/index.html` 和 `static/` 路径。可在构建前设置 `STATIC_CDN_HOST` 指定静态资源 CDN。`npm run preview` 可本地检查生产静态产物，生产构建始终关闭 Mock。
 
 ## 前端 Mock 预览
 
@@ -67,9 +66,9 @@ cd frontend
 npm run dev:mock
 ```
 
-启动器会在缺少 DLL 时自动构建，并为新版 Node 配置 Webpack 3 所需的 OpenSSL 兼容选项。默认访问 `http://127.0.0.1:8080`，端口被占用时以终端输出为准。
+默认访问 `http://127.0.0.1:8080`，可用 `PORT=8090 npm run dev:mock` 改端口。Mock 服务仅监听本机，不代理真实后端。
 
-Mock 模式默认登录模拟学生，提供首页公告、三道示例题、题目筛选、提交列表与详情。提交只生成固定结果的内存演示记录，不执行代码、不连接真实后端；重启后恢复初始数据。其他未实现的接口会明确报错。退出服务用 `Ctrl+C`。
+Mock 模式默认登录模拟学生，提供题目、提交、比赛与榜单、四个 AI 功能以及管理后台的演示数据。后台登录使用 `mock_admin` 和任意非空密码；`mock_student` 与 `mock_other` 用于学生和账号切换场景。这些账号只存在于本地 Mock。提交不执行代码，AI 不调用模型，修改仅保留在内存中，重启后恢复初始数据。未实现的接口会明确报错。退出服务用 `Ctrl+C`。
 
 ## 后端开发
 
@@ -116,7 +115,7 @@ python manage.py runserver 127.0.0.1:8000
 
 ## 检查与测试
 
-前端在 `frontend/` 执行 `npm run lint`。后端在依赖、密钥和数据库等环境就绪后，于 `backend/` 执行：
+前端在 `frontend/` 执行 `npm run lint` 和 `npm test`，回归测试使用 Vitest、Vue Test Utils 2 和 jsdom。后端在依赖、密钥和数据库等环境就绪后，于 `backend/` 执行：
 
 ```bash
 flake8 --statistics .
@@ -138,6 +137,8 @@ docker build -f backend/Dockerfile -t xmuoj-ai .
 Dockerfile 从根构建上下文复制 `backend/` 和 `frontend/dist/`。镜像构建不等于完整部署，数据库、Redis、持久化数据及判题组件仍需单独配置。
 
 `frontend/redeploy_local.sh` 用于更新已有部署，会替换容器中的前端产物并重启服务。使用时应通过 `COMPOSE_FILE` 指定实际的外部 Compose 文件；默认查找仓库下 `OnlineJudgeDeploy/docker-compose.yml`，该目录不随本仓库提供。
+
+`frontend/deploy/Dockerfile` 则是独立前端容器入口：将 `frontend/` 源码挂载到 `/OJ_FE`，启动脚本使用 Node 24 安装锁定依赖并构建到 `/OJ_FE/dist`，随后由 Nginx 提供学生端和管理端。此配置要求容器网络内有 `oj-backend:8080`，并将后端公开文件目录所在的数据根目录挂载到 `/app/data`，以提供 `/public/` 文件。它与上述后端镜像内的 `/app/dist` 部署路径不同。
 
 ## 项目协作文档
 

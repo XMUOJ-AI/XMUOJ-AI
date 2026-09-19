@@ -57,9 +57,9 @@
         <p class="notice">{{$t('m.Your_avatar_will_be_set_to')}}</p>
         <img :src="uploadImgSrc"/>
       </div>
-      <div slot="footer">
+      <template #footer><div>
         <Button @click="uploadAvatar" :loading="loadingUploadBtn">{{$t('m.Upload')}}</Button>
-      </div>
+      </div></template>
     </Modal>
 
     <div class="section-title">{{$t('m.Profile_Setting')}}</div>
@@ -105,9 +105,11 @@
   import api from '@oj/api'
   import utils from '@/utils/utils'
   import {VueCropper} from 'vue-cropper'
+  import 'vue-cropper/dist/index.css'
   import {types} from '@/store'
   import {languages} from '@/i18n'
-  import time from '@/utils/time'
+
+  const emptyProfile = () => ({real_name: '', mood: '', major: '', blog: '', school: '', github: '', language: ''})
 
   export default {
     components: {
@@ -117,6 +119,10 @@
       return {
         loadingSaveBtn: false,
         loadingUploadBtn: false,
+        profileAccountId: null,
+        profileBaseline: emptyProfile(),
+        settingsEpoch: 0,
+        settingsAlive: true,
         uploadModalVisible: false,
         preview: {},
         uploadImgSrc: '',
@@ -126,26 +132,46 @@
           outputType: 'png'
         },
         languages: languages,
-        formProfile: {
-          real_name: '',
-          mood: '',
-          major: '',
-          blog: '',
-          school: '',
-          github: '',
-          language: ''
-        }
+        formProfile: emptyProfile()
       }
     },
-    mounted () {
-      let profile = this.$store.state.user.profile
-      Object.keys(this.formProfile).forEach(element => {
-        if (profile[element] !== undefined) {
-          this.formProfile[element] = profile[element]
-        }
-      })
+    watch: {
+      profile: {immediate: true, deep: true, handler: 'syncProfile'}
+    },
+    beforeUnmount () {
+      this.settingsAlive = false
+      this.settingsEpoch++
     },
     methods: {
+      syncProfile (profile) {
+        const accountId = profile.user && profile.user.id != null ? String(profile.user.id) : null
+        const switchedAccount = this.profileAccountId !== null && this.profileAccountId !== accountId
+        if (this.profileAccountId !== accountId) {
+          this.settingsEpoch++
+          this.loadingSaveBtn = false
+          this.loadingUploadBtn = false
+          this.uploadModalVisible = false
+          this.avatarOption.imgSrc = ''
+          this.uploadImgSrc = ''
+          this.preview = {}
+        }
+        if (switchedAccount || accountId === null) {
+          this.formProfile = emptyProfile()
+          this.profileBaseline = emptyProfile()
+        }
+        this.profileAccountId = accountId
+        if (accountId === null) return
+        Object.keys(this.formProfile).forEach(field => {
+          const value = profile[field] == null ? '' : profile[field]
+          if (this.formProfile[field] === this.profileBaseline[field]) this.formProfile[field] = value
+          this.profileBaseline[field] = value
+        })
+      },
+      currentRequest (epoch) {
+        const user = this.$store.state.user.profile.user
+        const accountId = user && user.id != null ? String(user.id) : null
+        return this.settingsAlive && epoch === this.settingsEpoch && accountId !== null && accountId === this.profileAccountId
+      },
       checkFileType (file) {
         if (!/\.(gif|jpg|jpeg|png|bmp|GIF|JPG|PNG)$/.test(file.name)) {
           this.$Notice.warning({
@@ -168,12 +194,15 @@
         return true
       },
       handleSelectFile (file) {
+        const epoch = this.settingsEpoch
+        if (!this.currentRequest(epoch)) return false
         let isOk = this.checkFileType(file) && this.checkFileSize(file)
         if (!isOk) {
           return false
         }
         let reader = new window.FileReader()
         reader.onload = (e) => {
+          if (!this.currentRequest(epoch)) return
           this.avatarOption.imgSrc = e.target.result
         }
         reader.readAsDataURL(file)
@@ -198,13 +227,18 @@
         })
       },
       finishCrop () {
+        const epoch = this.settingsEpoch
         this.$refs.cropper.getCropData(data => {
+          if (!this.currentRequest(epoch)) return
           this.uploadImgSrc = data
           this.uploadModalVisible = true
         })
       },
       uploadAvatar () {
+        const epoch = this.settingsEpoch
+        if (!this.currentRequest(epoch)) return
         this.$refs.cropper.getCropBlob(blob => {
+          if (!this.currentRequest(epoch)) return
           let form = new window.FormData()
           let file = new window.File([blob], 'avatar.' + this.avatarOption.outputType)
           form.append('image', file)
@@ -215,30 +249,40 @@
             data: form,
             headers: {'content-type': 'multipart/form-data'}
           }).then(res => {
+            if (!this.currentRequest(epoch)) return
             this.loadingUploadBtn = false
             this.$success('Successfully set new avatar')
             this.uploadModalVisible = false
             this.avatarOption.imgSrc = ''
             this.$store.dispatch('getProfile')
           }, () => {
+            if (!this.currentRequest(epoch)) return
             this.loadingUploadBtn = false
           })
         })
       },
       updateProfile () {
+        const epoch = this.settingsEpoch
+        if (!this.currentRequest(epoch)) return
         this.loadingSaveBtn = true
-        let updateData = utils.filterEmptyValue(Object.assign({}, this.formProfile))
+        const submitted = {...this.formProfile}
+        let updateData = utils.filterEmptyValue(submitted)
         api.updateProfile(updateData).then(res => {
+          if (!this.currentRequest(epoch)) return
           this.$success('Success')
+          Object.keys(this.formProfile).forEach(field => {
+            if (this.formProfile[field] === submitted[field]) this.profileBaseline[field] = submitted[field]
+          })
           this.$store.commit(types.CHANGE_PROFILE, {profile: res.data.data})
-          time.changeLocale(this.formProfile.language)
           this.loadingSaveBtn = false
         }, _ => {
+          if (!this.currentRequest(epoch)) return
           this.loadingSaveBtn = false
         })
       }
     },
     computed: {
+      profile () { return this.$store.state.user.profile },
       previewStyle () {
         return {
           'width': this.preview.w + 'px',

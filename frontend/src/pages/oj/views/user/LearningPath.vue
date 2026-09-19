@@ -116,7 +116,7 @@
       }
     },
     mounted () { this.load() },
-    beforeDestroy () { this.alive = false; this.invalidate() },
+    beforeUnmount () { this.alive = false; this.invalidate() },
     methods: {
       formatDate (date) { return date ? time.utcToLocal(date, 'YYYY-MM-DD HH:mm') : '未知时间' },
       statusLabel,
@@ -128,7 +128,7 @@
       },
       // Callbacks also work with the historical Vue Router 3.0 installation.
       replaceRoute (query) {
-        return new Promise((resolve, reject) => this.$router.replace({ query }, resolve, reject))
+        return this.$router.replace({ query }).then(failure => { if (failure) throw failure })
       },
       handleError (error, step) {
         if (error.action === 'login') {
@@ -211,17 +211,18 @@
           try { await this.replaceRoute(origin) } catch (e) { return }
         }
         if (!this.alive || this.blocked || userId !== this.userId) return
-        this.$router.push({ name: context.type === 'contest' ? 'contest-problem-details' : 'problem-details', params: { problemID: problem.display_id, contestID: context.contest_id }, query }, () => {}, () => {})
+        this.$router.push({ name: context.type === 'contest' ? 'contest-problem-details' : 'problem-details', params: { problemID: problem.display_id, contestID: context.contest_id }, query }).catch(() => {})
       },
       async explain (step, retry = false) {
         if (this.blocked || !this.path) return
         const identity = this.routeIdentity
         const previous = this.explanations[step.step_id]
         if (previous && !retry) { previous.open = !previous.open; return }
-        const entry = { open: true, status: 'loading', text: '', error: null }
+        let entry = { open: true, status: 'loading', text: '', error: null }
         const pathId = this.path.path_id
         const revision = this.path.revision
-        this.$set(this.explanations, step.step_id, entry)
+        this.explanations[step.step_id] = entry
+        entry = this.explanations[step.step_id]
         try {
           const res = await api.explainLearningStep({ path_id: pathId, revision, step_id: step.step_id, mock_path: this.scenario })
           const data = res.data.data

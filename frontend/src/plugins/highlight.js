@@ -14,13 +14,14 @@ function renderCode (el, binding) {
     // Global asynchronous numbering can wrap already-numbered blocks repeatedly.
     const code = typeof binding.value === 'string' ? binding.value : target.textContent
     target.textContent = code
+    if (!code) return
     hljs.highlightBlock(target)
     hljs.lineNumbersBlockSync(target, {singleLine: true})
   })
 }
 
 export default {
-  install (Vue) {
-    Vue.directive('highlight', {deep: true, bind: renderCode, componentUpdated: renderCode})
+  install (app) {
+    app.directive('highlight', {deep: true, mounted: renderCode, updated: renderCode})
   }
 }

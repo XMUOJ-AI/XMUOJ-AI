@@ -1,5 +1,4 @@
-<template>
-</template>
+<template><span aria-hidden="true" /></template>
 
 <script>
   import api from '../../api.js'

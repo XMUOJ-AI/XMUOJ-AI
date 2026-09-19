@@ -8,10 +8,20 @@ export default {
   components: {
     ScreenFull
   },
+  data () {
+    return {rankMounted: false, rankRequestSequence: 0}
+  },
+  mounted () {
+    this.rankMounted = true
+  },
   methods: {
     getContestRankData (page = 1, refresh = false) {
+      if (!this.rankMounted || (this.contest.rule_type === 'OI' && !this.$store.getters.canViewContestRank)) return Promise.resolve()
+      const sequence = ++this.rankRequestSequence
+      const contestID = this.$route.params.contestID
+      const userID = this.$store.getters.user.id
       let offset = (page - 1) * this.limit
-      if (this.showChart && !refresh) {
+      if (this.showChart && !refresh && this.$refs.chart) {
         this.$refs.chart.showLoading({maskColor: 'rgba(250, 250, 250, 0.8)'})
       }
       let params = {
@@ -20,8 +30,10 @@ export default {
         contest_id: this.$route.params.contestID,
         force_refresh: this.forceUpdate ? '1' : '0'
       }
-      api.getContestRank(params).then(res => {
-        if (this.showChart && !refresh) {
+      return api.getContestRank(params).then(res => {
+        if (!this.rankMounted || sequence !== this.rankRequestSequence || contestID !== this.$route.params.contestID || userID !== this.$store.getters.user.id) return
+        if (this.contest.rule_type === 'OI' && !this.$store.getters.canViewContestRank) return
+        if (this.showChart && !refresh && this.$refs.chart) {
           this.$refs.chart.hideLoading()
         }
         this.total = res.data.data.total
@@ -29,6 +41,8 @@ export default {
           this.applyToChart(res.data.data.results.slice(0, 10))
         }
         this.applyToTable(res.data.data.results)
+      }).catch(() => {
+        if (this.rankMounted && sequence === this.rankRequestSequence && this.$refs.chart) this.$refs.chart.hideLoading()
       })
     },
     handleAutoRefresh (status) {
@@ -63,10 +77,10 @@ export default {
       set (value) {
         this.$store.commit(types.CHANGE_CONTEST_ITEM_VISIBLE, {menu: value})
         this.$nextTick(() => {
-          if (this.showChart) {
+          if (this.showChart && this.$refs.chart) {
             this.$refs.chart.resize()
           }
-          this.$refs.tableRank.handleResize()
+          if (this.$refs.tableRank) this.$refs.tableRank.handleResize()
         })
       }
     },
@@ -110,7 +124,9 @@ export default {
       return this.contest.status === CONTEST_STATUS.ENDED
     }
   },
-  beforeDestroy () {
+  beforeUnmount () {
+    this.rankMounted = false
+    this.rankRequestSequence++
     clearInterval(this.refreshFunc)
   }
 }

@@ -4,7 +4,7 @@
       <Col :span=12>
       <div>
         <span>{{$t('m.Language')}}:</span>
-        <Select :value="language" @on-change="onLangChange" class="adjust">
+        <Select :model-value="language" @on-change="onLangChange" class="adjust">
           <Option v-for="item in languages" :key="item" :value="item">{{item}}
           </Option>
         </Select>
@@ -24,7 +24,7 @@
       <Col :span=12>
       <div class="fl-right">
         <span>{{$t('m.Theme')}}:</span>
-        <Select :value="theme" @on-change="onThemeChange" class="adjust">
+        <Select :model-value="theme" @on-change="onThemeChange" class="adjust">
           <Option v-for="item in themes" :key="item.label" :value="item.value">{{item.label}}
           </Option>
         </Select>
@@ -110,7 +110,7 @@
         this.editor.setModelLanguage(this.editor.getModel(), this.mode[this.language] || 'plaintext')
       })
     },
-    beforeDestroy () {
+    beforeUnmount () {
       if (this.editor) {
         this.editor.dispose()
       }

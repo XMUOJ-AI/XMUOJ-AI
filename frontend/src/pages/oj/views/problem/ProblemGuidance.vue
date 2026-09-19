@@ -1,12 +1,12 @@
 <template>
   <Card class="problem-guidance" dis-hover :padding="20">
-    <div slot="title" class="guidance-heading">
+    <template #title><div class="guidance-heading">
       <span><Icon type="ios-lightbulb-outline"></Icon> 解题引导</span>
       <Tag v-if="isMock" color="blue">模拟演示</Tag>
       <Button type="text" size="small" :aria-expanded="String(expanded)" aria-controls="guidance-content" @click="expanded = !expanded">
         {{ expanded ? '收起' : '展开' }} <Icon :type="expanded ? 'chevron-up' : 'chevron-down'"></Icon>
       </Button>
-    </div>
+    </div></template>
     <div v-show="expanded" id="guidance-content">
       <p class="intro">先独立思考，再说说你的理解。通过小步追问找到方向，每次只前进一步。</p>
       <Steps :current="session ? session.stage : 0" size="small" class="guidance-steps">
@@ -61,19 +61,19 @@
     },
     data () {
       return { expanded: true,
-        stages,
-        session: null,
-        thought: '',
-        error: '',
-        validation: '',
-        loading: false,
-        sending: false,
-        retryPayload: null,
-        sequence: 0,
-        timer: null,
-        now: Date.now(),
-        receivedAt: 0,
-        alive: true }
+               stages,
+               session: null,
+               thought: '',
+               error: '',
+               validation: '',
+               loading: false,
+               sending: false,
+               retryPayload: null,
+               sequence: 0,
+               timer: null,
+               now: Date.now(),
+               receivedAt: 0,
+               alive: true }
     },
     computed: {
       isMock () { return process.env.AI_FEATURES_MOCK === true },
@@ -114,7 +114,7 @@
     watch: {
       identity: { immediate: true, handler () { this.reset(); this.load() } }
     },
-    beforeDestroy () { this.alive = false; this.sequence++; this.stopTimer() },
+    beforeUnmount () { this.alive = false; this.sequence++; this.stopTimer() },
     methods: {
       stageLabel (stage) { return stages.find(item => item.id === stage).label },
       stopTimer () { clearInterval(this.timer); this.timer = null },
@@ -181,8 +181,8 @@
         if (text.length < 12 || text.length > 1000) { this.validation = '请用 12–1000 字具体描述'; return }
         this.validation = ''
         this.request({ session_id: this.session.session_id,
-          text,
-          request_id: 'guidance-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12) })
+                       text,
+                       request_id: 'guidance-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12) })
       },
       retry () {
         if (!this.retryPayload || this.sending || this.loading) return

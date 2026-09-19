@@ -4,7 +4,7 @@
       <Alert :type="status.type" showIcon>
         <span class="title">{{status.unknown ? '判题状态暂不可识别' : $t('m.' + status.statusName.replace(/ /g, "_"))}}</span>
         <span class="title" v-if="isCE">[main.c:后面的两个数字分别表示错误代码所在的“行号”和“列号”]</span>
-        <div slot="desc" class="content">
+        <template #desc><div class="content">
           <template v-if="isCE">
             <!--
             请选择出错信息的语言：
@@ -18,12 +18,12 @@
             <pre>{{submission.statistic_info.err_info}}</pre>
           </template>
           <template v-else>
-            <span>{{$t('m.Time')}}: {{submission.statistic_info.time_cost | submissionTime}}</span>
-            <span>{{$t('m.Memory')}}: {{submission.statistic_info.memory_cost | submissionMemory}}</span>
+            <span>{{$t('m.Time')}}: {{ $filters.submissionTime(submission.statistic_info.time_cost) }}</span>
+            <span>{{$t('m.Memory')}}: {{ $filters.submissionMemory(submission.statistic_info.memory_cost) }}</span>
             <span>{{$t('m.Lang')}}: {{submission.language}}</span>
             <span>{{$t('m.Author')}}: {{submission.username}}</span>
           </template>
-        </div>
+        </div></template>
       </Alert>
     </Col>
 
@@ -56,6 +56,8 @@
 </template>
 
 <script>
+  import { resolveComponent } from 'vue'
+
   import api from '@oj/api'
   import {JUDGE_STATUS} from '@/utils/constants'
   import utils from '@/utils/utils'
@@ -83,11 +85,11 @@
             align: 'center',
             render: (h, params) => {
               const status = Object.prototype.hasOwnProperty.call(JUDGE_STATUS, params.row.result) ? JUDGE_STATUS[params.row.result] : null
-              return h('Tag', {
-                props: {
-                  color: status ? status.color : 'blue'
-                }
-              }, status ? this.$i18n.t('m.' + status.name.replace(/ /g, '_')) : '状态未知')
+              return h(resolveComponent('Tag'), {
+
+                color: status ? status.color : 'blue'
+
+              }, () => (status ? this.$i18n.t('m.' + status.name.replace(/ /g, '_')) : '状态未知'))
             }
           },
           {
@@ -124,7 +126,7 @@
     mounted () {
       this.getSubmission()
     },
-    beforeDestroy () {
+    beforeUnmount () {
       this.requestSequence++
     },
     watch: {

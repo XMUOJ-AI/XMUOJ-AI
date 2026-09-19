@@ -1,0 +1,21 @@
+{
+  "name": "simple-uploader",
+  "version": "2.1.0",
+  "description": "A HTML5 upload component without UI",
+  "keywords": "upload",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:mycolorway/simple-uploader.git"
+  },
+  "author": "farthinker",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mycolorway/simple-uploader/issues"
+  },
+  "main": "lib/uploader.js",
+  "homepage": "https://github.com/mycolorway/simple-uploader",
+  "dependencies": {
+    "jquery": "=3.1.1",
+    "simple-module": "file:../simple-module"
+  }
+}

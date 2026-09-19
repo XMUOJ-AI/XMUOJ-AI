@@ -1,0 +1,41 @@
+// iView 2 pagination colors, weight and spacing, applied to View UI Plus.
+.ivu-page {
+  // Vue 2 preserved an inline space between list items; Vue 3 omits it.
+  // Helvetica Neue's space advance is about 0.27846 em at the inherited size.
+  --legacy-page-inline-space: 0.27846em;
+
+  &-item {
+    font-weight: 400;
+  }
+
+  &-item-active {
+    background-color: @primary-color;
+    border-color: @primary-color;
+    a, &:hover a { color: #fff; }
+  }
+
+  &:not(.mini):not(.ivu-page-simple) {
+    > .ivu-page-prev { margin-right: 8px; }
+    > li + li { margin-left: var(--legacy-page-inline-space); }
+    > .ivu-page-next { margin-left: calc(4px + var(--legacy-page-inline-space)); }
+    > .ivu-page-total + .ivu-page-prev { margin-left: var(--legacy-page-inline-space); }
+    > .ivu-page-options { margin-left: calc(15px + var(--legacy-page-inline-space)); }
+  }
+
+  &-item-jump-prev, &-item-jump-next {
+    border-color: @border-color-base;
+    &:after {
+      content: '•••';
+      display: block;
+      letter-spacing: 1px;
+      color: #ccc;
+      text-align: center;
+    }
+    i { display: none; }
+    &:hover {
+      &:after { display: none; }
+      i:first-child { display: inline; }
+      i:last-child { display: none; }
+    }
+  }
+}

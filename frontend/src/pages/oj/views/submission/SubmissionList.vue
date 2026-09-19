@@ -2,28 +2,28 @@
   <div class="flex-container">
     <div id="main">
       <Panel shadow>
-        <div slot="title">{{title}}</div>
-        <div slot="extra">
+        <template #title><div>{{title}}</div></template>
+        <template #extra><div>
           <ul class="filter">
             <li>
               <Dropdown @on-click="handleResultChange">
                 <span>{{status}}
                   <Icon type="arrow-down-b"></Icon>
                 </span>
-                <Dropdown-menu slot="list">
+                <template #list><Dropdown-menu>
                   <Dropdown-item name="">{{$t('m.All')}}</Dropdown-item>
                   <Dropdown-item v-for="status in Object.keys(JUDGE_STATUS)" :key="status" :name="status">
                     {{$t('m.' + JUDGE_STATUS[status].name.replace(/ /g, "_"))}}
                   </Dropdown-item>
-                </Dropdown-menu>
+                </Dropdown-menu></template>
               </Dropdown>
             </li>
 
 
             <li>
               <i-switch size="large" v-model="formFilter.myself" @on-change="handleQueryChange">
-                <span slot="open">{{$t('m.Mine')}}</span>
-                <span slot="close">{{$t('m.All')}}</span>
+                <template #open><span>{{$t('m.Mine')}}</span></template>
+                <template #close><span>{{$t('m.All')}}</span></template>
               </i-switch>
             </li>
             <li>
@@ -34,15 +34,17 @@
               <Button type="info" icon="refresh" @click="getSubmissions">{{$t('m.Refresh')}}</Button>
             </li>
           </ul>
-        </div>
+        </div></template>
         <Table stripe :disabled-hover="true" :columns="columns" :data="submissions" :loading="loadingTable"></Table>
-        <Pagination :total="total" :page-size="limit" @on-change="changeRoute" :current.sync="page"></Pagination>
+        <Pagination :total="total" :page-size="limit" @on-change="changeRoute" v-model:current="page"></Pagination>
       </Panel>
     </div>
   </div>
 </template>
 
 <script>
+  import { resolveComponent } from 'vue'
+
   import { mapActions, mapGetters } from 'vuex'
   import api from '@oj/api'
   import { JUDGE_STATUS, USER_TYPE } from '@/utils/constants'
@@ -80,11 +82,11 @@
                     color: '#57a3f3',
                     cursor: 'pointer'
                   },
-                  on: {
-                    click: () => {
-                      this.$router.push('/status/' + params.row.id)
-                    }
+
+                  onClick: () => {
+                    this.$router.push('/status/' + params.row.id)
                   }
+
                 }, params.row.id.slice(0, 12))
               } else {
                 return h('span', params.row.id.slice(0, 12))
@@ -95,11 +97,11 @@
             title: this.$i18n.t('m.Status'),
             align: 'center',
             render: (h, params) => {
-              return h('Tag', {
-                props: {
-                  color: JUDGE_STATUS[params.row.result].color
-                }
-              }, this.$i18n.t('m.' + JUDGE_STATUS[params.row.result].name.replace(/ /g, '_')))
+              return h(resolveComponent('Tag'), {
+
+                color: JUDGE_STATUS[params.row.result].color
+
+              }, () => (this.$i18n.t('m.' + JUDGE_STATUS[params.row.result].name.replace(/ /g, '_'))))
             }
           },
           {
@@ -107,26 +109,26 @@
             align: 'center',
             render: (h, params) => {
               return h('span',
-                {
-                  style: {
-                    color: '#57a3f3',
-                    cursor: 'pointer'
-                  },
-                  on: {
-                    click: () => {
-                      if (this.contestID) {
-                        this.$router.push(
-                          {
-                            name: 'contest-problem-details',
-                            params: {problemID: params.row.problem, contestID: this.contestID}
-                          })
-                      } else {
-                        this.$router.push({name: 'problem-details', params: {problemID: params.row.problem}})
-                      }
-                    }
-                  }
-                },
-                params.row.problem)
+                       {
+                         style: {
+                           color: '#57a3f3',
+                           cursor: 'pointer'
+                         },
+
+                         onClick: () => {
+                           if (this.contestID) {
+                             this.$router.push(
+                               {
+                                 name: 'contest-problem-details',
+                                 params: {problemID: params.row.problem, contestID: this.contestID}
+                               })
+                           } else {
+                             this.$router.push({name: 'problem-details', params: {problemID: params.row.problem}})
+                           }
+                         }
+
+                       },
+                       params.row.problem)
             }
           },
           {
@@ -157,15 +159,15 @@
                   'display': 'inline-block',
                   'max-width': '150px'
                 },
-                on: {
-                  click: () => {
-                    this.$router.push(
-                      {
-                        name: 'user-home',
-                        query: {username: params.row.username}
-                      })
-                  }
+
+                onClick: () => {
+                  this.$router.push(
+                    {
+                      name: 'user-home',
+                      query: {username: params.row.username}
+                    })
                 }
+
               }, params.row.username)
             }
           }
@@ -262,18 +264,17 @@
           align: 'center',
           width: 90,
           render: (h, params) => {
-            return h('Button', {
-              props: {
-                type: 'primary',
-                size: 'small',
-                loading: params.row.loading
-              },
-              on: {
-                click: () => {
-                  this.handleRejudge(params.row.id, params.index)
-                }
+            return h(resolveComponent('Button'), {
+
+              type: 'primary',
+              size: 'small',
+              loading: params.row.loading,
+
+              onClick: () => {
+                this.handleRejudge(params.row.id, params.index)
               }
-            }, this.$i18n.t('m.Rejudge'))
+
+            }, () => (this.$i18n.t('m.Rejudge')))
           }
         }
         this.columns.push(judgeColumn)

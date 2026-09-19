@@ -1,569 +1,73 @@
-# OnlineJudgeFE 项目文档
+# XMUOJ-AI 前端代码导览
 
-## 1. 项目概述
+本文记录当前 Vue 3 前端入口与维护边界。启动命令见 [README](README.md)，全仓库说明见[根 README](../README.md)。
 
-OnlineJudgeFE 是一个基于 Vue.js 开发的在线判题系统前端项目，为用户提供题目浏览、提交代码、参加比赛、查看排名等功能，同时为管理员提供题目管理、比赛管理、用户管理等后台操作界面。
+## 技术与目录
 
-### 主要特点
-- 基于 Webpack3 的多页面应用，优化了打包大小
-- 集成了 Simditor 富文本编辑器和 CodeMirror 代码编辑器
-- 使用 ECharts 实现数据可视化和图表展示
-- 支持国际化（中文、英文、繁体中文）
-- 响应式设计，支持现代浏览器和 IE 10+
+学生端使用 View UI Plus，管理端使用 Element Plus；共同使用 Vue 3 Options API、Vue Router 4、Vuex 4 和 Vue I18n 11。Vite 负责两个入口的开发服务与生产构建，具体依赖版本以 package.json 和 package-lock.json 为准。
 
-### 技术栈
-| 技术/框架 | 版本 | 用途 |
-|---------|------|------|
-| Vue | 2.5.13 | 前端框架 |
-| Vuex | 3.0.1 | 状态管理 |
-| Vue Router | 3.0.1 | 路由管理 |
-| iView | 2.13.0 | UI 组件库 |
-| Element UI | 2.3.7 | UI 组件库 |
-| ECharts | 3.8.5 | 数据可视化 |
-| Axios | 0.18.0 | HTTP 请求 |
-| Moment | 2.22.1 | 时间处理 |
-| KaTeX | 0.10.0 | 数学公式渲染 |
-| Highlight.js | 9.12.0 | 代码高亮 |
+| 位置 | 职责 |
+| --- | --- |
+| index.html、admin/index.html | 学生端和管理端 HTML 入口 |
+| src/pages/oj/ | 学生页面、路由、API 及页面组件 |
+| src/pages/admin/ | 管理页面、路由、API 及页面组件 |
+| src/store/ | 用户、比赛及全局状态 |
+| src/i18n/ | 中文、英文、繁体中文文案及组件语言包 |
+| src/components/、src/services/ | 共享 Vue 3 组件、消息服务、路由状态同步、监控接入 |
+| src/plugins/、src/utils/ | 高亮、数学公式、复制、时间和存储等工具 |
+| src/styles/、src/assets/legacy-icons/ | 学生端旧外观兼容主题及保留的图标资源 |
+| build/mock-*.js | Mock API、页面数据及 AI 场景 |
+| tests/、vitest.config.mjs | Vue Test Utils 2、jsdom 与 Vitest 回归测试 |
+| vite.config.mjs、build/dev-server.mjs | 构建、多入口回退、代理、Mock 服务与开发启动 |
+| vendor/ | Simditor 所需的三个固定历史依赖及许可证 |
+| static/、deploy/ | 静态资源与部署配置 |
 
-## 2. 项目结构
+## 页面与数据流
 
-项目采用多页面应用架构，主要分为普通用户（oj）和管理员（admin）两个页面入口。整体目录结构清晰，遵循 Vue 项目的最佳实践。
+学生入口由 src/pages/oj/index.js 创建 Vue 应用，路由位于同目录 router/；管理入口位于 src/pages/admin/index.js，路由位于 router.js。普通页面通过各自 api.js 请求后端，Vuex 保存共享状态。保持现有 URL、查询参数、权限判断和 API 请求格式。
 
-```
-OnlineJudgeFE/
-├── build/             # 构建配置文件
-├── config/            # 项目配置文件
-├── deploy/            # 部署相关文件
-├── src/               # 源代码目录
-│   ├── assets/        # 静态资源
-│   ├── i18n/          # 国际化配置
-│   ├── pages/         # 页面目录
-│   │   ├── admin/     # 管理员页面
-│   │   └── oj/        # 普通用户页面
-│   ├── plugins/       # 插件
-│   ├── store/         # Vuex 状态管理
-│   ├── styles/        # 样式文件
-│   └── utils/         # 工具函数
-├── static/            # 静态文件
-├── package.json       # 项目依赖和脚本
-└── README.md          # 项目说明
-```
+| 模块 | 主要页面与维护重点 |
+| --- | --- |
+| 题库与做题 | ProblemList.vue、Problem.vue；筛选、分页、编辑器、提交与轮询 |
+| 比赛 | ContestDetail.vue 及 children/；题目、ACM/OI 榜单、权限与倒计时 |
+| 提交 | SubmissionList.vue、SubmissionDetails.vue；筛选、结果、代码与高亮 |
+| 个人主页与设置 | UserHome.vue、setting/；主页 Tab、资料、头像、账号与会话 |
+| 管理端 | problem/、contest/、general/；表单、表格、批量操作、上传与弹窗 |
 
-### 核心目录说明
+四项 AI 原型分别是个人主页的学习路径与学习反馈、题目页的解题引导、提交详情的代码解读。独立的数据适配、API helper 和 Mock 文件与页面按功能组织；真实 AI 后端不由 Mock 实现。生成操作由用户主动触发，路由、账号或题目变化时必须继续隔离迟到响应。详细契约见 [AI 功能原型说明](docs/ai-feature-prototypes.md)。
 
-| 目录/文件 | 职责 |
-|---------|------|
-| src/pages/oj/ | 普通用户页面，包含题目、比赛、排名等功能 |
-| src/pages/admin/ | 管理员页面，包含题目管理、比赛管理、用户管理等功能 |
-| src/store/ | Vuex 状态管理，包含用户信息和比赛状态 |
-| src/i18n/ | 国际化配置，支持中文、英文、繁体中文 |
-| src/utils/ | 工具函数，包含常量定义、存储操作、时间处理等 |
-| src/plugins/ | 插件，包含代码高亮、数学公式渲染等 |
+## Vue 3 维护约定
 
-## 3. 系统架构与主流程
+- 应用入口使用 createApp；全局消息、HTTP 和格式化函数由应用注册。模板通过 $filters 调用格式化函数，不使用 Vue 2 filter 语法。
+- 组件使用命名 slot、具名 v-model、emits 和 beforeUnmount；路由过渡通过 RouterView slot 取出页面组件。
+- 表格 render 回调使用 Vue 3 VNode 属性和组件解析，事件为 onClick 等属性。修改列时同时检查点击、颜色、宽度和滚动。
+- CodeMirrorInput.vue 保留 CodeMirror 5 引擎；Chart.vue 保留 ECharts 3 引擎。避免在一般页面维护中顺带更换编辑器或图表引擎。
+- 学生端 LegacyButton、LegacyIcon 与 legacy-theme.less 负责旧外观；管理端在 Element Plus 上保留旧尺寸和图标。变更组件库或样式后需重新检查两端布局。
+- Simditor 继续使用原编辑器核心；头像使用 Vue 3 版本 VueCropper。组件卸载时释放编辑器、图表及计时器。
 
-### 架构图
+## 开发、测试与产物
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                     前端应用                            │
-├─────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │
-│  │  普通用户页  │  │  管理员页   │  │  公共组件   │    │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘    │
-│         │                │                │            │
-│  ┌──────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐    │
-│  │  Vue Router │  │  Vue Router │  │  全局插件   │    │
-│  └──────┬──────┘  └──────┬──────┘  └─────────────┘    │
-│         │                │                            │
-│  ┌──────▼────────────────▼──────┐                     │
-│  │         Vuex Store           │                     │
-│  └──────────────┬───────────────┘                     │
-│                 │                                     │
-│  ┌──────────────▼───────────────┐                     │
-│  │           API 调用           │                     │
-│  └──────────────────────────────┘                     │
-└─────────────────────────────────────────────────────────┘
-```
+使用 Node.js 24 和 npm 11+，在 frontend/ 执行：
 
-### 主流程
+| 命令 | 用途 |
+| --- | --- |
+| npm ci | 安装锁定依赖 |
+| npm run dev | 启动真实后端代理模式 |
+| npm run dev:mock | 启动本地 Mock 模式 |
+| npm run lint | 检查源码、构建脚本和测试 |
+| npm test | 运行回归测试 |
+| npm run build | 构建生产静态产物 |
+| npm run preview | 本地预览生产产物 |
 
-1. **用户访问**：用户通过浏览器访问系统，根据 URL 路由到相应的页面
-2. **身份验证**：系统检查用户是否登录，未登录用户访问需要权限的页面时会被重定向到登录页面
-3. **数据加载**：页面加载时，通过 API 调用获取必要的数据，如题目列表、比赛信息等
-4. **用户操作**：用户可以进行查看题目、提交代码、参加比赛等操作
-5. **状态管理**：通过 Vuex 管理全局状态，如用户信息、比赛状态等
-6. **响应更新**：当数据发生变化时，页面会相应更新，提供实时反馈
+TARGET 控制开发代理目标，PORT 控制本地端口。生产构建始终关闭 Mock。Vite 输出 dist/index.html、dist/admin/index.html 和 dist/static/；部署端需正确处理学生和管理路由的 HTML 回退，同时保留 /api 与 /public 服务。
 
-## 4. 核心功能模块
+浏览器范围为 Chrome、Edge、Firefox 最近两个版本及 Safari 16.4+。不再支持 IE，也不再使用 Webpack DLL、旧 config/ 环境文件或 vue-codemirror-lite/vue-echarts 的 Vue 2 封装。旧构建配置已删除，历史版本可通过 Git 查阅。
 
-### 4.1 题目模块
+测试应覆盖路由直达与刷新、表单校验、分页、代码编辑与提交、榜单、管理端操作和 AI 请求隔离，详见 [Vue 3 测试矩阵](docs/vue3-test-matrix.md)。npm run build 不部署；build.sh 与 redeploy_local.sh 是显式容器部署入口，运行前核对目标环境。
 
-**功能描述**：提供题目列表浏览、题目详情查看、代码提交等功能。
+## 历史记录：与上游 OnlineJudge 后端的关系
 
-**核心组件**：
-- `ProblemList.vue`：题目列表页面，支持题目筛选、搜索和分页
-- `Problem.vue`：题目详情页面，显示题目描述、输入输出样例，提供代码编辑器
-
-**关键功能**：
-- 题目分类与筛选
-- 题目搜索
-- 代码编辑器（支持多种编程语言）
-- 代码提交与评测状态查询
-
-### 4.2 比赛模块
-
-**功能描述**：提供比赛列表浏览、比赛详情查看、比赛排名等功能。
-
-**核心组件**：
-- `ContestList.vue`：比赛列表页面，显示即将开始、进行中和已结束的比赛
-- `ContestDetails.vue`：比赛详情页面，包含比赛题目、提交、排名等信息
-- `ContestRank.vue`：比赛排名页面，支持 ACM 和 OI 两种排名方式
-
-**关键功能**：
-- 比赛列表与详情
-- 比赛题目查看与提交
-- 实时排名更新
-- 比赛倒计时
-
-### 4.3 提交模块
-
-**功能描述**：提供提交历史查看、提交详情查看等功能。
-
-**核心组件**：
-- `SubmissionList.vue`：提交列表页面，显示提交历史，支持筛选和搜索
-- `SubmissionDetails.vue`：提交详情页面，显示代码、评测结果、运行时间等信息
-
-**关键功能**：
-- 提交历史查询
-- 提交状态跟踪
-- 评测结果详情查看
-- 代码查看与复制
-
-### 4.4 用户模块
-
-**功能描述**：提供用户登录、注册、个人设置等功能。
-
-**核心组件**：
-- `Login.vue`：登录页面
-- `Register.vue`：注册页面
-- `Settings.vue`：个人设置页面，包含个人资料、账号设置、安全设置
-
-**关键功能**：
-- 用户登录与注册
-- 个人资料管理
-- 账号设置
-- 密码修改
-
-### 4.5 排名模块
-
-**功能描述**：提供 ACM 排名和 OI 排名查看功能。
-
-**核心组件**：
-- `ACMRank.vue`：ACM 排名页面，显示用户的解题数量和时间
-- `OIRank.vue`：OI 排名页面，显示用户的得分情况
-
-**关键功能**：
-- 实时排名更新
-- 排名筛选与排序
-- 用户排名详情
-
-### 4.6 管理员模块
-
-**功能描述**：提供题目管理、比赛管理、用户管理等后台操作功能。
-
-**核心组件**：
-- `ProblemList.vue`：题目管理页面，支持题目添加、编辑、删除
-- `ContestList.vue`：比赛管理页面，支持比赛创建、编辑、删除
-- `User.vue`：用户管理页面，支持用户信息查看和管理
-
-**关键功能**：
-- 题目管理（添加、编辑、删除、导入导出）
-- 比赛管理（创建、编辑、删除、设置）
-- 用户管理（查看、编辑、权限设置）
-- 系统配置管理
-
-## 5. 核心 API 与类
-
-### 5.1 API 调用
-
-项目使用 Axios 进行 HTTP 请求，主要 API 调用集中在 `api.js` 文件中。
-
-**主要 API 函数**：
-
-| 函数名 | 功能描述 | 参数 | 返回值 |
-|-------|---------|------|--------|
-| `getWebsiteConf` | 获取网站配置 | 无 | 网站配置信息 |
-| `login` | 用户登录 | username, password | 登录结果 |
-| `register` | 用户注册 | username, password, email | 注册结果 |
-| `getProblemList` | 获取题目列表 | page, limit, filter | 题目列表 |
-| `getProblem` | 获取题目详情 | problemID | 题目详情 |
-| `submitCode` | 提交代码 | problemID, language, code | 提交结果 |
-| `getSubmissionList` | 获取提交列表 | page, limit, filter | 提交列表 |
-| `getSubmission` | 获取提交详情 | submissionID | 提交详情 |
-| `getContestList` | 获取比赛列表 | page, limit, filter | 比赛列表 |
-| `getContest` | 获取比赛详情 | contestID | 比赛详情 |
-| `getContestRank` | 获取比赛排名 | contestID | 比赛排名 |
-
-### 5.2 核心类与组件
-
-**1. Vuex Store**
-
-| 模块 | 功能描述 | 主要状态 | 主要 mutations |
-|-----|---------|----------|----------------|
-| `user` | 用户信息管理 | user, authed | LOGIN, LOGOUT, UPDATE_USER |
-| `contest` | 比赛状态管理 | currentContest, contestRank | SET_CURRENT_CONTEST, UPDATE_CONTEST_RANK |
-| `root` | 全局状态管理 | website, modalStatus | UPDATE_WEBSITE_CONF, CHANGE_MODAL_STATUS |
-
-**2. 全局组件**
-
-| 组件名 | 功能描述 | 主要属性 |
-|-------|---------|----------|
-| `Panel` | 面板组件 | title, collapsible |
-| `VerticalMenu` | 垂直菜单组件 | items, activeIndex |
-| `CodeMirror` | 代码编辑器组件 | value, language, readonly |
-| `Highlight` | 代码高亮组件 | code, language |
-| `Pagination` | 分页组件 | total, pageSize, current |
-
-**3. 工具类**
-
-| 工具类 | 功能描述 | 主要方法 |
-|-------|---------|----------|
-| `storage` | 本地存储操作 | get, set, remove, clear |
-| `filters` | 过滤器 | formatTime, formatMemory, formatLanguage |
-| `time` | 时间处理 | formatDuration, formatDate |
-| `utils` | 通用工具 | debounce, throttle, deepClone |
-
-## 6. 技术实现细节
-
-### 6.1 多页面应用配置
-
-项目使用 Webpack 配置为多页面应用，主要配置在 `build/webpack.base.conf.js` 文件中。通过 `glob` 模块自动识别页面入口，每个页面都有独立的入口文件和 HTML 模板。
-
-### 6.2 国际化实现
-
-项目使用 `vue-i18n` 实现国际化，支持中文、英文、繁体中文三种语言。国际化配置文件存放在 `src/i18n` 目录中，分为管理员页面和普通用户页面两个部分。
-
-### 6.3 状态管理
-
-项目使用 Vuex 进行状态管理，主要分为 `user` 和 `contest` 两个模块，分别管理用户信息和比赛状态。全局状态包括网站配置和模态框状态。
-
-### 6.4 路由配置
-
-项目使用 Vue Router 进行路由管理，主要分为普通用户路由和管理员路由。路由配置中包含权限控制，未登录用户访问需要权限的页面时会被重定向到登录页面。
-
-### 6.5 代码编辑器
-
-项目使用 `vue-codemirror-lite` 实现代码编辑器，支持多种编程语言的语法高亮和代码提示。
-
-### 6.6 数据可视化
-
-项目使用 ECharts 实现数据可视化，主要用于排名页面的图表展示。
-
-## 7. 项目运行与部署
-
-### 7.1 开发环境
-
-**前置条件**：
-- Node.js v8.12.0+
-- npm 3.0.0+
-
-**安装依赖**：
-```bash
-npm install
-```
-
-**构建 DLL**：
-```bash
-# Linux
-export NODE_ENV=development 
-npm run build:dll
-
-# Windows
-set NODE_ENV=development 
-npm run build:dll
-```
-
-**启动开发服务器**：
-```bash
-# 设置后端代理
-export TARGET=http://Your-backend
-
-# 启动开发服务器
-npm run dev
-```
-
-### 7.2 生产环境
-
-**构建生产版本**：
-```bash
-npm run build
-```
-
-**部署**：
-项目提供了 Docker 部署配置，位于 `deploy` 目录中。可以使用 Docker 容器化部署，也可以直接部署到静态文件服务器。
-
-## 8. 目录结构详解
-
-### 8.1 普通用户页面 (`src/pages/oj/`)
-
-```
-oj/
-├── components/        # 组件
-├── router/           # 路由配置
-├── views/            # 页面视图
-│   ├── contest/      # 比赛相关页面
-│   ├── general/      # 通用页面
-│   ├── help/         # 帮助页面
-│   ├── problem/      # 题目相关页面
-│   ├── rank/         # 排名页面
-│   ├── setting/      # 设置页面
-│   ├── submission/   # 提交相关页面
-│   └── user/         # 用户相关页面
-├── App.vue           # 应用根组件
-├── api.js            # API 调用
-├── index.html        # HTML 模板
-└── index.js          # 入口文件
-```
-
-### 8.2 管理员页面 (`src/pages/admin/`)
-
-```
-admin/
-├── components/        # 组件
-├── views/             # 页面视图
-│   ├── contest/       # 比赛管理
-│   ├── general/       # 通用管理
-│   └── problem/       # 题目管理
-├── App.vue            # 应用根组件
-├── api.js             # API 调用
-├── index.html         # HTML 模板
-├── index.js           # 入口文件
-└── router.js          # 路由配置
-```
-
-### 8.3 状态管理 (`src/store/`)
-
-```
-store/
-├── modules/           # 模块
-│   ├── contest.js     # 比赛状态
-│   └── user.js        # 用户状态
-├── index.js           # 根 store
-└── types.js           #  mutation 类型
-```
-
-### 8.4 国际化 (`src/i18n/`)
-
-```
-i18n/
-├── admin/            # 管理员页面国际化
-│   ├── en-US.js      # 英文
-│   ├── zh-CN.js      # 中文
-│   └── zh-TW.js      # 繁体中文
-├── oj/               # 普通用户页面国际化
-│   ├── en-US.js      # 英文
-│   ├── zh-CN.js      # 中文
-│   └── zh-TW.js      # 繁体中文
-└── index.js          # 国际化配置
-```
-
-## 9. 核心功能流程图
-
-### 9.1 代码提交流程
-
-```mermaid
-flowchart TD
-    A[用户访问题目页面] --> B[查看题目描述]
-    B --> C[编写代码]
-    C --> D[选择编程语言]
-    D --> E[提交代码]
-    E --> F[API 调用 submitCode]
-    F --> G[后端评测]
-    G --> H[返回评测结果]
-    H --> I[显示评测结果]
-```
-
-### 9.2 比赛参与流程
-
-```mermaid
-flowchart TD
-    A[用户访问比赛列表] --> B[选择比赛]
-    B --> C[查看比赛详情]
-    C --> D[进入比赛]
-    D --> E[查看比赛题目]
-    E --> F[提交代码]
-    F --> G[查看实时排名]
-    G --> H[比赛结束]
-    H --> I[查看最终排名]
-```
-
-### 9.3 用户登录流程
-
-```mermaid
-flowchart TD
-    A[用户访问登录页面] --> B[输入用户名和密码]
-    B --> C[点击登录]
-    C --> D[API 调用 login]
-    D --> E{登录成功?}
-    E -->|是| F[存储用户信息]
-    E -->|否| G[显示错误信息]
-    F --> H[跳转到首页]
-```
-
-## 10. 关键模块与典型用例
-
-### 10.1 题目提交
-
-**功能说明**：用户可以在题目详情页面提交代码，系统会对代码进行评测并返回结果。
-
-**使用步骤**：
-1. 访问题目详情页面
-2. 在代码编辑器中编写代码
-3. 选择编程语言
-4. 点击提交按钮
-5. 查看评测结果
-
-**常见问题**：
-- 编译错误：检查代码语法是否正确
-- 运行时错误：检查代码逻辑是否正确
-- 超时：检查算法复杂度是否过高
-- 内存超限：检查内存使用是否合理
-
-### 10.2 比赛参与
-
-**功能说明**：用户可以参加正在进行的比赛，提交代码并查看实时排名。
-
-**使用步骤**：
-1. 访问比赛列表页面
-2. 选择正在进行的比赛
-3. 进入比赛详情页面
-4. 查看比赛题目
-5. 提交代码
-6. 查看实时排名
-
-**注意事项**：
-- 比赛期间，提交的代码会实时评测
-- 比赛结束后，排名会最终确定
-- 不同比赛可能有不同的规则（ACM 或 OI）
-
-### 10.3 个人设置
-
-**功能说明**：用户可以修改个人资料、账号信息和安全设置。
-
-**使用步骤**：
-1. 登录系统
-2. 进入个人设置页面
-3. 修改个人资料
-4. 修改账号信息
-5. 修改密码
-
-**注意事项**：
-- 修改密码需要验证旧密码
-- 邮箱修改需要验证新邮箱
-- 头像上传支持图片裁剪
-
-## 11. 配置、部署与开发
-
-### 11.1 配置文件
-
-项目的主要配置文件位于 `config` 目录中：
-- `index.js`：主要配置文件，包含开发环境和生产环境的配置
-- `dev.env.js`：开发环境变量
-- `prod.env.js`：生产环境变量
-
-### 11.2 部署方式
-
-**Docker 部署**：
-1. 构建 Docker 镜像：`docker build -t onlinejudge-fe .`
-2. 运行容器：`docker run -d -p 80:80 onlinejudge-fe`
-
-**Nginx 部署**：
-1. 构建生产版本：`npm run build`
-2. 将 `dist` 目录部署到 Nginx 服务器
-3. 配置 Nginx 反向代理到后端 API
-
-### 11.3 开发规范
-
-- 代码风格：使用 ESLint 进行代码检查
-- 命名规范：组件名使用 PascalCase，变量名使用 camelCase
-- 目录结构：按照功能模块组织代码
-- 注释规范：关键代码需要添加注释
-
-## 12. 监控与维护
-
-### 12.1 错误监控
-
-项目集成了 Sentry 错误监控，配置文件位于 `src/utils/sentry.js`。当发生错误时，错误信息会被发送到 Sentry 服务器，便于开发人员及时发现和修复问题。
-
-### 12.2 性能优化
-
-- 使用 Webpack DLL 插件减少构建时间
-- 按需加载组件，减少初始加载时间
-- 图片懒加载
-- 代码分割
-
-### 12.3 常见问题与解决方案
-
-| 问题 | 解决方案 |
-|-----|---------|
-| 页面加载缓慢 | 检查网络连接，清除浏览器缓存 |
-| 提交代码失败 | 检查网络连接，确保代码符合要求 |
-| 登录失败 | 检查用户名和密码是否正确，尝试重置密码 |
-| 比赛排名不更新 | 刷新页面，确保网络连接正常 |
-| 代码编辑器无响应 | 清除浏览器缓存，刷新页面 |
-
-## 13. 总结与亮点回顾
-
-OnlineJudgeFE 是一个功能完整、界面美观的在线判题系统前端项目，具有以下亮点：
-
-1. **架构清晰**：采用 Vue 生态系统的最佳实践，代码结构清晰，易于维护和扩展。
-
-2. **用户体验**：界面美观，操作流畅，响应式设计，支持多种设备。
-
-3. **功能完善**：涵盖了在线判题系统的所有核心功能，包括题目管理、比赛管理、提交评测、排名系统等。
-
-4. **技术先进**：使用最新的前端技术栈，如 Vue 2.5、Vuex 3.0、ECharts 等。
-
-5. **国际化支持**：支持中文、英文、繁体中文三种语言，满足不同用户的需求。
-
-6. **性能优化**：采用多种性能优化手段，如代码分割、按需加载、Webpack DLL 等，提高页面加载速度和运行效率。
-
-7. **部署便捷**：提供了 Docker 部署配置，便于快速部署和维护。
-
-OnlineJudgeFE 不仅是一个功能完整的在线判题系统前端，也是学习 Vue 生态系统和前端工程化的优秀范例。通过本项目，可以了解如何构建一个大型 Vue 应用，如何进行状态管理、路由配置、国际化实现等前端开发中的常见问题。
-
-## 14. 附录
-
-### 14.1 常用命令
-
-| 命令 | 描述 |
-|-----|------|
-| `npm install` | 安装依赖 |
-| `npm run build:dll` | 构建 DLL |
-| `npm run dev` | 启动开发服务器 |
-| `npm run build` | 构建生产版本 |
-| `npm run lint` | 代码检查 |
-
-### 14.2 技术文档
-
-- [Vue 官方文档](https://vuejs.org/v2/guide/)
-- [Vuex 官方文档](https://vuex.vuejs.org/)
-- [Vue Router 官方文档](https://router.vuejs.org/)
-- [ECharts 官方文档](https://echarts.apache.org/zh/index.html)
-- [iView 官方文档](https://www.iviewui.com/docs/guide/introduce)
-- [Element UI 官方文档](https://element.eleme.io/#/zh-CN)
-
-### 14.3 项目地址
-
-- [GitHub 仓库](https://github.com/shaohuihuang/OnlineJudgeFE)
-- [Demo 地址](https://qduoj.com)
-
-### 14.4 许可证
-
-项目使用 MIT 许可证，详情请查看 [LICENSE](LICENSE) 文件。
-
-## 15. 与 OnlineJudge 后端的关系
+> 以下保留原上游说明，仅供历史参考。仓库地址、API 示例、认证方式、数据库、框架版本和部署关系不代表当前 XMUOJ-AI；当前后端以根 README、backend/ 源码和实际接口为准。
 
 ### 15.1 OnlineJudge 项目概述
 

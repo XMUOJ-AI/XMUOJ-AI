@@ -7,22 +7,24 @@
       <i class="el-icon-fa-font katex-editor" @click="katexVisible=true" ></i>
       <screen-full :width="14" :height="14" class="screen-full"></screen-full>
       <el-dropdown @command="handleCommand">
-        <span>{{user.username}}<i class="el-icon-caret-bottom el-icon--right"></i></span>
-        <el-dropdown-menu slot="dropdown">
+        <template #default><span>{{user.username}}<i class="el-icon-caret-bottom el-icon--right"></i></span></template>
+        <template #dropdown><el-dropdown-menu>
           <el-dropdown-item command="logout">Logout</el-dropdown-item>
-        </el-dropdown-menu>
+        </el-dropdown-menu></template>
       </el-dropdown>
     </div>
     <div class="content-app">
-      <transition name="fadeInUp" mode="out-in">
-        <router-view></router-view>
-      </transition>
+      <router-view v-slot="{ Component }">
+        <transition name="fadeInUp" mode="out-in">
+          <component :is="Component"></component>
+        </transition>
+      </router-view>
       <div class="footer">
         Build Version: {{ version }}
       </div>
     </div>
 
-    <el-dialog :title="$t('m.Latex_Editor')" :visible.sync="katexVisible">
+    <el-dialog :title="$t('m.Latex_Editor')" v-model="katexVisible">
       <KatexEditor></KatexEditor>
     </el-dialog>
   </div>

@@ -13,6 +13,7 @@
 <script>
   export default {
     name: 'pagination',
+    emits: ['update:current', 'update:pageSize', 'on-change', 'on-page-size-change'],
     props: {
       total: {
         required: true,
@@ -58,5 +59,6 @@
 <style lang="less">
   .ivu-page-options-sizer {
     min-width: 85px;
+    width: 85px;
   }
 </style>

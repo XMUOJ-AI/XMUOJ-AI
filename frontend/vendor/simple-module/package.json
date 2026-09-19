@@ -1,0 +1,19 @@
+{
+  "name": "simple-module",
+  "version": "2.1.0",
+  "description": "A abstract class for module and UI widget.",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:mycolorway/simple-module.git"
+  },
+  "author": "farthinker",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mycolorway/simple-module/issues"
+  },
+  "homepage": "https://github.com/mycolorway/simple-module",
+  "main": "lib/module.js",
+  "dependencies": {
+    "jquery": "=3.1.1"
+  }
+}

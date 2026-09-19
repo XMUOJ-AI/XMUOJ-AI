@@ -107,7 +107,7 @@
     },
     watch: { identity () { this.reset(); this.load() } },
     mounted () { this.load() },
-    beforeDestroy () { this.reset() },
+    beforeUnmount () { this.reset() },
     methods: {
       assessmentLabel,
       formatDate (value) { return value ? time.utcToLocal(value, 'YYYY-MM-DD HH:mm') : '未知时间' },

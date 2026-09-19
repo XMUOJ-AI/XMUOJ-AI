@@ -1,10 +1,11 @@
 <template>
   <div>
-    <component :is="currentView"></component>
+    <component :is="currentView" :key="$route.params.contestID"></component>
   </div>
 </template>
 
 <script>
+  import { h } from 'vue'
   import { mapGetters } from 'vuex'
   import { types } from '../../../../../store'
   import ACMContestRank from './ACMContestRank.vue'
@@ -12,7 +13,7 @@
 
   const NullComponent = {
     name: 'null-component',
-    template: '<div></div>'
+    render: () => h('div')
   }
 
   export default {

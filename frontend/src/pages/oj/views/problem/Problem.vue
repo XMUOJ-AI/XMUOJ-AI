@@ -6,16 +6,16 @@
       </div>
       <!--problem main-->
       <Panel :padding="40" shadow>
-        <div slot="title">{{problem.title}}</div>
-        <div id="problem-content" class="markdown-body" v-katex>
+        <template #title><div>{{problem.title}}</div></template>
+        <div id="problem-content" class="markdown-body">
           <p class="title">{{$t('m.Description')}}</p>
-          <p class="content" v-html=problem.description></p>
+          <p class="content" v-katex v-html=problem.description></p>
           <!-- {{$t('m.music')}} -->
           <p class="title">{{$t('m.Input')}} <span v-if="problem.io_mode.io_mode=='File IO'">({{$t('m.FromFile')}}: {{ problem.io_mode.input }})</span></p>
-          <p class="content" v-html=problem.input_description></p>
+          <p class="content" v-katex v-html=problem.input_description></p>
 
           <p class="title">{{$t('m.Output')}} <span v-if="problem.io_mode.io_mode=='File IO'">({{$t('m.ToFile')}}: {{ problem.io_mode.output }})</span></p>
-          <p class="content" v-html=problem.output_description></p>
+          <p class="content" v-katex v-html=problem.output_description></p>
 
           <div v-for="(sample, index) of problem.samples" :key="index">
             <div class="flex-container sample">
@@ -40,13 +40,13 @@
           <div v-if="problem.hint">
             <p class="title">{{$t('m.Hint')}}</p>
             <Card dis-hover>
-              <div class="content" v-html=problem.hint></div>
+              <div class="content" v-katex v-html=problem.hint></div>
             </Card>
           </div>
 
           <div v-if="problem.source">
             <p class="title">{{$t('m.Source')}}</p>
-            <p class="content">{{problem.source}}</p>
+            <p class="content" v-katex="{text: problem.source}"></p>
           </div>
 
           <div v-if="problem.can_download_test_case">
@@ -61,7 +61,7 @@
       <!--problem main end-->
       <ProblemGuidance :problem-id="$route.params.problemID" :contest-id="$route.params.contestID"></ProblemGuidance>
       <Card :padding="20" id="submit-code" dis-hover>
-        <CodeMirror :value.sync="code"
+        <CodeMirror v-model:value="code"
                     :languages="problem.languages"
                     :language="language"
                     :theme="theme"
@@ -73,7 +73,7 @@
             <div class="status" v-if="statusVisible">
               <template v-if="!this.contestID || (this.contestID && OIContestRealTimePermission)">
                 <span>{{$t('m.Status')}}</span>
-                <Tag type="dot" :color="submissionStatus.color" @click.native="handleRoute('/status/'+submissionId)">
+                <Tag type="dot" :color="submissionStatus.color" @click="handleRoute('/status/'+submissionId)">
                   {{$t('m.' + submissionStatus.text.replace(/ /g, "_"))}}
                 </Tag>
                 <span> [ <Icon type="arrow-left-a"></Icon> 点击左侧按钮，查看详情 ]</span>
@@ -152,10 +152,10 @@
       </VerticalMenu>
 
       <Card id="info">
-        <div slot="title" class="header">
+        <template #title><div class="header">
           <Icon type="information-circled"></Icon>
           <span class="card-title">{{$t('m.Information')}}</span>
-        </div>
+        </div></template>
         <ul>
           <li><p>ID</p>
             <p>{{problem._id}}</p></li>
@@ -165,7 +165,7 @@
           <li>
             <p>{{$t('m.Memory_Limit')}}</p>
             <p>{{problem.memory_limit}}MB</p></li>
-          <li>
+          <li class="info-separator" aria-hidden="true"></li>
           <li>
             <p>{{$t('m.IOMode')}}</p>
             <p>{{problem.io_mode.io_mode}}</p>
@@ -185,9 +185,9 @@
             <p>
               <Poptip trigger="hover" placement="left-end">
                 <a>{{$t('m.Show')}}</a>
-                <div slot="content">
+                <template #content><div>
                   <Tag v-for="tag in problem.tags" :key="tag">{{tag}}</Tag>
-                </div>
+                </div></template>
               </Poptip>
             </p>
           </li>
@@ -195,11 +195,11 @@
       </Card>
 
       <Card id="pieChart" :padding="0" v-if="!this.contestID || OIContestRealTimePermission">
-        <div slot="title">
+        <template #title><div>
           <Icon type="ios-analytics"></Icon>
           <span class="card-title">{{$t('m.Statistic')}}</span>
           <Button type="ghost" size="small" id="detail" @click="graphVisible = !graphVisible">{{$t('m.Details')}}</Button>
-        </div>
+        </div></template>
         <div class="echarts">
           <ECharts :options="pie"></ECharts>
         </div>
@@ -210,9 +210,9 @@
       <div id="pieChart-detail">
         <ECharts :options="largePie" :initOptions="largePieInitOpts"></ECharts>
       </div>
-      <div slot="footer">
+      <template #footer><div>
         <Button type="ghost" @click="graphVisible=false">{{$t('m.Close')}}</Button>
-      </div>
+      </div></template>
     </Modal>
   </div>
 </template>

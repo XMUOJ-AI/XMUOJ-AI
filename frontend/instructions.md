@@ -1,4 +1,21 @@
-# QingdaoU OnlineJudge 安装及二次开发指南
+# 当前前端开发与部署
+
+当前仓库前端已迁移到 Vue 3 + Vite，使用 Node.js 24、npm 11+。以下命令在 frontend/ 执行，完整说明见 [README](README.md)。
+
+```bash
+npm ci
+TARGET=http://127.0.0.1:8000 npm run dev
+```
+
+纯前端演示使用 npm run dev:mock；日常检查使用 npm run lint 和 npm test；生产产物通过 npm run build 输出到 dist/。无需 DLL 构建，生产构建始终关闭 Mock。
+
+build.sh 是显式部署脚本：使用锁定依赖构建，将 dist/ 复制到 oj-backend 容器的 /app/，随后打开容器 shell。运行它会操作该容器；仅构建请用 npm run build。当前项目与后端部署入口以[根 README](../README.md)为准。
+
+---
+
+> 下方为 2018 年上游环境的原始安装与后端运维记录，仅供历史参考。Ubuntu、Docker、仓库路径、数据库及容器操作均未作为本次 Vue 3 迁移重新验证；不要将其视为当前项目安装步骤。旧前端和 Node 8 指令已由上方当前说明替代。
+
+# 历史上游安装与后端运维记录
 
 > ### by sway 2018-12-21 ###
 
@@ -23,18 +40,6 @@
 3. `pip3 install docker-compose`
 4. `sudo snap install docker`
    
-## node版本
-
-直接`sudo apt install nodejs`装的是8.10.0版本，为与开发文档一致，最好安装8.12.0版
-1. 安装npm：`sudo apt install npm`
-2. 安装n：`sudo npm install -g n`
-3. 利用n下载安装指定node版本，支持以下命令：
-   + `sudo n lts` 长期支持版
-   + `sudo n stable` 稳定版
-   + `sudo n latest` 最新版
-   + `sudo n 8.12.0` 指定版本
-   + `sudo n` 列出所有版本，然后直接键盘上下移动选择切换的版本，回车确认
-
 ## 首次安装OJ
 
 1. `git clone -b 2.0 https://github.com/QingdaoU/OnlineJudgeDeploy.git && cd OnlineJudgeDeploy`
@@ -49,24 +54,6 @@
 4. root用户执行：`docker-compose up –d`  
    非root用户执行：`sudo -E docker-compose up –d` （一定要-E参数，否则会出现数据丢失，原因未知）
   
-## 前端二次开发环境
-
-1. 首次拉取代码：`git clone https://github.com/shaohuihuang/OnlineJudgeFE.git`  
-   或者更新代码：`cd OnlineJudgeFE && git pull`
-2. `cd OnlineJudgeFE`
-3. `npm install`
-
-## 前端注入
-
-1. `NODE_ENV=production npm run build:dll`
-2. `export TARGET=http://Your-backend`
-3. `npm run build`
-4. `sudo docker cp ./dist oj-backend:/app/`
-5. `sudo docker exec -it oj-backend /bin/sh`
-6. `cd deploy`
-7. `./entrypoint.sh`
-8. `exit`
-
 ## 后端二次开发
 
 1. 首次拉取代码：`git clone https://github.com/shaohuihuang/OnlineJudge.git`  

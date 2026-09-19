@@ -16,9 +16,11 @@ module.exports = function (router, context) {
   }
   const summary = mode => {
     if (mode === 'disabled') return { user_id: user.id, status: 'disabled', capabilities: { can_generate: false }, reason: '当前教学配置未开放学习反馈。' }
-    const end = new Date()
+    const ownSubmissions = submissions.filter(s => String(s.user_id) === String(user.id))
+    // Stable screenshot baseline; user-created submissions can advance the range.
+    const end = new Date(ownSubmissions.reduce((latest, submission) => Math.max(latest, Date.parse(submission.create_time) || 0), Date.parse('2026-09-19T06:00:00Z')))
     const start = new Date(end.getTime() - 14 * 86400000)
-    const rows = mode === 'empty' ? [] : submissions.filter(s => String(s.user_id) === String(user.id) && Date.parse(s.create_time) >= start.getTime() && Date.parse(s.create_time) <= end.getTime())
+    const rows = mode === 'empty' ? [] : ownSubmissions.filter(s => Date.parse(s.create_time) >= start.getTime() && Date.parse(s.create_time) <= end.getTime())
     if (!rows.length) return { user_id: user.id, status: 'empty', capabilities: { can_generate: false }, reason: '近 14 天暂无提交，完成练习后再来回顾。' }
     return {
       user_id: user.id,

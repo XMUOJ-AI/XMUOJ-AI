@@ -1,11 +1,11 @@
 <template>
   <Panel shadow>
-    <div slot="title">{{ contest.title }}</div>
-    <div slot="extra">
+    <template #title><div>{{ contest.title }}</div></template>
+    <template #extra><div>
       <screen-full :height="18" :width="18" class="screen-full"></screen-full>
       <Poptip trigger="hover" placement="left-start">
         <Icon type="android-settings" size="20"></Icon>
-        <div slot="content" id="switches">
+        <template #content><div id="switches">
           <p>
             <span>{{$t('m.Menu')}}</span>
             <i-switch v-model="showMenu"></i-switch>
@@ -26,12 +26,10 @@
               <i-switch :disabled="refreshDisabled" v-model="forceUpdate"></i-switch>
             </p>
           </template>
-          <template>
-            <Button type="primary" size="small" @click="downloadRankCSV">{{$t('m.download_csv')}}</Button>
-          </template>
-        </div>
+          <Button type="primary" size="small" @click="downloadRankCSV">{{$t('m.download_csv')}}</Button>
+        </div></template>
       </Poptip>
-    </div>
+    </div></template>
     <div v-show="showChart" class="echarts">
       <ECharts :options="options" ref="chart" auto-resize></ECharts>
     </div>
@@ -42,8 +40,8 @@
           disabled-hover
           height="600"></Table>
     <Pagination :total="total"
-                :page-size.sync="limit"
-                :current.sync="page"
+                v-model:page-size="limit"
+                v-model:current="page"
                 @on-change="getContestRankData"
                 @on-page-size-change="getContestRankData(1)"
                 show-sizer></Pagination>
@@ -89,15 +87,15 @@
                 style: {
                   display: 'inline-block'
                 },
-                on: {
-                  click: () => {
-                    this.$router.push(
-                      {
-                        name: 'user-home',
-                        query: {username: params.row.user.username}
-                      })
-                  }
+
+                onClick: () => {
+                  this.$router.push(
+                    {
+                      name: 'user-home',
+                      query: {username: params.row.user.username}
+                    })
                 }
+
               }, params.row.user.username)
             }
           },
@@ -111,14 +109,14 @@
                 h('span', {}, params.row.accepted_number + ' / '),
                 h('a', {
                   class: 'rank-score-link',
-                  on: {
-                    click: () => {
-                      this.$router.push({
-                        name: 'contest-submission-list',
-                        query: {username: params.row.user.username}
-                      })
-                    }
+
+                  onClick: () => {
+                    this.$router.push({
+                      name: 'contest-submission-list',
+                      query: {username: params.row.user.username}
+                    })
                   }
+
                 }, params.row.submission_number)
               ])
             }
@@ -291,17 +289,17 @@
                 'class': {
                   'emphasis': true
                 },
-                on: {
-                  click: () => {
-                    this.$router.push({
-                      name: 'contest-problem-details',
-                      params: {
-                        contestID: this.contestID,
-                        problemID: problem._id
-                      }
-                    })
-                  }
+
+                onClick: () => {
+                  this.$router.push({
+                    name: 'contest-problem-details',
+                    params: {
+                      contestID: this.contestID,
+                      problemID: problem._id
+                    }
+                  })
                 }
+
               }, problem._id)
             },
             render: (h, params) => {
@@ -353,7 +351,7 @@
     }
   }
 
-  .contest-rank-table /deep/ .ivu-table-cell {
+  .contest-rank-table :deep(.ivu-table-cell) {
     white-space: nowrap;
     word-break: normal;
     overflow: visible;
@@ -362,19 +360,19 @@
     padding-right: 6px;
   }
 
-  .contest-rank-table /deep/ th,
-  .contest-rank-table /deep/ td {
+  .contest-rank-table :deep(th),
+  .contest-rank-table :deep(td) {
     height: 36px;
   }
 
-  .contest-rank-table /deep/ th > .ivu-table-cell,
-  .contest-rank-table /deep/ td > .ivu-table-cell {
+  .contest-rank-table :deep(th > .ivu-table-cell),
+  .contest-rank-table :deep(td > .ivu-table-cell) {
     padding-top: 6px;
     padding-bottom: 6px;
   }
 
-  .contest-rank-table /deep/ .rank-user-link,
-  .contest-rank-table /deep/ .rank-score-link {
+  .contest-rank-table :deep(.rank-user-link),
+  .contest-rank-table :deep(.rank-score-link) {
     display: inline-block;
     white-space: nowrap;
     word-break: normal;

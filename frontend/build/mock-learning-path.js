@@ -66,7 +66,7 @@ module.exports = function (router, problems, submissions, isLoggedIn) {
     if (req.body.path_id !== 'mock-path' || ![1, 2].includes(data.revision) || !step) return res.status(409).json({ error: 'version_mismatch', data: 'Unknown path version or step' })
     setTimeout(() => {
       if (req.body.mock_path === 'explanation_error') return res.status(503).json({ error: 'unavailable', data: 'Mock explanation failure' })
-      ok(res, { path_id: data.path_id, revision: data.revision, step_id: req.body.step_id, status: 'ready', generated_at: new Date().toISOString(), text: '模拟解释（未调用 AI）：' + (req.body.mock_path === 'starter' ? '目前练习数据不足，本步骤属于通用入门训练。' : '根据模拟练习记录，这一步帮助你巩固对应知识点。') + '训练目标是：' + step.objective + '。题目和顺序由规则程序确定，解释不会改变这条路径。' })
+      ok(res, { path_id: data.path_id, revision: data.revision, step_id: req.body.step_id, status: 'ready', generated_at: '2026-09-19T06:00:00Z', text: '模拟解释（未调用 AI）：' + (req.body.mock_path === 'starter' ? '目前练习数据不足，本步骤属于通用入门训练。' : '根据模拟练习记录，这一步帮助你巩固对应知识点。') + '训练目标是：' + step.objective + '。题目和顺序由规则程序确定，解释不会改变这条路径。' })
     }, 800)
   })
 }

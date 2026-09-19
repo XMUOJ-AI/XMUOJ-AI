@@ -1,19 +1,19 @@
 <template>
   <div class="view">
     <Panel :title="$t('m.User_User') ">
-      <div slot="header">
+      <template #header><div>
         <el-row :gutter="20">
           <el-col :span="8">
             <el-button v-show="selectedUsers.length"
-                       type="warning" icon="el-icon-fa-trash"
-                       @click="deleteUsers(selectedUserIDs)">Delete
+                       type="warning"
+                       @click="deleteUsers(selectedUserIDs)"><template #icon><i class="el-icon-fa-trash" aria-hidden="true"></i></template>Delete
             </el-button>
           </el-col>
           <el-col :span="selectedUsers.length ? 16: 24">
-            <el-input v-model="keyword" prefix-icon="el-icon-search" placeholder="Keywords"></el-input>
+            <el-input v-model="keyword" placeholder="Keywords"><template #prefix><i class="el-icon-search" aria-hidden="true"></i></template></el-input>
           </el-col>
         </el-row>
-      </div>
+      </div></template>
       <el-table
         v-loading="loadingTable"
         element-loading-text="loading"
@@ -28,14 +28,14 @@
         <el-table-column prop="username" label="Username"></el-table-column>
 
         <el-table-column prop="create_time" label="Create Time">
-          <template slot-scope="scope">
-            {{scope.row.create_time | localtime }}
+          <template #default="scope">
+            {{$filters.localtime(scope.row.create_time)}}
           </template>
         </el-table-column>
 
         <el-table-column prop="last_login" label="Last Login">
-          <template slot-scope="scope">
-            {{scope.row.last_login | localtime }}
+          <template #default="scope">
+            {{$filters.localtime(scope.row.last_login)}}
           </template>
         </el-table-column>
 
@@ -44,15 +44,15 @@
         <el-table-column prop="school" label="Class Name"></el-table-column>
 
         <el-table-column prop="admin_type" label="User Type">
-          <template slot-scope="scope">
+          <template #default="scope">
             {{ scope.row.admin_type }}
           </template>
         </el-table-column>
 
         <el-table-column fixed="right" label="Option" width="200">
-          <template slot-scope="{row}">
-            <icon-btn name="Edit" icon="edit" @click.native="openUserDialog(row.id)"></icon-btn>
-            <icon-btn name="Delete" icon="trash" @click.native="deleteUsers([row.id])"></icon-btn>
+          <template #default="{row}">
+            <icon-btn name="Edit" icon="edit" @click="openUserDialog(row.id)"></icon-btn>
+            <icon-btn name="Delete" icon="trash" @click="deleteUsers([row.id])"></icon-btn>
           </template>
         </el-table-column>
       </el-table>
@@ -62,7 +62,7 @@
           layout="prev, pager, next, sizes"
           @current-change="currentChange"
           @size-change="handlePageSizeChange"
-          :current-page="currentPage"
+          v-model:current-page="currentPage"
           :page-size="pageSize"
           :page-sizes="pageSizes"
           :total="total">
@@ -71,51 +71,49 @@
     </Panel>
 
     <Panel>
-      <span slot="title">{{$t('m.Import_User')}}
+      <template #title><span>{{$t('m.Import_User')}}
         <el-popover placement="right" trigger="hover">
           <p>仅支持逗号分隔的、Unicode编码的csv文件。<br />每个用户一行，分别为：学号,姓名,班级<br />若用户已存在，仅更新班级信息，其余不变；否则按照默认密码123456新建用户。</p>
-          <i slot="reference" class="el-icon-fa-question-circle import-user-icon"></i>
+          <template #reference><i class="el-icon-fa-question-circle import-user-icon"></i></template>
         </el-popover>
-      </span>
+      </span></template>
       <el-upload v-if="!uploadUsers.length"
                  action=""
                  :show-file-list="false"
                  accept=".csv"
                  :before-upload="handleUsersCSV">
-        <el-button size="small" icon="el-icon-fa-upload" type="primary">Choose File</el-button>
+        <el-button size="small" type="primary"><template #icon><i class="el-icon-fa-upload" aria-hidden="true"></i></template>Choose File</el-button>
       </el-upload>
       <template v-else>
         <el-table :data="uploadUsersPage">
           <el-table-column label="Username">
-            <template slot-scope="{row}">
+            <template #default="{row}">
               {{row[0]}}
             </template>
           </el-table-column>
           <el-table-column label="Real Name">
-            <template slot-scope="{row}">
+            <template #default="{row}">
               {{row[1]}}
             </template>
           </el-table-column>
           <el-table-column label="Class Name">
-            <template slot-scope="{row}">
+            <template #default="{row}">
               {{row[2]}}
             </template>
           </el-table-column>
         </el-table>
         <div class="panel-options">
           <el-button type="primary" size="small"
-                     icon="el-icon-fa-upload"
-                     @click="handleUsersUpload">Import All
+                     @click="handleUsersUpload"><template #icon><i class="el-icon-fa-upload" aria-hidden="true"></i></template>Import All
           </el-button>
           <el-button type="warning" size="small"
-                     icon="el-icon-fa-undo"
-                     @click="handleResetData">Reset Data
+                     @click="handleResetData"><template #icon><i class="el-icon-fa-undo" aria-hidden="true"></i></template>Reset Data
           </el-button>
           <el-pagination
             class="page"
             layout="prev, pager, next"
             :page-size="uploadUsersPageSize"
-            :current-page.sync="uploadUsersCurrentPage"
+            v-model:current-page="uploadUsersCurrentPage"
             :total="uploadUsers.length">
           </el-pagination>
         </div>
@@ -154,7 +152,7 @@
         </el-row>
 
         <el-form-item>
-          <el-button type="primary" @click="generateUser" icon="el-icon-fa-users" :loading="loadingGenerate">Generate & Export
+          <el-button type="primary" @click="generateUser" :loading="loadingGenerate"><template #icon><i class="el-icon-fa-users" aria-hidden="true"></i></template>Generate & Export
           </el-button>
           <span class="userPreview" v-if="formGenerateUser.number_from && formGenerateUser.number_to &&
                                           formGenerateUser.number_from <= formGenerateUser.number_to">
@@ -201,7 +199,7 @@
           <el-col :span="4">
             <el-form-item :label="formChangeUserpassword.match_type === 'type_exact_list' ? '新密码规则' : '新密码 = 学号后几位 + 后缀'">
               <span v-if="formChangeUserpassword.match_type === 'type_exact_list'" style="font-size:12px;color:#909399">填 random=随机8位<br/>填其他=固定后缀</span>
-              <br /><el-button type="primary" @click="changeUserpassword" icon="el-icon-fa-users" :loading="loadingChangeUserpassword">批量修改密码</el-button>
+              <br /><el-button type="primary" @click="changeUserpassword" :loading="loadingChangeUserpassword"><template #icon><i class="el-icon-fa-users" aria-hidden="true"></i></template>批量修改密码</el-button>
             </el-form-item>
           </el-col>
         </el-row>        
@@ -209,7 +207,7 @@
     </Panel>
 
     <!--对话框-->
-    <el-dialog :title="$t('m.User_Info')" :visible.sync="showUserDialog" :close-on-click-modal="false">
+    <el-dialog :title="$t('m.User_Info')" v-model="showUserDialog" :close-on-click-modal="false">
       <el-form :model="user" label-width="120px" label-position="left">
         <el-row :gutter="20">
           <el-col :span="12">
@@ -252,20 +250,16 @@
           </el-col>
           <el-col :span="8">
             <el-form-item :label="$t('m.Two_Factor_Auth')">
-              <el-switch
+              <el-switch style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
                 v-model="user.two_factor_auth"
-                :disabled="!user.real_tfa"
-                active-color="#13ce66"
-                inactive-color="#ff4949">
+                :disabled="!user.real_tfa">
               </el-switch>
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="Open Api">
-              <el-switch
-                v-model="user.open_api"
-                active-color="#13ce66"
-                inactive-color="#ff4949">
+              <el-switch style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+                v-model="user.open_api">
               </el-switch>
             </el-form-item>
           </el-col>
@@ -278,10 +272,10 @@
           </el-col>
         </el-row>
       </el-form>
-      <span slot="footer" class="dialog-footer">
-        <cancel @click.native="showUserDialog = false">Cancel</cancel>
-        <save @click.native="saveUser()"></save>
-      </span>
+      <template #footer><span class="dialog-footer">
+        <cancel @click="showUserDialog = false">Cancel</cancel>
+        <save @click="saveUser()"></save>
+      </span></template>
     </el-dialog>
   </div>
 </template>

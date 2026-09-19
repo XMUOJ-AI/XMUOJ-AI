@@ -1,14 +1,11 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 // 引入 view 组件
 import { Announcement, Conf, Contest, ContestList, Home, JudgeServer, Login,
   Problem, ProblemList, User, PruneTestCase, Dashboard, ProblemImportOrExport, ProblemTagGovernance } from './views'
-Vue.use(VueRouter)
 
-export default new VueRouter({
-  mode: 'history',
-  base: '/admin/',
-  scrollBehavior: () => ({y: 0}),
+export default createRouter({
+  history: createWebHistory('/admin/'),
+  scrollBehavior: () => ({left: 0, top: 0}),
   routes: [
     {
       path: '/login',
@@ -112,7 +109,7 @@ export default new VueRouter({
       ]
     },
     {
-      path: '*', redirect: '/login'
+      path: '/:pathMatch(.*)*', redirect: '/login'
     }
   ]
 })

@@ -1,7 +1,7 @@
 <template>
   <panel shadow>
-    <div slot="title">{{$t('m.ACM_Helper')}}</div>
-    <div slot="extra">
+    <template #title><div>{{$t('m.ACM_Helper')}}</div></template>
+    <template #extra><div>
       <ul class="filter">
         <li>
           {{$t('m.Auto_Refresh')}} (10s)
@@ -11,17 +11,19 @@
           <Button type="info" @click="getACInfo">{{$t('m.Refresh')}}</Button>
         </li>
       </ul>
-    </div>
+    </div></template>
     <Table :data="pagedAcInfo" :columns="columns" :loading="loadingTable" disabled-hover></Table>
     <pagination :total="total"
-                :page-size.sync="limit"
-                :current.sync="page"
+                v-model:page-size="limit"
+                v-model:current="page"
                 @on-change="handlePage"
                 @on-page-size-change="handlePage(1)"
                 show-sizer></pagination>
   </panel>
 </template>
 <script>
+  import { resolveComponent } from 'vue'
+
   import { mapState, mapActions } from 'vuex'
   import { types } from '../../../../../store'
   import moment from 'moment'
@@ -53,11 +55,11 @@
             align: 'center',
             render: (h, {row}) => {
               if (row.ac_info.is_first_ac) {
-                return h('Tag', {
-                  props: {
-                    color: 'red'
-                  }
-                }, this.$i18n.t('m.First_Blood'))
+                return h(resolveComponent('Tag'), {
+
+                  color: 'red'
+
+                }, () => (this.$i18n.t('m.First_Blood')))
               } else {
                 return h('span', '----')
               }
@@ -72,14 +74,14 @@
                   display: 'inline-block',
                   'max-width': '150px'
                 },
-                on: {
-                  click: () => {
-                    this.$router.push({
-                      name: 'contest-submission-list',
-                      query: {username: row.username}
-                    })
-                  }
+
+                onClick: () => {
+                  this.$router.push({
+                    name: 'contest-submission-list',
+                    query: {username: row.username}
+                  })
                 }
+
               }, row.username)
             }
           },
@@ -99,11 +101,11 @@
             title: this.$i18n.t('m.Status'),
             align: 'center',
             render: (h, {row}) => {
-              return h('Tag', {
-                props: {
-                  color: row.checked ? 'green' : 'yellow'
-                }
-              }, row.checked ? this.$i18n.t('m.Checked') : this.$i18n.t('m.Not_Checked'))
+              return h(resolveComponent('Tag'), {
+
+                color: row.checked ? 'green' : 'yellow'
+
+              }, () => (row.checked ? this.$i18n.t('m.Checked') : this.$i18n.t('m.Not_Checked')))
             }
           },
           {
@@ -112,19 +114,18 @@
             align: 'center',
             width: 100,
             render: (h, {row}) => {
-              return h('Button', {
-                props: {
-                  type: 'ghost',
-                  size: 'small',
-                  icon: 'checkmark',
-                  disabled: row.checked
-                },
-                on: {
-                  click: () => {
-                    this.updateCheckedStatus(row)
-                  }
+              return h(resolveComponent('Button'), {
+
+                type: 'ghost',
+                size: 'small',
+                icon: 'checkmark',
+                disabled: row.checked,
+
+                onClick: () => {
+                  this.updateCheckedStatus(row)
                 }
-              }, this.$i18n.t('m.Check_It'))
+
+              }, () => (this.$i18n.t('m.Check_It')))
             }
           }
         ],
@@ -224,7 +225,7 @@
         }
       }
     },
-    beforeDestroy () {
+    beforeUnmount () {
       clearInterval(this.refreshFunc)
     }
   }

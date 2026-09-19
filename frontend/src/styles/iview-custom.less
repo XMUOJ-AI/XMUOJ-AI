@@ -44,3 +44,28 @@ table {
 .ivu-modal-body {
   padding: 18px;
 }
+
+// View UI Plus adds percentage height and vertical padding to header cells.
+// Keep the original fixed header row heights, including fixed-column copies.
+.ivu-table-header thead tr th,
+.ivu-table-fixed-header thead tr th {
+  height: 40px;
+  padding: 0;
+}
+.ivu-table-large .ivu-table-header thead tr th,
+.ivu-table-large .ivu-table-fixed-header thead tr th {
+  height: 48px;
+}
+.ivu-table-small .ivu-table-header thead tr th,
+.ivu-table-small .ivu-table-fixed-header thead tr th {
+  height: 32px;
+}
+
+// iView 2 form labels, content and default input text used the small font size.
+.ivu-form .ivu-form-item-label,
+.ivu-form-item-content,
+.ivu-form-item-required .ivu-form-item-label:before {
+  font-size: @font-size-small;
+}
+.ivu-input { font-size: @font-size-small; }
+.ivu-input-large { font-size: @font-size-base; }

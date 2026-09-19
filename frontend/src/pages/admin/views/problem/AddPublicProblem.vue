@@ -2,8 +2,7 @@
   <div>
     <el-input
       v-model="keyword"
-      placeholder="Keywords"
-      prefix-icon="el-icon-search">
+      placeholder="Keywords"><template #prefix><i class="el-icon-search" aria-hidden="true"></i></template>
     </el-input>
     <el-table :data="problems" v-loading="loading">
       <el-table-column
@@ -25,9 +24,9 @@
         align="center"
         width="100"
         fixed="right">
-        <template slot-scope="{row}">
+        <template #default="{row}">
           <icon-btn icon="plus" name="Add the problem"
-                    @click.native="handleAddProblem(row.id)"></icon-btn>
+                    @click="handleAddProblem(row.id)"></icon-btn>
         </template>
       </el-table-column>
     </el-table>
@@ -45,6 +44,7 @@
   import api from '@admin/api'
 
   export default {
+    emits: ['on-change'],
     name: 'add-problem-from-public',
     props: ['contestID'],
     data () {
