@@ -169,4 +169,47 @@ async function mockTests () {
   loggedIn = false
   assert.strictEqual((await call('get', 'available')).status, 401)
 }
-Promise.resolve().then(componentTests).then(apiTests).then(mockTests).then(() => console.log('Problem guidance: adapter, lifecycle/races, API isolation and mock permissions/quota tests passed.')).catch(error => { console.error(error); process.exitCode = 1 })
+async function uncertainRequestRecovery () {
+  const requests = []
+  const api = {}
+  for (const method of ['get', 'send']) api[method] = (...args) => { const result = deferred(); requests.push({ method, args, result }); return result.promise }
+  const options = load('ProblemGuidance.vue', { './problemGuidanceApi': api, './problemGuidanceData': data }).default
+  const page = new Vue({ ...options,
+    propsData: { problemId: '1002' },
+    beforeCreate () {
+      this.$route = { query: {} }
+      this.$store = { getters: { user: { id: 1 } } }
+    } })
+  requests[0].result.resolve(fixture()); await settle()
+  page.thought = '我理解输入表示网格，目标是最少移动次数，但不知道如何逐层探索。'
+  page.send()
+  const payload = requests[1].args[2]
+  requests[1].result.reject(new Error('response lost after server accepted')); await settle()
+  page.load(); requests[2].result.reject(new Error('status read offline')); await settle()
+  assert.strictEqual(page.retryPayload.request_id, payload.request_id, 'a failed GET cannot discard an uncertain POST key')
+  page.retry()
+  assert.strictEqual(requests[3].args[2].request_id, payload.request_id, 'retry after GET failure remains idempotent')
+  requests[3].result.resolve({ ...fixture(), status: 'generating' }); await settle()
+  assert.strictEqual(page.retryPayload.request_id, payload.request_id, 'pending generation retains its request key')
+  page.load()
+  requests[4].result.resolve({ ...fixture(),
+    stage: 'knowledge',
+    quota: { limit: 3, remaining: 2 },
+    last_request_id: payload.request_id,
+    messages: [{ id: 'student-1', role: 'student', stage: 'understand', text: payload.text }, { id: 'guide-1', role: 'guide', stage: 'understand', text: '先说说终点与最短路有什么区别。' }] })
+  await settle()
+  assert.strictEqual(page.retryPayload, null)
+  assert.strictEqual(page.thought, '', 'accepted thought must not remain in the next-stage input')
+  assert.strictEqual(page.session.quota.remaining, 2)
+  const before = requests.length
+  page.send()
+  assert.strictEqual(requests.length, before, 'recovered old input cannot create a new charged request')
+  page.thought = '现在理解最短路与到达终点不同，下一步想比较不同的搜索次序。'
+  page.send(); requests[before].result.reject(new Error('network')); await settle()
+  page.load(); requests[before + 1].result.reject({ response: { status: 403 } }); await settle()
+  assert.strictEqual(page.retryPayload, null, 'explicit permission rejection ends retry')
+  assert.strictEqual(page.canCompose, false)
+  page.$destroy()
+  console.log('PASS: accepted POST timeout, failed GET, idempotent retry, pending generation and acknowledged input cleanup')
+}
+Promise.resolve().then(componentTests).then(uncertainRequestRecovery).then(apiTests).then(mockTests).then(() => console.log('Problem guidance: adapter, lifecycle/races, API isolation and mock permissions/quota tests passed.')).catch(error => { console.error(error); process.exitCode = 1 })

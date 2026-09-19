@@ -18,17 +18,23 @@ function load (filename, imports) {
 }
 const data = load('learningPathData.js', {})
 const fixture = (revision = 1) => ({
-  status: 'ready', path_id: 7, revision, next_step_id: '1', next_problem_id: '20',
-  steps: [{ step_id: 1, status: 'pending', problems: [
+  status: 'ready',
+  path_id: 7,
+  revision,
+  next_step_id: '1',
+  next_problem_id: '20',
+  steps: [{ step_id: 1,
+    status: 'pending',
+    problems: [
     { problem_id: 10, display_id: 1001, availability: 'available', context: { type: 'public' } },
     { problem_id: 20, display_id: '1002', availability: 'available', context: { type: 'contest', contest_id: 3 } }
-  ] }]
+    ] }]
 })
 const reply = data => ({ data: { data } })
 function deferred () {
-  let resolve
-  const promise = new Promise(r => { resolve = r })
-  return { promise, resolve }
+  const result = {}
+  result.promise = new Promise(resolve => { result.resolve = resolve })
+  return result
 }
 const normalized = data.normalizePath(fixture())
 assert.strictEqual(normalized.path_id, '7')
@@ -69,6 +75,7 @@ async function main () {
   const page = new Vue({
     ...options,
     beforeCreate () {
+      this.$store = { getters: { user: { id: 1 } } }
       Object.defineProperty(this, '$route', { get: () => route.current })
       this.$router = {
         // Callback-only router deliberately returns undefined.
@@ -122,4 +129,82 @@ async function main () {
   route.$destroy()
   console.log('PASS: data adaptation, unknown states, error actions, version race, stale explanation, reactive route changes, callback navigation')
 }
-main().catch(error => { console.error(error); process.exitCode = 1 })
+
+async function accountIsolation () {
+  const state = new Vue({ data: { user: { id: 1 }, query: { path: '7', revision: '1', step: '1' } } })
+  const requests = []
+  const explanations = []
+  const api = {
+    getLearningPath (params) { const result = deferred(); requests.push({ params, result }); return result.promise },
+    explainLearningStep () { const result = deferred(); explanations.push(result); return result.promise }
+  }
+  const options = load('LearningPath.vue', { '@oj/api': api, '@/utils/time': {}, './learningPathData': data }).default
+  const page = new Vue({ ...options,
+    beforeCreate () {
+      this.$store = { getters: { get user () { return state.user } } }
+      this.$route = { get query () { return state.query } }
+      this.$router = { replace: (location, done) => { state.query = location.query; if (done) done() } }
+    } })
+  const settle = async () => { await Vue.nextTick(); await Promise.resolve(); await Vue.nextTick() }
+  const initial = page.load()
+  requests[0].result.resolve(reply(fixture())); await initial
+  page.showEvidence = true
+  const explaining = page.explain(page.path.steps[0])
+  const staleRefresh = page.load()
+  state.user = { id: 2 }
+  // Resolve before the Vue watcher flushes: the request itself must check identity.
+  requests[1].result.resolve(reply({ ...fixture(), summary: 'old-account-data' }))
+  explanations[0].resolve(reply({ path_id: 7, revision: 1, step_id: 1, status: 'ready', text: 'old-account-explanation' }))
+  await staleRefresh; await explaining; await settle()
+  assert.strictEqual(page.path, null, 'account change clears private path')
+  assert.strictEqual(Object.keys(page.explanations).length, 0)
+  assert.strictEqual(page.showEvidence, false)
+  assert.strictEqual(state.query.path, undefined, 'old account route identifiers must be removed')
+  assert.strictEqual(state.query.revision, undefined)
+  assert.strictEqual(state.query.step, undefined)
+  assert.strictEqual(requests.length, 3, 'fetch the new account once after clearing the route')
+  assert.strictEqual(requests[2].params.path_id, null)
+  requests[2].result.resolve(reply({ ...fixture(), path_id: 'account-2-path' })); await settle()
+  assert.strictEqual(page.path.path_id, 'account-2-path')
+  const staleLogout = page.load()
+  state.user = {}
+  requests[3].result.resolve(reply({ ...fixture(), path_id: 'account-2-path' }))
+  await staleLogout; await settle()
+  assert.strictEqual(page.path, null)
+  assert.strictEqual(page.error.action, 'login')
+  assert.strictEqual(requests.length, 4, 'logout must not request a private path')
+  state.user = { id: 3 }; await settle()
+  assert.strictEqual(requests.length, 5)
+  page.$destroy()
+  requests[4].result.resolve(reply({ ...fixture(), path_id: 'account-3-path' })); await settle()
+  assert.strictEqual(page.path, null, 'destroyed component ignores late account response')
+  state.$destroy()
+  console.log('PASS: account switch/logout clear private state, route identifiers and stale path/explanation requests')
+}
+
+async function profileLoadingAndStepOnlyRoute () {
+  const state = new Vue({ data: { user: {}, query: { path: '7', revision: '1', step: '1' } } })
+  const requests = []
+  const api = { getLearningPath (params) { requests.push(params); return Promise.resolve(reply(fixture())) } }
+  const options = load('LearningPath.vue', { '@oj/api': api, '@/utils/time': {}, './learningPathData': data }).default
+  const page = new Vue({ ...options,
+    beforeCreate () {
+      this.$store = { getters: { get user () { return state.user } } }
+      this.$route = { get query () { return state.query } }
+      this.$router = { replace: (location, done) => { state.query = location.query; if (done) done() } }
+    } })
+  const settle = async () => { await Vue.nextTick(); await Promise.resolve(); await Vue.nextTick(); await Promise.resolve() }
+  await page.load()
+  assert.strictEqual(requests.length, 0)
+  state.user = { id: 1 }; await settle()
+  assert.strictEqual(requests[0].path_id, '7', 'initial profile loading preserves a valid return link')
+  state.query = { step: '1' }; await settle()
+  const count = requests.length
+  state.user = { id: 2 }; await settle()
+  assert.strictEqual(state.query.step, undefined)
+  assert.strictEqual(requests.length, count + 1, 'account switch with only a step query still fetches once')
+  assert.strictEqual(requests[count].path_id, null)
+  page.$destroy(); state.$destroy()
+  console.log('PASS: initial profile preserves deep links; step-only account switch still refreshes')
+}
+main().then(accountIsolation).then(profileLoadingAndStepOnlyRoute).catch(error => { console.error(error); process.exitCode = 1 })

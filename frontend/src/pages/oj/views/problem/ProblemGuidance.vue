@@ -127,6 +127,11 @@
         this.loading = this.sending = false
       },
       current (token, identity) { return this.alive && this.sequence === token && this.identity === identity },
+      definitiveError (error) {
+        const status = error.response && error.response.status
+        return (status >= 400 && status < 500 && status !== 408) ||
+          (error.code && !['ECONNABORTED', 'ERR_NETWORK'].includes(error.code))
+      },
       accept (raw, context) {
         this.session = normalizeGuidance(raw, context)
         this.receivedAt = this.now = Date.now()
@@ -145,7 +150,7 @@
         const token = ++this.sequence
         this.loading = true
         this.error = ''
-        // Fail closed during every capability refresh, retaining only the user's input.
+        // Fail closed while checking, retaining input and any uncertain POST key.
         this.session = null
         this.stopTimer()
         try {
@@ -153,13 +158,19 @@
           if (!this.current(token, identity)) return
           this.accept(raw, context)
           // A status read can resolve an uncertain POST; never resend an accepted message.
-          if (this.retryPayload && (raw.last_request_id === this.retryPayload.request_id ||
-              this.session.session_id !== this.retryPayload.session_id ||
-              !this.session.allowed || !['ready', 'insufficient', 'failed'].includes(this.session.status))) {
-            this.retryPayload = null
+          if (this.retryPayload) {
+            if (raw.last_request_id === this.retryPayload.request_id) {
+              this.thought = this.validation = ''
+              this.retryPayload = null
+            } else if (this.session.session_id !== this.retryPayload.session_id || !this.session.allowed) {
+              this.retryPayload = null
+            }
           }
         } catch (error) {
-          if (this.current(token, identity)) { this.error = errorMessage(error); this.retryPayload = null }
+          if (this.current(token, identity)) {
+            this.error = errorMessage(error)
+            if (this.definitiveError(error)) this.retryPayload = null
+          }
         } finally {
           if (this.current(token, identity)) this.loading = false
         }
@@ -189,14 +200,12 @@
           const raw = await api.send(context, this.scenario, payload)
           if (!this.current(token, identity)) return
           this.accept(raw, Object.assign({}, context, { session_id: payload.session_id }))
-          if (this.session.status !== 'failed' || !this.session.allowed) this.retryPayload = null
+          if (!['failed', 'generating'].includes(this.session.status) || !this.session.allowed) this.retryPayload = null
           if (raw.last_request_id === payload.request_id) this.thought = ''
         } catch (error) {
           if (!this.current(token, identity)) return
           this.error = errorMessage(error)
-          const status = error.response && error.response.status
-          if ((status >= 400 && status < 500 && status !== 408) ||
-              (error.code && !['ECONNABORTED', 'ERR_NETWORK'].includes(error.code))) {
+          if (this.definitiveError(error)) {
             this.session = null
             this.retryPayload = null
           }

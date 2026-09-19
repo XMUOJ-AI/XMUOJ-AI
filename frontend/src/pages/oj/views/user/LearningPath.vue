@@ -67,14 +67,16 @@
         explanations: {},
         timer: null,
         requestId: 0,
+        alive: true,
         mockEnabled: process.env.LEARNING_PATH_MOCK === true,
         scenarios: [['ready', '正常路径'], ['starter', '入门路径'], ['insufficient_data', '数据不足'], ['empty', '暂无推荐'], ['generating', '生成中'], ['error', '加载失败'], ['explanation_error', '解释失败'], ['unavailable', '题目不可用'], ['judging', '判题中'], ['new_version', '新版本提醒'], ['compatibility', '扩展字段与多题'], ['invalid_data', '无效推荐引用'], ['expired', '旧版本失效'], ['unauthenticated', '登录过期']]
       }
     },
     computed: {
+      userId () { return id(this.$store.getters.user.id) },
       scenario () { return this.mockEnabled ? (this.$route.query.mock_path || 'ready') : undefined },
-      routeIdentity () { return JSON.stringify([id(this.$route.query.path), id(this.$route.query.revision), this.scenario]) },
-      blocked () { return this.error && ['login', 'latest', null].includes(this.error.action) },
+      routeIdentity () { return JSON.stringify([this.userId, id(this.$route.query.path), id(this.$route.query.revision), this.scenario]) },
+      blocked () { return !this.userId || (this.error && ['login', 'latest', null].includes(this.error.action)) },
       selected () {
         if (!this.path || !this.path.steps) return null
         const id = this.$route.query.step
@@ -87,16 +89,34 @@
       }
     },
     watch: {
-      routeIdentity () {
+      routeIdentity (identity, previous) {
         this.invalidate()
         this.path = null
         this.pending = null
+        this.error = null
+        this.showEvidence = false
         this.explanations = {}
+        // Keep legitimate deep links during initial profile loading, but never
+        // carry a previous account's path/version into the next account.
+        const previousUser = previous && JSON.parse(previous)[0]
+        if (previousUser && previousUser !== this.userId && ['path', 'revision', 'step'].some(key => this.$route.query[key] !== undefined)) {
+          const query = { ...this.$route.query }
+          delete query.path
+          delete query.revision
+          delete query.step
+          this.replaceRoute(query).then(() => {
+            // Removing only step does not change routeIdentity, so no second watcher runs.
+            if (this.alive && identity === this.routeIdentity) this.load()
+          }).catch(e => {
+            if (this.alive && identity === this.routeIdentity) this.error = errorFeedback(e)
+          })
+          return
+        }
         this.load()
       }
     },
     mounted () { this.load() },
-    beforeDestroy () { this.invalidate() },
+    beforeDestroy () { this.alive = false; this.invalidate() },
     methods: {
       formatDate (date) { return date ? time.utcToLocal(date, 'YYYY-MM-DD HH:mm') : '未知时间' },
       statusLabel,
@@ -134,16 +154,22 @@
         this.$router.replace({ query: { ...this.$route.query, step: selected } })
       },
       async load () {
+        if (!this.alive) return
         clearTimeout(this.timer)
         const requestId = ++this.requestId
         const routeIdentity = this.routeIdentity
         this.loading = true
         this.error = null
+        if (!this.userId) {
+          this.error = errorFeedback({ code: 'not_authenticated' })
+          this.loading = false
+          return
+        }
         try {
           const requestedPath = id(this.$route.query.path) || (this.path && this.path.path_id)
           const requestedRevision = id(this.$route.query.revision) || (this.path && this.path.revision)
           const res = await api.getLearningPath({ mock_path: this.scenario, path_id: requestedPath, revision: requestedRevision })
-          if (requestId !== this.requestId || routeIdentity !== this.routeIdentity) return
+          if (!this.alive || requestId !== this.requestId || routeIdentity !== this.routeIdentity) return
           const data = normalizePath(res.data.data)
           if (data.status === 'ready' && ((requestedPath && data.path_id !== requestedPath) || (requestedRevision && data.revision !== requestedRevision))) {
             throw Object.assign(new Error('Version mismatch'), { code: 'version_mismatch' })
@@ -158,12 +184,12 @@
           this.applyPath(data)
           if (data.status === 'generating') this.timer = setTimeout(this.load, Math.max(3000, (Number(data.retry_after_seconds) || 10) * 1000))
         } catch (e) {
-          if (requestId === this.requestId) {
+          if (this.alive && requestId === this.requestId && routeIdentity === this.routeIdentity) {
             this.error = errorFeedback(e)
             if (this.error.action === 'login' || this.error.action === null) { this.path = null; this.pending = null; this.explanations = {} }
           }
         } finally {
-          if (requestId === this.requestId) this.loading = false
+          if (this.alive && requestId === this.requestId && routeIdentity === this.routeIdentity) this.loading = false
         }
       },
       applyPath (data) {
@@ -176,6 +202,7 @@
       },
       async start (step, problem) {
         if (this.blocked || problem.availability !== 'available') return
+        const userId = this.userId
         const context = problem.context
         const query = { from: 'learning-path', step: step.step_id, path: this.path.path_id, revision: String(this.path.revision) }
         if (this.scenario) query.mock_path = this.scenario
@@ -183,9 +210,12 @@
         if (Object.keys(origin).some(key => origin[key] !== this.$route.query[key])) {
           try { await this.replaceRoute(origin) } catch (e) { return }
         }
+        if (!this.alive || this.blocked || userId !== this.userId) return
         this.$router.push({ name: context.type === 'contest' ? 'contest-problem-details' : 'problem-details', params: { problemID: problem.display_id, contestID: context.contest_id }, query }, () => {}, () => {})
       },
       async explain (step, retry = false) {
+        if (this.blocked || !this.path) return
+        const identity = this.routeIdentity
         const previous = this.explanations[step.step_id]
         if (previous && !retry) { previous.open = !previous.open; return }
         const entry = { open: true, status: 'loading', text: '', error: null }
@@ -195,13 +225,13 @@
         try {
           const res = await api.explainLearningStep({ path_id: pathId, revision, step_id: step.step_id, mock_path: this.scenario })
           const data = res.data.data
-          if (this.explanations[step.step_id] !== entry) return
+          if (!this.alive || identity !== this.routeIdentity || this.explanations[step.step_id] !== entry) return
           if (id(data.path_id) !== pathId || id(data.revision) !== revision || id(data.step_id) !== step.step_id) throw Object.assign(new Error('Version mismatch'), { code: 'version_mismatch' })
           if (data.status !== 'ready' || typeof data.text !== 'string' || !data.text) throw new Error('Explanation unavailable')
           entry.status = 'ready'
           entry.text = data.text
         } catch (e) {
-          if (this.explanations[step.step_id] !== entry) return
+          if (!this.alive || identity !== this.routeIdentity || this.explanations[step.step_id] !== entry) return
           entry.status = 'error'
           entry.error = errorFeedback(e)
         }
