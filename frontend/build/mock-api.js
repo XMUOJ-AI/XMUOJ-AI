@@ -91,6 +91,7 @@ module.exports = function () {
   require('./mock-learning-feedback')(router, aiContext)
   require('./mock-problem-guidance')(router, aiContext)
   require('./mock-submission-analysis')(router, aiContext)
+  require('./mock-knowledge')(router, { isLoggedIn: () => loggedIn, problems })
   router.use((req, res) => fail(res, `Mock 尚未实现 ${req.method} ${req.path}`))
   return router
 }
