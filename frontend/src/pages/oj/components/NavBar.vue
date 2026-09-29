@@ -18,6 +18,10 @@
         <Icon type="ios-pulse-strong"></Icon>
         {{$t('m.NavStatus')}}
       </Menu-item>
+      <Menu-item v-if="isAuthenticated" name="/knowledge">
+        <Icon type="ios-book"></Icon>
+        知识点
+      </Menu-item>
       <Submenu name="rank">
         <template #title>
           <Icon type="podium"></Icon>

@@ -15,6 +15,9 @@ router.beforeEach(to => {
   if (to.matched.some(record => record.meta.requiresAuth) && !storage.get(STORAGE_KEY.AUTHED)) {
     ui.$error('Please login first')
     store.commit(types.CHANGE_MODAL_STATUS, { mode: 'login', visible: true })
+    if (to.path.startsWith('/knowledge')) {
+      sessionStorage.setItem('knowledge-return-to', to.fullPath)
+    }
     return { name: 'home' }
   }
 })

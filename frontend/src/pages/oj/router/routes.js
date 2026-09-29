@@ -20,6 +20,10 @@ import {
 import * as Contest from '@oj/views/contest'
 import * as Setting from '@oj/views/setting'
 
+const KnowledgeExplore = () => import('@oj/views/knowledge/KnowledgeExplore.vue')
+const KnowledgeMap = () => import('@oj/views/knowledge/KnowledgeMap.vue')
+const KnowledgeDetail = () => import('@oj/views/knowledge/KnowledgeDetail.vue')
+
 export default [
   {
     name: 'home',
@@ -56,6 +60,24 @@ export default [
     path: '/problem/:problemID',
     meta: {title: 'm.Problems'},
     component: Problem
+  },
+  {
+    name: 'knowledge',
+    path: '/knowledge',
+    meta: {requiresAuth: true, title: '知识点'},
+    component: KnowledgeExplore
+  },
+  {
+    name: 'knowledge-graph',
+    path: '/knowledge/graph',
+    meta: {requiresAuth: true, title: '完整知识图谱'},
+    component: KnowledgeMap
+  },
+  {
+    name: 'knowledge-detail',
+    path: '/knowledge/:code',
+    meta: {requiresAuth: true, title: '知识点详情'},
+    component: KnowledgeDetail
   },
   {
     name: 'submission-list',

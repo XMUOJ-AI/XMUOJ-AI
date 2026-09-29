@@ -85,7 +85,13 @@
           api.login(formData).then(res => {
             this.btnLoginLoading = false
             this.changeModalStatus({visible: false})
-            this.getProfile()
+            this.getProfile().then(() => {
+              const destination = sessionStorage.getItem('knowledge-return-to')
+              if (destination && destination.startsWith('/knowledge')) {
+                sessionStorage.removeItem('knowledge-return-to')
+                this.$router.push(destination)
+              }
+            }).catch(() => {})
             this.$success(this.$i18n.t('m.Welcome_back'))
           }, _ => {
             this.btnLoginLoading = false
