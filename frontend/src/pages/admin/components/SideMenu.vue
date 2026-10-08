@@ -19,7 +19,9 @@
       <el-menu-item index="/problem/create">{{$t('m.Create_Problem')}}</el-menu-item>
       <el-menu-item index="/problem/batch_ops">{{$t('m.Export_Import_Problem')}}</el-menu-item>
       <el-menu-item index="/problem/tags">{{$t('m.Problem_Tag_Governance')}}</el-menu-item>
-
+      <el-menu-item index="/knowledge">知识点管理</el-menu-item>
+      <el-menu-item index="/knowledge/graph">知识图谱</el-menu-item>
+      <el-menu-item v-if="isSuperAdmin" index="/knowledge/reviews">知识审核</el-menu-item>
     </el-sub-menu>
     <el-sub-menu index="contest">
       <template #title><i class="el-icon-fa-trophy"></i>{{$t('m.Contest')}}</template>

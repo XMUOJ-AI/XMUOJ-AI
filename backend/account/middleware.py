@@ -36,6 +36,9 @@ class SessionRecordMiddleware(MiddlewareMixin):
 class AdminRoleRequiredMiddleware(MiddlewareMixin):
     def process_request(self, request):
         path = request.path_info
+        # Knowledge endpoints provide their own 401/403 envelope and object permissions.
+        if path.startswith("/api/admin/knowledge-") or (path.startswith("/api/admin/problems/") and "/knowledge-mappings" in path):
+            return
         if path.startswith("/admin/") or path.startswith("/api/admin/"):
             if not (request.user.is_authenticated and request.user.is_admin_role()):
                 return JSONResponse.response({"error": "login-required", "data": "Please login in first"})

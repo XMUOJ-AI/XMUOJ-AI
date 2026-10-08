@@ -92,9 +92,10 @@
         <el-table-column
           fixed="right"
           label="Operation"
-          width="250">
+          width="300">
           <template #default="scope"><div>
             <icon-btn name="Edit" icon="edit" @click="goEdit(scope.row.id)"></icon-btn>
+            <icon-btn v-if="!contestId" name="知识点标注" icon="tags" @click="goKnowledge(scope.row.id)"></icon-btn>
             <icon-btn v-if="contestId" name="Make Public" icon="clone"
                       @click="makeContestProblemPublic(scope.row.id)"></icon-btn>
             <icon-btn icon="download" name="Download TestCase"
@@ -272,6 +273,9 @@
       this.getProblemList(this.currentPage, false)
     },
     methods: {
+      goKnowledge (problemId) {
+        this.$router.push({name: 'admin-problem-knowledge', params: {problemId}})
+      },
       applyRouteState (route) {
         const query = route.query || {}
         const parsedPage = parseInt(query.page)

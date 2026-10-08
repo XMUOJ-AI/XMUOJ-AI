@@ -7,7 +7,7 @@ import adminRouter from '../src/pages/admin/router'
 
 const views = vi.hoisted(() => {
   const component = { render: () => null }
-  return Object.fromEntries(['About', 'ACMRank', 'Announcements', 'ApplyResetPassword', 'FAQ', 'Home', 'Logout', 'NotFound', 'OIRank', 'Problem', 'ProblemList', 'ResetPassword', 'SubmissionDetails', 'SubmissionList', 'UserHome', 'Announcement', 'Conf', 'Contest', 'ContestList', 'JudgeServer', 'Login', 'User', 'PruneTestCase', 'Dashboard', 'ProblemImportOrExport', 'ProblemTagGovernance'].map(name => [name, component]))
+  return Object.fromEntries(['About', 'ACMRank', 'Announcements', 'ApplyResetPassword', 'FAQ', 'Home', 'Logout', 'NotFound', 'OIRank', 'Problem', 'ProblemList', 'ResetPassword', 'SubmissionDetails', 'SubmissionList', 'UserHome', 'Announcement', 'Conf', 'Contest', 'ContestList', 'JudgeServer', 'Login', 'User', 'PruneTestCase', 'Dashboard', 'ProblemImportOrExport', 'ProblemTagGovernance', 'KnowledgeList', 'KnowledgeDetail', 'KnowledgeGraph', 'ProblemKnowledge', 'KnowledgeReviews'].map(name => [name, component]))
 })
 vi.mock('../src/pages/oj/views', () => views)
 vi.mock('../src/pages/admin/views', () => views)
@@ -50,6 +50,11 @@ describe('Router 4 existing URL contracts', () => {
       ['login', {}, '/admin/login'], ['dashboard', {}, '/admin/'], ['problem-list', {}, '/admin/problems'],
       ['edit-problem', { problemId: '1' }, '/admin/problem/edit/1'],
       ['problem-tag-governance', {}, '/admin/problem/tags'],
+      ['admin-knowledge-list', {}, '/admin/knowledge'],
+      ['admin-knowledge-graph', {}, '/admin/knowledge/graph'],
+      ['admin-knowledge-reviews', {}, '/admin/knowledge/reviews'],
+      ['admin-knowledge-detail', { code: 'bfs_basic' }, '/admin/knowledge/bfs_basic'],
+      ['admin-problem-knowledge', { problemId: '2' }, '/admin/problem/2/knowledge'],
       ['edit-contest', { contestId: '1' }, '/admin/contest/1/edit'],
       ['edit-contest-problem', { contestId: '1', problemId: '2' }, '/admin/contest/1/problem/2/edit']
     ]) expect(adminRouter.resolve({ name, params }).href).toBe(href)

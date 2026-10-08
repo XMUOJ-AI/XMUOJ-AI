@@ -1,6 +1,8 @@
 from django.conf.urls import include, url
 
 urlpatterns = [
+    url(r"^api/", include("knowledge.urls.public")),
+    url(r"^api/admin/", include("knowledge.urls.admin")),
     url(r"^api/plugin/", include("plugin.urls")),
     url(r"^api/", include("account.urls.oj")),
     url(r"^api/admin/", include("account.urls.admin")),

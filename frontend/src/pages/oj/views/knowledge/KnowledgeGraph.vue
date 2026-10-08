@@ -30,7 +30,8 @@
     props: {
       graph: { type: Object, required: true },
       rootCode: { type: String, default: '' },
-      directional: { type: Boolean, default: false }
+      directional: { type: Boolean, default: false },
+      detailRouteName: { type: String, default: 'knowledge-detail' }
     },
     emits: ['select-node'],
     data () { return { scale: 1, pressed: false, dragging: false, dragStart: null, suppressClick: false } },
@@ -47,7 +48,7 @@
     methods: {
       short (value, limit = 12) { return value.length > limit ? value.slice(0, limit - 1) + '…' : value },
       select (code) { this.$emit('select-node', code) },
-      openDetail (code) { this.$router.push({ name: 'knowledge-detail', params: { code } }) },
+      openDetail (code) { this.$router.push({ name: this.detailRouteName, params: { code } }) },
       startDrag (event) {
         if (event.button !== 0 || event.isPrimary === false || !event.target.closest('.graph-stage')) return
         const shell = this.$refs.shell
