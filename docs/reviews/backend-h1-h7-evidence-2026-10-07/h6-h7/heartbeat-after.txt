@@ -1,0 +1,39 @@
+Using existing test database for alias 'default' ('test_xmuoj_heartbeat')...
+Operations to perform:
+  Synchronize unmigrated apps: django_dbconn_retry, judge, messages, postgres, rest_framework, staticfiles, utils
+  Apply all migrations: account, agent_service, announcement, auth, conf, contenttypes, contest, django_dramatiq, knowledge, learning, options, problem, problem_import, rag, sessions, submission
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying conf.0005_judgeserver_hostname_unique... OK
+System check identified no issues (0 silenced).
+test_get_info (conf.tests.DashboardInfoAPITest.test_get_info) ... ok
+test_delete_judge_server (conf.tests.JudgeServerAPITest.test_delete_judge_server) ... ok
+test_disabled_judge_server (conf.tests.JudgeServerAPITest.test_disabled_judge_server) ... ok
+test_get_judge_server (conf.tests.JudgeServerAPITest.test_get_judge_server) ... ok
+test_new_heartbeat (conf.tests.JudgeServerHeartbeatTest.test_new_heartbeat) ... ok
+test_update_heartbeat (conf.tests.JudgeServerHeartbeatTest.test_update_heartbeat) ... ok
+test_get_languages (conf.tests.LanguageListAPITest.test_get_languages) ... ok
+test_get_versions (conf.tests.ReleaseNoteAPITest.test_get_versions) ... ok
+test_create_smtp_config (conf.tests.SMTPConfigTest.test_create_smtp_config) ... ok
+test_edit_with_password (conf.tests.SMTPConfigTest.test_edit_with_password) ... ok
+test_edit_without_password (conf.tests.SMTPConfigTest.test_edit_without_password) ... ok
+test_edit_without_password1 (conf.tests.SMTPConfigTest.test_edit_without_password1) ... ok
+test_test_smtp (conf.tests.SMTPConfigTest.test_test_smtp) ... ok
+test_delete_test_case (conf.tests.TestCasePruneAPITest.test_delete_test_case) ... ok
+test_get_isolated_test_case (conf.tests.TestCasePruneAPITest.test_get_isolated_test_case) ... ok
+test_create_website_config (conf.tests.WebsiteConfigAPITest.test_create_website_config) ... ok
+test_edit_website_config (conf.tests.WebsiteConfigAPITest.test_edit_website_config) ... ok
+test_get_website_config (conf.tests.WebsiteConfigAPITest.test_get_website_config) ... ok
+test_database_enforces_hostname_uniqueness (conf.test_heartbeat.ConcurrentHeartbeatTests.test_database_enforces_hostname_uniqueness) ... ok
+test_heartbeat_preserves_occupied_slot_primary_key_and_disabled_flag (conf.test_heartbeat.ConcurrentHeartbeatTests.test_heartbeat_preserves_occupied_slot_primary_key_and_disabled_flag) ... ok
+test_simultaneous_first_heartbeats_create_one_server (conf.test_heartbeat.ConcurrentHeartbeatTests.test_simultaneous_first_heartbeats_create_one_server) ... ok
+test_idle_duplicates_keep_latest_telemetry_and_any_disable (conf.test_heartbeat.HeartbeatUniquenessMigrationTests.test_idle_duplicates_keep_latest_telemetry_and_any_disable) ... ok
+test_nonzero_duplicate_slots_abort_without_changing_any_rows (conf.test_heartbeat.HeartbeatUniquenessMigrationTests.test_nonzero_duplicate_slots_abort_without_changing_any_rows) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 27.380s
+
+OK
+Preserving test database for alias 'default' ('test_xmuoj_heartbeat')...

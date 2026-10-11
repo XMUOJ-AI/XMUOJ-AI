@@ -81,7 +81,7 @@
                 <el-tag
                   v-for="tag in problem.tags"
                   :closable="true"
-                  :close-transition="false"
+                  :disable-transitions="true"
                   :key="tag"
                   type="success"
                   @close="closeTag(tag)"
@@ -89,12 +89,12 @@
               </span>
               <el-autocomplete
                 v-if="inputVisible"
-                size="mini"
-                class="input-new-tag"
+                size="small"
+                class="legacy-mini input-new-tag"
                 popper-class="problem-tag-poper"
                 v-model="tagInput"
                 :trigger-on-focus="false"
-                @keyup.enter.native="addTag"
+                @keyup.enter="addTag"
                 @select="addTag"
                 :fetch-suggestions="querySearch">
               </el-autocomplete>
@@ -107,7 +107,7 @@
               <el-checkbox-group v-model="problem.languages">
                 <el-tooltip class="spj-radio" v-for="lang in allLanguage.languages" :key="'spj'+lang.name" effect="dark"
                             :content="lang.description" placement="top-start">
-                  <el-checkbox :label="lang.name"></el-checkbox>
+                  <el-checkbox :label="lang.name" :value="lang.name"></el-checkbox>
                 </el-tooltip>
               </el-checkbox-group>
             </el-form-item>
@@ -116,9 +116,9 @@
         <div>
           <el-form-item v-for="(sample, index) in problem.samples" :key="'sample'+index">
             <Accordion :title="'Sample' + (index + 1)">
-              <el-button type="warning" size="small" icon="el-icon-delete" slot="header" @click="deleteSample(index)">
+              <template #header><el-button type="warning" size="small" @click="deleteSample(index)"><template #icon><i class="el-icon-delete" aria-hidden="true"></i></template>
                 Delete
-              </el-button>
+              </el-button></template>
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item :label="$t('m.Input_Samples')" required>
@@ -165,21 +165,21 @@
         </el-form-item>
         <el-form-item :label="$t('m.Special_Judge')" :error="error.spj">
           <el-col :span="24">
-            <el-checkbox v-model="problem.spj" @click.native.prevent="switchSpj()">{{$t('m.Use_Special_Judge')}}</el-checkbox>
+            <el-checkbox :model-value="problem.spj" @click.prevent="switchSpj">{{$t('m.Use_Special_Judge')}}</el-checkbox>
           </el-col>
         </el-form-item>
         <el-form-item v-if="problem.spj">
           <Accordion :title="$t('m.Special_Judge_Code')">
-            <template slot="header">
+            <template #header>
               <span>{{$t('m.SPJ_language')}}</span>
               <el-radio-group v-model="problem.spj_language">
                 <el-tooltip class="spj-radio" v-for="lang in allLanguage.spj_languages" :key="lang.name" effect="dark"
                             :content="lang.description" placement="top-start">
-                  <el-radio :label="lang.name">{{ lang.name }}</el-radio>
+                  <el-radio :value="lang.name">{{ lang.name }}</el-radio>
                 </el-tooltip>
               </el-radio-group>
-              <el-button type="primary" size="small" icon="el-icon-fa-random" @click="compileSPJ"
-                         :loading="loadingCompile">
+              <el-button type="primary" size="small" @click="compileSPJ"
+                         :loading="loadingCompile"><template #icon><i class="el-icon-fa-random" aria-hidden="true"></i></template>
                 {{$t('m.Compile')}}
               </el-button>
             </template>
@@ -190,8 +190,8 @@
           <el-col :span="4">
             <el-form-item :label="$t('m.Type')">
               <el-radio-group v-model="problem.rule_type" :disabled="disableRuleType">
-                <el-radio label="ACM">ACM</el-radio>
-                <el-radio label="OI">OI</el-radio>
+                <el-radio value="ACM">ACM</el-radio>
+                <el-radio value="OI">OI</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -204,7 +204,7 @@
                 :show-file-list="true"
                 :on-success="uploadSucceeded"
                 :on-error="uploadFailed">
-                <el-button size="small" type="primary" icon="el-icon-fa-upload">Choose File</el-button>
+                <el-button size="small" type="primary"><template #icon><i class="el-icon-fa-upload" aria-hidden="true"></i></template>Choose File</el-button>
               </el-upload>
             </el-form-item>
           </el-col>
@@ -212,8 +212,8 @@
           <el-col :span="6">
             <el-form-item :label="$t('m.IOMode')">
               <el-radio-group v-model="problem.io_mode.io_mode">
-                <el-radio label="Standard IO">Standard IO</el-radio>
-                <el-radio label="File IO">File IO</el-radio>
+                <el-radio value="Standard IO">Standard IO</el-radio>
+                <el-radio value="File IO">File IO</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -244,7 +244,7 @@
               <el-table-column
                 prop="score"
                 :label="$t('m.Score')">
-                <template slot-scope="scope">
+                <template #default="scope">
                   <el-input
                     size="small"
                     :placeholder="$t('m.Score')"
@@ -268,13 +268,14 @@
           </el-switch>
           <p class="form-help">{{$t('m.Allow_Public_TestCase_Download_Help')}}</p>
         </el-form-item>
-        <save @click.native="submit()">Save</save>
+        <save @click="submit()">Save</save>
       </el-form>
     </Panel>
   </div>
 </template>
 
 <script>
+  import { h } from 'vue'
   import Simditor from '../../components/Simditor'
   import Accordion from '../../components/Accordion'
   import CodeMirror from '../../components/CodeMirror'
@@ -532,7 +533,6 @@
         }, err => {
           this.loadingCompile = false
           this.problem.spj_compile_ok = false
-          const h = this.$createElement
           this.$msgbox({
             title: 'Compile Error',
             type: 'error',
@@ -688,4 +688,3 @@
     overflow-x: scroll;
   }
 </style>
-

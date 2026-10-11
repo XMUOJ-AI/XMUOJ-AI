@@ -38,16 +38,14 @@
           </el-col>
           <el-col :span="8">
             <el-form-item :label="$t('m.Contest_Rule_Type')">
-              <el-radio class="radio" v-model="contest.rule_type" label="ACM" :disabled="disableRuleType">ACM</el-radio>
-              <el-radio class="radio" v-model="contest.rule_type" label="OI" :disabled="disableRuleType">OI</el-radio>
+              <el-radio class="radio" v-model="contest.rule_type" value="ACM" :disabled="disableRuleType">ACM</el-radio>
+              <el-radio class="radio" v-model="contest.rule_type" value="OI" :disabled="disableRuleType">OI</el-radio>
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item :label="$t('m.Real_Time_Rank')">
-              <el-switch
-                v-model="contest.real_time_rank"
-                active-color="#13ce66"
-                inactive-color="#ff4949">
+              <el-switch style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+                v-model="contest.real_time_rank">
               </el-switch>
             </el-form-item>
           </el-col>
@@ -62,7 +60,7 @@
           </el-col>
           <el-col :span="8">
             <el-form-item :label="$t('m.Exam_Mode')">
-              <el-switch v-model="contest.is_exam" active-color="#ff4949" inactive-color="#13ce66">
+              <el-switch style="--el-switch-on-color: #ff4949; --el-switch-off-color: #13ce66" v-model="contest.is_exam">
               </el-switch>
               <span style="font-size:12px;color:#999;margin-left:8px">{{ $t('m.Exam_Mode_Desc') }}</span>
             </el-form-item>
@@ -75,8 +73,8 @@
                     <el-input v-model="range.value" :placeholder="$t('m.CIDR_Network')"></el-input>
                   </el-col>
                   <el-col :span="10">
-                    <el-button plain icon="el-icon-fa-plus" @click="addIPRange"></el-button>
-                    <el-button plain icon="el-icon-fa-trash" @click="removeIPRange(range)"></el-button>
+                    <el-button plain @click="addIPRange"><template #icon><i class="el-icon-fa-plus" aria-hidden="true"></i></template></el-button>
+                    <el-button plain @click="removeIPRange(range)"><template #icon><i class="el-icon-fa-trash" aria-hidden="true"></i></template></el-button>
                   </el-col>
                 </el-row>
               </div>
@@ -84,7 +82,7 @@
           </el-col>
         </el-row>
       </el-form>
-      <save @click.native="saveContest"></save>
+      <save @click="saveContest"></save>
     </Panel>
   </div>
 </template>

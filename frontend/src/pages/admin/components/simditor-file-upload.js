@@ -1,7 +1,7 @@
 /* eslint-disable */
 
 import Simditor from 'tar-simditor'
-import * as $ from 'jquery'
+import $ from 'jquery'
 
 var UploadFile,
   __hasProp = {}.hasOwnProperty,
@@ -81,5 +81,4 @@ UploadFile = (function (_super) {
 })(Simditor.Button);
 
 Simditor.Toolbar.addButton(UploadFile);
-
 

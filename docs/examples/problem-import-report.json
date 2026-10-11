@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "batch_id": "20260809-bfs-dfs-001",
+  "status": "validated",
+  "generated_at": "2026-08-09T10:01:00Z",
+  "summary": {
+    "total": 1,
+    "valid": 1,
+    "warnings": 1,
+    "errors": 0,
+    "duplicates": 0,
+    "imported": 0,
+    "skipped": 0
+  },
+  "problems": [
+    {
+      "id": 101,
+      "line_number": 1,
+      "problem_key": "luogu_P1001",
+      "source_platform": "luogu",
+      "source_id": "P1001",
+      "status": "ready",
+      "issues": [
+        {
+          "level": "warning",
+          "code": "IMPORT_KNOWLEDGE_CODE_UNKNOWN",
+          "field": "knowledge_candidates[0]",
+          "message": "知识点候选值需要人工确认"
+        }
+      ]
+    }
+  ]
+}

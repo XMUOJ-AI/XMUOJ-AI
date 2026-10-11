@@ -1,0 +1,33 @@
+{
+  "database": "xmuoj_benchmark",
+  "mapping_count": 100000,
+  "knowledge_count": 100,
+  "pending_review_count_initial": 1000,
+  "scope": "Django HTTP stack + PostgreSQL14 + Redis; loopback, sequential warm requests, excludes browser/network and multi-user load",
+  "measurements": {
+    "admin_list": {
+      "samples": 25,
+      "median_ms": 103.51,
+      "p95_ms": 192.98,
+      "max_ms": 242.99
+    },
+    "review_queue": {
+      "samples": 25,
+      "median_ms": 61.36,
+      "p95_ms": 68.54,
+      "max_ms": 77.02
+    },
+    "graph_depth_3": {
+      "samples": 25,
+      "median_ms": 66.23,
+      "p95_ms": 91.26,
+      "max_ms": 178.18
+    },
+    "mapping_approval": {
+      "samples": 25,
+      "median_ms": 148.77,
+      "p95_ms": 231.99,
+      "max_ms": 296.42
+    }
+  }
+}

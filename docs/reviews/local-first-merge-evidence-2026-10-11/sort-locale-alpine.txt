@@ -1,0 +1,6 @@
+PostgreSQL 14.23 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+postgres|en_US.utf8|en_US.utf8
+template0|en_US.utf8|en_US.utf8
+template1|en_US.utf8|en_US.utf8
+xmuoj_merge_20261011|en_US.utf8|en_US.utf8
+P001,other|P001,other

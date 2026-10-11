@@ -3,6 +3,7 @@ django-cas-ng==5.0.1
 django-dbconn-retry==0.1.7
 django-dramatiq==0.11.6
 django-redis==5.4.0
+redis==5.0.8
 Django==3.2.25
 djangorestframework==3.14.0
 dramatiq==1.16.0
@@ -13,6 +14,7 @@ flake8-quotes==3.3.2
 flake8==7.0.0
 gunicorn==21.2.0
 jsonfield==3.1.0
+jsonschema==4.23.0
 otpauth==1.0.1
 pillow==10.2.0
 psycopg2==2.9.9

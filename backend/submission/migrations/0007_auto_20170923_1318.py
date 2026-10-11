@@ -11,6 +11,10 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('submission', '0006_auto_20170830_1154'),
+        # These integer columns become FKs after the legacy contest rebuild.
+        # Explicit ordering is required when a new app depends on Submission.
+        ('problem', '0008_auto_20170923_1318'),
+        ('contest', '0005_auto_20170823_0918'),
     ]
 
     operations = [

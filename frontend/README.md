@@ -1,64 +1,50 @@
-# OnlineJudge Front End
-[![vue](https://img.shields.io/badge/vue-2.5.13-blue.svg?style=flat-square)](https://github.com/vuejs/vue)
-[![vuex](https://img.shields.io/badge/vuex-3.0.1-blue.svg?style=flat-square)](https://vuex.vuejs.org/)
-[![echarts](https://img.shields.io/badge/echarts-3.8.3-blue.svg?style=flat-square)](https://github.com/ecomfe/echarts)
-[![iview](https://img.shields.io/badge/iview-2.8.0-blue.svg?style=flat-square)](https://github.com/iview/iview)
-[![element-ui](https://img.shields.io/badge/element-2.0.9-blue.svg?style=flat-square)](https://github.com/ElemeFE/element)
-[![Build Status](https://travis-ci.org/QingdaoU/OnlineJudgeFE.svg?branch=master)](https://travis-ci.org/QingdaoU/OnlineJudgeFE)
+# XMUOJ-AI 前端
 
->### A multiple pages app built for OnlineJudge. [Demo](https://qduoj.com)
+学生端和管理端共用一个 Vue 3 项目，通过两个 HTML 入口分别加载。当前目录与开发入口以[根 README](../README.md)为准；本项目源自 QingdaoU OnlineJudgeFE。
 
-## Features
+- 学生端：View UI Plus，入口 `/`。
+- 管理端：Element Plus，入口 `/admin/`，登录页 `/admin/login`。
+- Vue Router 4、Vuex 4、Vue I18n 11；Vite 构建。
+- 保留 CodeMirror 5、ECharts 3、Simditor 核心及旧图标、主题，使用 Vue 3 封装保持现有页面表现。
 
-+ Webpack3 multiple pages with bundle size optimization
-+ Easy use simditor & Nice codemirror editor
-+ Amazing charting and visualization(echarts)
-+ User-friendly operation
-+ Quite beautiful：)
+## 开发
 
-## Get Started
-
-Install nodejs **v8.12.0** first.
-
-### Linux
+使用 Node.js 24、npm 11+，在本目录执行：
 
 ```bash
-npm install
-# we use webpack DllReference to decrease the build time,
-# this command only needs execute once unless you upgrade the package in build/webpack.dll.conf.js
-export NODE_ENV=development 
-npm run build:dll
-
-# the dev-server will set proxy table to your backend
-export TARGET=http://Your-backend
-
-# serve with hot reload at localhost:8080
-npm run dev
+npm ci
+TARGET=http://127.0.0.1:8000 npm run dev
 ```
-### Windows
+
+默认端口为 `8080`，通过 `PORT=8090 npm run dev` 可更换端口。`TARGET` 控制 `/api` 和 `/public` 的后端代理，默认指向 `http://127.0.0.1:8000`。不再需要 DLL 构建或 OpenSSL 兼容参数。
+
+不连接后端的页面演示：
 
 ```bash
-npm install
-# we use webpack DllReference to decrease the build time,
-# this command only needs execute once unless you upgrade the package in build/webpack.dll.conf.js
-set NODE_ENV=development 
-npm run build:dll
-
-# the dev-server will set proxy table to your backend
-set TARGET=http://Your-backend
-
-# serve with hot reload at localhost:8080
-npm run dev
+npm run dev:mock
 ```
 
-## Screenshots
+Mock 模式只使用本地样例，提交与 AI 结果均为模拟。开发说明见[功能原型说明](docs/ai-feature-prototypes.md)。
 
-[Check here.](https://github.com/QingdaoU/OnlineJudge)
+## 检查与构建
 
-## Browser Support
+```bash
+npm run lint
+npm test
+npm run build
+npm run preview
+```
 
-Modern browsers and Internet Explorer 10+.
+生产产物为 `dist/index.html`、`dist/admin/index.html` 和 `dist/static/`。生产构建始终关闭 Mock；`preview` 仅用于本地检查产物。构建时可设置 `STATIC_CDN_HOST` 指定静态资源 CDN，`USE_SENTRY=1` 开启已有 Sentry 接入和 source map。
 
-## LICENSE
+实际部署需保留学生端、管理端的 HTML 回退及 `/api`、`/public` 路径。`build.sh` 是显式容器部署脚本：安装锁定依赖、构建、复制到 `oj-backend:/app/`，然后打开容器 shell；它不是日常开发命令。
 
-[MIT](http://opensource.org/licenses/MIT)
+## 兼容与维护
+
+浏览器范围：Chrome、Edge、Firefox 最近两个版本及 Safari 16.4+，不支持 IE。依赖版本以 `package.json`、`package-lock.json` 为准，统一使用 npm。
+
+Vue 3 迁移和后续调整需同时验证学生端、管理端及四项 AI Mock 功能；验收场景见[测试矩阵](docs/vue3-test-matrix.md)。代码入口与职责见[代码导览](CODE_WIKI.md)。[instructions.md](instructions.md)保留已标注的历史部署记录。
+
+本次迁移结果、回归修复、验收证据和尚未完成的完整截图验收见[迁移记录](docs/vue3-migration.md)。
+
+项目遵循 [MIT 许可证](LICENSE)。保留的图标和编辑器依赖许可证分别位于 `src/assets/legacy-icons/`、`vendor/`。

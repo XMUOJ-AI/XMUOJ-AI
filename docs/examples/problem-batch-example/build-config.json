@@ -1,0 +1,9 @@
+{
+  "batch_id": "20260809-bfs-dfs-001",
+  "generated_at": "2026-08-09T10:00:00Z",
+  "producer": {
+    "name": "xmuoj-data-pipeline",
+    "version": "0.1.0",
+    "contact": "data-team"
+  }
+}

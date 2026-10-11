@@ -1,4 +1,7 @@
 import hashlib
+import json
+import os
+import tempfile
 from unittest import mock
 
 from django.conf import settings
@@ -94,7 +97,7 @@ class JudgeServerHeartbeatTest(APITestCase):
         resp = self.client.post(self.url, data=self.data, **self.headers)
         self.assertSuccess(resp)
         server = JudgeServer.objects.first()
-        self.assertEqual(server.ip, "127.0.0.1")
+        self.assertEqual(server.ip, "1.2.3.4")
 
     def test_update_heartbeat(self):
         self.test_new_heartbeat()
@@ -172,6 +175,22 @@ class ReleaseNoteAPITest(APITestCase):
     def test_get_versions(self):
         resp = self.client.get(self.url)
         self.assertSuccess(resp)
+
+    @mock.patch("conf.views.requests.get")
+    def test_get_versions_from_another_working_directory(self, mocked_get):
+        mocked_get.return_value.json.return_value = self.latest_data
+        with open(os.path.join(settings.BASE_DIR, "docs", "data.json"), encoding="utf-8") as source:
+            version = json.load(source)["update"][0]["version"]
+        previous_directory = os.getcwd()
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                os.chdir(directory)
+                resp = self.client.get(self.url)
+                self.assertSuccess(resp)
+                self.assertEqual(resp.data["data"]["local_version"], version)
+                self.assertEqual(resp.data["data"]["update"], self.latest_data["update"])
+        finally:
+            os.chdir(previous_directory)
 
 
 class DashboardInfoAPITest(APITestCase):

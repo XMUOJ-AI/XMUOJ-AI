@@ -1,0 +1,8 @@
+{
+  "image": "xmuoj-ai:h1-h7-20261007",
+  "image_id": "sha256:8458e9b8f186148f02c82b07ac57436ad29b75fd4c1a37a19436816b2f6dd33f",
+  "container_id": "c284740e99d4e76253921acb79f124c9141fac1493f1777525dc9999195cd949",
+  "architecture": "amd64",
+  "started_at": "2026-10-07T09:38:54.074928Z",
+  "health": "healthy"
+}

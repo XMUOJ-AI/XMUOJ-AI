@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xmuoj.example/schemas/collection-config-v1.schema.json",
+  "title": "XMUOJ-AI collection configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "job_name", "sources", "network", "compliance", "output"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "job_name": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$"},
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["platform", "enabled", "base_url", "selectors"],
+        "properties": {
+          "platform": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{0,49}$"},
+          "enabled": {"type": "boolean"},
+          "base_url": {"type": "string", "format": "uri", "pattern": "^https://"},
+          "selectors": {
+            "type": "object",
+            "additionalProperties": {"type": "string", "minLength": 1, "maxLength": 500}
+          },
+          "auth_secret_ref": {
+            "type": ["string", "null"],
+            "description": "Secret manager reference only; credentials must never be embedded.",
+            "pattern": "^[A-Za-z][A-Za-z0-9._/-]{0,199}$"
+          }
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timeout_seconds", "max_concurrency", "requests_per_second", "retry"],
+      "properties": {
+        "timeout_seconds": {"type": "integer", "minimum": 1, "maximum": 120},
+        "max_concurrency": {"type": "integer", "minimum": 1, "maximum": 16},
+        "requests_per_second": {"type": "number", "exclusiveMinimum": 0, "maximum": 10},
+        "user_agent": {"type": "string", "minLength": 1, "maxLength": 200},
+        "retry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["max_attempts", "base_delay_seconds", "max_delay_seconds"],
+          "properties": {
+            "max_attempts": {"type": "integer", "minimum": 1, "maximum": 10},
+            "base_delay_seconds": {"type": "number", "minimum": 0.1, "maximum": 60},
+            "max_delay_seconds": {"type": "number", "minimum": 1, "maximum": 600}
+          }
+        }
+      }
+    },
+    "compliance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["respect_robots_txt", "exclude_private", "exclude_active_contests", "allowed_license_codes"],
+      "properties": {
+        "respect_robots_txt": {"const": true},
+        "exclude_private": {"const": true},
+        "exclude_active_contests": {"const": true},
+        "allowed_license_codes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 100}
+        },
+        "exclude_url_patterns": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {"type": "string", "minLength": 1, "maxLength": 500}
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "directory", "write_raw_snapshots"],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "directory": {"type": "string", "minLength": 1, "maxLength": 500},
+        "write_raw_snapshots": {"type": "boolean"}
+      }
+    }
+  }
+}

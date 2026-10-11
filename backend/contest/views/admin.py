@@ -15,7 +15,7 @@ from utils.cache import cache
 from utils.constants import CacheKey, ContestStatus
 from utils.shortcuts import rand_str
 from utils.tasks import delete_files
-from ..models import Contest, ContestAnnouncement, ACMContestRank, OIContestRank
+from ..models import Contest, ContestAnnouncement, ACMContestRank
 from ..serializers import (ContestAnnouncementSerializer, ContestAdminSerializer,
                            CreateConetestSeriaizer, CreateContestAnnouncementSerializer,
                            EditConetestSeriaizer, EditContestAnnouncementSerializer,
@@ -79,7 +79,7 @@ class ContestAPI(APIView):
             except Contest.DoesNotExist:
                 return self.error("Contest does not exist")
 
-        contests = Contest.objects.select_related('created_by').all().order_by("-create_time")
+        contests = Contest.objects.select_related("created_by").all().order_by("-create_time")
         if request.user.is_admin():
             contests = contests.filter(created_by=request.user)
 
@@ -254,7 +254,7 @@ class DownloadContestSubmissions(APIView):
         problem_ids = contest.problem_set.all().values_list("id", "_id")
         id2display_id = {k[0]: k[1] for k in problem_ids}
         ac_map = {k[0]: False for k in problem_ids}
-        if dlType == "0": # download all
+        if dlType == "0":  # download all
             submissions = Submission.objects.filter(contest=contest).order_by("-create_time")
         else:
             submissions = Submission.objects.filter(contest=contest, result=JudgeStatus.ACCEPTED).order_by("-create_time")

@@ -1,0 +1,30 @@
+2026-10-07 06:11:49,620 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2026-10-07 06:11:49,764 INFO RPC interface 'supervisor' initialized
+2026-10-07 06:11:49,765 CRIT Server 'inet_http_server' running without any HTTP authentication checking
+2026-10-07 06:11:49,768 INFO supervisord started with pid 489
+2026-10-07 06:11:50,799 INFO spawned: 'dramatiq' with pid 692
+2026-10-07 06:11:50,846 INFO spawned: 'gunicorn' with pid 693
+2026-10-07 06:11:50,924 INFO spawned: 'nginx' with pid 694
+2026-10-07 06:11:51,034 INFO spawned: 'recover-agent' with pid 695
+2026-10-07 06:11:51,173 INFO spawned: 'recover-import' with pid 696
+2026-10-07 06:11:51,444 INFO spawned: 'recover-learning' with pid 697
+2026-10-07 06:11:51,504 INFO reaped unknown pid 686 (exit status 0)
+2026-10-07 06:11:55,837 INFO success: dramatiq entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+2026-10-07 06:11:55,845 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+2026-10-07 06:11:56,863 INFO success: nginx entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+2026-10-07 06:11:56,867 INFO success: recover-agent entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+2026-10-07 06:11:56,874 INFO success: recover-import entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+2026-10-07 06:11:56,875 INFO success: recover-learning entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+2026-10-07 06:18:52,964 INFO waiting for gunicorn to stop
+2026-10-07 06:18:54,995 INFO stopped: gunicorn (exit status 0)
+2026-10-07 06:18:55,085 INFO spawned: 'gunicorn' with pid 941
+2026-10-07 06:19:00,375 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+2026-10-07 06:23:42,312 INFO waiting for dramatiq, nginx, recover-agent, recover-import, recover-learning, gunicorn to die
+2026-10-07 06:23:44,301 INFO stopped: gunicorn (exit status 0)
+2026-10-07 06:23:44,373 WARN stopped: recover-learning (terminated by SIGTERM)
+2026-10-07 06:23:45,441 WARN stopped: recover-import (terminated by SIGTERM)
+2026-10-07 06:23:45,448 INFO waiting for dramatiq, nginx, recover-agent to die
+2026-10-07 06:23:45,572 WARN stopped: recover-agent (terminated by SIGTERM)
+2026-10-07 06:23:45,770 INFO stopped: nginx (exit status 0)
+2026-10-07 06:23:49,076 INFO waiting for dramatiq to die
+2026-10-07 06:23:49,209 INFO stopped: dramatiq (exit status 0)

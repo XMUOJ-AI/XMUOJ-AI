@@ -1,0 +1,177 @@
+{
+  "direct_http_spoof_redirect": {
+    "passed": true,
+    "detail": null
+  },
+  "https_hsts": {
+    "passed": true,
+    "detail": null
+  },
+  "frontend_html": {
+    "passed": true,
+    "detail": null
+  },
+  "frontend_scripts": {
+    "passed": true,
+    "detail": [
+      {
+        "url": "/static/js/vendor.dll.794a942.js",
+        "status": 200,
+        "hsts": "max-age=3600"
+      },
+      {
+        "url": "/static/js/manifest.e98795589107ab420940.js",
+        "status": 200,
+        "hsts": "max-age=3600"
+      },
+      {
+        "url": "/static/js/vendor.24bfea10b5ce8a236a50.js",
+        "status": 200,
+        "hsts": "max-age=3600"
+      },
+      {
+        "url": "/static/js/oj.ad9dd57d2d2296ec8b5b.js",
+        "status": 200,
+        "hsts": "max-age=3600"
+      }
+    ]
+  },
+  "secure_cookies": {
+    "passed": true,
+    "detail": null
+  },
+  "csrf_rejection": {
+    "passed": true,
+    "detail": null
+  },
+  "import_retry_same_export": {
+    "passed": true,
+    "detail": null
+  },
+  "private_retryable_export": {
+    "passed": true,
+    "detail": null
+  },
+  "random_password_login": {
+    "passed": true,
+    "detail": null
+  },
+  "student_cannot_export": {
+    "passed": true,
+    "detail": null
+  },
+  "real_judgeserver_accepted": {
+    "passed": true,
+    "detail": {
+      "submission_id": "966a2c145d324e0a6bef4f399d45e18e",
+      "result": 0,
+      "elapsed_seconds": 6.14
+    }
+  },
+  "real_queue_profile": {
+    "passed": true,
+    "detail": {
+      "student_id": 4,
+      "algorithm_version": "elo-v1",
+      "updated_time": "2026-10-07T09:46:51.094380Z",
+      "knowledge_states": [
+        {
+          "knowledge_code": "h7_addition",
+          "name": "H7 加法联调",
+          "rating": 1207.6881,
+          "mastery_level": "stable",
+          "attempt_count": 1,
+          "accepted_count": 1,
+          "recent_fail_count": 0,
+          "confidence": 0.091,
+          "last_submission_time": "2026-10-07T09:46:46.560721Z"
+        }
+      ]
+    }
+  },
+  "real_rejudge_idempotent": {
+    "passed": true,
+    "detail": null
+  },
+  "real_judge_offline_queued": {
+    "passed": true,
+    "detail": null
+  },
+  "real_judge_restart_recovers_queue": {
+    "passed": true,
+    "detail": {
+      "submission_id": "8a9b0b3ce8d1ecce00e0110abeaaa1f3",
+      "result": 0
+    }
+  },
+  "recovered_judge_updates_profile": {
+    "passed": true,
+    "detail": null
+  },
+  "real_path_generation": {
+    "passed": true,
+    "detail": {
+      "path_id": "9c2bb35f-6588-4741-be21-40e4f2e319c0",
+      "algorithm_version": "path-v1",
+      "status": "active",
+      "target": null,
+      "steps": [
+        {
+          "order": 1,
+          "knowledge_code": "h7_addition",
+          "knowledge_name": "H7 加法联调",
+          "problem_id": null,
+          "title": null,
+          "problem_rating": null,
+          "reason_code": "weakness_practice",
+          "reason_text": "先复习知识点，暂无合适的可判题练习",
+          "status": "pending"
+        }
+      ],
+      "generated_time": "2026-10-07T09:47:44.151848Z",
+      "expires_time": "2026-10-14T09:47:44.143688Z"
+    }
+  },
+  "missing_model_explicit_503": {
+    "passed": true,
+    "detail": {
+      "status": 503,
+      "response": {
+        "error": "AGENT_DEPENDENCY_NOT_READY",
+        "data": {
+          "message": "模型服务尚未配置",
+          "retryable": true,
+          "details": {}
+        },
+        "request_id": "req_d46de1efbaa64b9a95f846e3679ee47b"
+      }
+    }
+  },
+  "credential_disk_permissions": {
+    "passed": true,
+    "detail": {
+      "directory": "0o700",
+      "owner": 900,
+      "files": [
+        {
+          "mode": "0o600",
+          "owner": 900
+        },
+        {
+          "mode": "0o600",
+          "owner": 900
+        },
+        {
+          "mode": "0o600",
+          "owner": 900
+        }
+      ]
+    }
+  },
+  "background_credentials_cleanup": {
+    "passed": true,
+    "detail": {
+      "observed_seconds": 9.667
+    }
+  }
+}

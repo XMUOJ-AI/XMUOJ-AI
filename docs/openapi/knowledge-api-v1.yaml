@@ -1,0 +1,4358 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "XMUOJ Knowledge Point API",
+    "version": "0.9.9",
+    "description": "2026-10-07 H5修订（x-contract-revision=2026-10-07-H5）。知识模块实施工作契约，版本仍为0.9.9，未冻结、未经四方签字。用户已授权实施，原评审包保持不变；当前变更见 docs/knowledge/implementation-notes-2026-10-07.md。新接口使用独立响应基类与客户端适配器，正式图与审核申请分离，提交人不得自审。"
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Same-origin XMUOJ backend"
+    }
+  ],
+  "security": [
+    {
+      "sessionCookie": []
+    }
+  ],
+  "x-integration-rule": {
+    "backend": "知识模块新接口使用 KnowledgeAPIView 生成 error/data/request_id 和 X-API-Version；不得修改全局 APIView 或旧接口包络。",
+    "frontend": "知识模块页面使用 knowledgeRequest；适配器处理 4xx、request_id 和无 body 的 204，不得修改全局 ajax。"
+  },
+  "tags": [
+    {
+      "name": "Public Knowledge"
+    },
+    {
+      "name": "Knowledge Point"
+    },
+    {
+      "name": "Knowledge Graph"
+    },
+    {
+      "name": "Problem Knowledge"
+    },
+    {
+      "name": "Knowledge Review"
+    }
+  ],
+  "paths": {
+    "/knowledge-points": {
+      "get": {
+        "tags": [
+          "Public Knowledge"
+        ],
+        "operationId": "listPublicKnowledgePoints",
+        "description": "只查询 active 知识点；关键词匹配 code、name、normalized_name 和 aliases，按 code 升序稳定分页。",
+        "x-access-rule": {
+          "allowed": [
+            "Regular User",
+            "Super Admin",
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN",
+            "Admin + ProblemPermission.NONE"
+          ],
+          "denied": [
+            "Anonymous"
+          ],
+          "condition": "Session 必需；服务端仅查询 status=active；不能通过 query 获取草稿或废弃知识点"
+        },
+        "x-reject-unknown-query-parameters": true,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Category"
+            }
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "已启用知识点分页列表",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicKnowledgeListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/knowledge-points/{knowledge_code}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/KnowledgeCodePath"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Public Knowledge"
+        ],
+        "operationId": "getPublicKnowledgePoint",
+        "description": "只读详情；保留 prerequisites、dependents、related_problems 三个数组的原有类型和小集合完整语义。默认 include_collections=true，各集合最多100项；任一可见集合超过100时返回409 KNOWLEDGE_PAGINATION_REQUIRED，details明确集合名、分页入口和不内嵌集合的详情URL，绝不静默截断。include_collections=false显式跳过全部集合，三个数组均为空，prerequisite_count/dependent_count仍是当前正式active邻接总数；关联题完整total由公开分页接口提供。依赖按对方code、依赖id升序；题目按展示编号、数据库id升序。隐藏题、比赛题及待审数据的编号、标题与计数不返回。",
+        "x-access-rule": {
+          "allowed": [
+            "Regular User",
+            "Super Admin",
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN",
+            "Admin + ProblemPermission.NONE"
+          ],
+          "denied": [
+            "Anonymous"
+          ],
+          "condition": "仅 status=active；非 active 与不存在统一 404；关联题来自当前 approved 映射且 contest_id__isnull=True、visible=True"
+        },
+        "x-reject-unknown-query-parameters": true,
+        "responses": {
+          "200": {
+            "description": "已启用知识点只读详情",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicKnowledgeEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "409": {
+            "$ref": "#/components/responses/PaginationRequired"
+          }
+        },
+        "parameters": [
+          {
+            "name": "include_collections",
+            "in": "query",
+            "required": false,
+            "description": "精确使用true或false，不接受0/1、大小写变体或重复参数。false只读取详情字段和邻接计数，不内嵌集合。",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ]
+      }
+    },
+    "/knowledge-graph": {
+      "get": {
+        "tags": [
+          "Public Knowledge"
+        ],
+        "operationId": "getPublicKnowledgeGraph",
+        "description": "有 root 时先在 active 正式图中同时沿上游和下游遍历，根距离 0，一条边距离 1；再对非根节点应用 category/level，根始终保留。无 root 时筛选全部 active 节点且忽略 depth。超过 500 个候选时按 distance、code 截断，边按 from、to 排序且不得悬空。/knowledge 局部图只发送 root_code 与 depth；category/level 供 /knowledge/graph 完整图谱筛选使用。",
+        "x-access-rule": {
+          "allowed": [
+            "Regular User",
+            "Super Admin",
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN",
+            "Admin + ProblemPermission.NONE"
+          ],
+          "denied": [
+            "Anonymous"
+          ],
+          "condition": "Session 必需；仅 active 节点和两端 active 的正式边；不支持待审申请或 status"
+        },
+        "x-reject-unknown-query-parameters": true,
+        "parameters": [
+          {
+            "name": "root_code",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/KnowledgeCode"
+            }
+          },
+          {
+            "name": "depth",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8,
+              "default": 3
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Category"
+            }
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "当前生效只读图谱",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicGraphEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/admin/knowledge-points": {
+      "get": {
+        "tags": [
+          "Knowledge Point"
+        ],
+        "operationId": "listKnowledgePoints",
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin",
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN"
+          ],
+          "denied": [
+            "Admin + ProblemPermission.NONE",
+            "Regular User"
+          ]
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Category"
+            }
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/KnowledgeStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "知识点分页列表",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "description": "按updated_time倒序、code升序稳定分页；关键词匹配code/name/normalized_name/aliases。三类计数与管理详情同口径，related_problem_count应用调用者的题目对象权限。"
+      },
+      "post": {
+        "tags": [
+          "Knowledge Point"
+        ],
+        "operationId": "createKnowledgePoint",
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin"
+          ],
+          "denied": [
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN",
+            "Admin + ProblemPermission.NONE",
+            "Regular User"
+          ]
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "知识点已创建",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/Unprocessable"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/admin/knowledge-points/{knowledge_code}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/KnowledgeCodePath"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Knowledge Point"
+        ],
+        "operationId": "getKnowledgePoint",
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin",
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN"
+          ],
+          "denied": [
+            "Admin + ProblemPermission.NONE",
+            "Regular User"
+          ]
+        },
+        "responses": {
+          "200": {
+            "description": "知识点详情",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeAdminDetailEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Knowledge Point"
+        ],
+        "operationId": "updateKnowledgePoint",
+        "description": "仅允许 draft->active 或 active->deprecated。废弃前不能有引用该点的 pending 依赖变更申请、pending 映射批次、当前正式依赖或当前 ProblemKnowledge 映射；有引用或非法跳转时返回 409 且状态/version 不变。",
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin"
+          ],
+          "denied": [
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN",
+            "Admin + ProblemPermission.NONE",
+            "Regular User"
+          ]
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "知识点已更新",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/Unprocessable"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/admin/knowledge-points/{knowledge_code}/delete": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/KnowledgeCodePath"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Knowledge Point"
+        ],
+        "operationId": "deleteUnusedDraftKnowledgePoint",
+        "description": "操作命令：仅删除从未被正式依赖、依赖变更申请、题目映射或映射批次引用的 draft。JSON 体携带 version 和 reason；在同一事务复核状态、版本及引用，写受限快照事件后删除。active/deprecated 或任一引用返回 409。",
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin"
+          ],
+          "denied": [
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN",
+            "Admin + ProblemPermission.NONE",
+            "Regular User"
+          ]
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeDelete"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "未使用草稿已删除，审计事件已提交",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/admin/knowledge-graph": {
+      "get": {
+        "tags": [
+          "Knowledge Graph"
+        ],
+        "operationId": "getKnowledgeGraph",
+        "description": "正式图查询。有 root 时先双向遍历再过滤且根始终保留；无 root 时过滤全部 active 节点并忽略 depth；超过 500 按 distance、code 截断，边不得悬空。待审依赖变更只能从审核接口查看。",
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin",
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN"
+          ],
+          "denied": [
+            "Admin + ProblemPermission.NONE",
+            "Regular User"
+          ],
+          "condition": "仅 active 节点和正式依赖；所有有权管理账号看到同一正式图"
+        },
+        "parameters": [
+          {
+            "name": "root_code",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/KnowledgeCode"
+            }
+          },
+          {
+            "name": "depth",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8,
+              "default": 3
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Category"
+            }
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "知识依赖图",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/admin/knowledge-dependency-change-requests": {
+      "post": {
+        "tags": [
+          "Knowledge Graph"
+        ],
+        "operationId": "createKnowledgeDependencyChangeRequest",
+        "description": "提交 create、update 或 delete 申请；成功只创建 pending 申请，正式依赖保持不变。",
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin"
+          ],
+          "denied": [
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN",
+            "Admin + ProblemPermission.NONE",
+            "Regular User"
+          ]
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DependencyChangeRequestInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "依赖变更申请已创建，正式图未改变",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DependencyChangeRequestEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/Unprocessable"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/admin/problems/{problem_id}/knowledge-mappings": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ProblemId"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Problem Knowledge"
+        ],
+        "operationId": "getProblemKnowledgeMappings",
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin",
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN"
+          ],
+          "condition": "Super Admin 和 ALL 可访问全部普通题；OWN 仅可访问 created_by 为当前用户且 contest 为空的题目；越权题目统一返回 404"
+        },
+        "responses": {
+          "200": {
+            "description": "题目知识点映射集合",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MappingSetEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Problem Knowledge"
+        ],
+        "operationId": "replaceProblemKnowledgeMappings",
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin",
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN"
+          ],
+          "condition": "Super Admin 和 ALL 可访问全部普通题；OWN 仅可访问 created_by 为当前用户且 contest 为空的题目；越权题目统一返回 404"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MappingSetInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "映射批次已提交审核，当前已批准集合未改变",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MappingSubmissionEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/Unprocessable"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/admin/knowledge-reviews": {
+      "get": {
+        "tags": [
+          "Knowledge Review"
+        ],
+        "operationId": "listKnowledgeReviews",
+        "description": "仅Super Admin。默认status=pending；按created_time、object_key升序。updated_from/updated_to为闭区间，前者不得晚于后者。keyword仅匹配依赖两端code/name、题目display_id/title或提交者username，不搜索候选payload或敏感字段。只返回摘要。",
+        "x-reject-unknown-query-parameters": true,
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin"
+          ],
+          "denied": [
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN",
+            "Admin + ProblemPermission.NONE",
+            "Regular User"
+          ]
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "name": "object_type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "dependency_change",
+                "problem_mapping"
+              ]
+            }
+          },
+          {
+            "name": "submitter_id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ReviewQueueStatus"
+            }
+          },
+          {
+            "name": "updated_from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "updated_to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "审核队列",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/admin/knowledge-reviews/{object_type}/{object_key}": {
+      "get": {
+        "tags": [
+          "Knowledge Review"
+        ],
+        "operationId": "getKnowledgeReviewDetail",
+        "description": "按 object_type 返回完整且可判别的依赖变更申请或映射批次详情；队列本身只返回摘要。",
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin"
+          ],
+          "denied": [
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN",
+            "Admin + ProblemPermission.NONE",
+            "Regular User"
+          ]
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ObjectType"
+          },
+          {
+            "$ref": "#/components/parameters/ObjectKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "审核对象完整详情",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewDetailEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/admin/knowledge-reviews/{object_type}/{object_key}/approve": {
+      "post": {
+        "tags": [
+          "Knowledge Review"
+        ],
+        "operationId": "approveKnowledgeReview",
+        "description": "仅非提交人的 Super Admin 可以批准。当前用户等于审核对象 submitted_by 时返回 403 KNOWLEDGE_SELF_REVIEW_FORBIDDEN，业务数据和审计均不改变。",
+        "x-object-rule": "current_user.id != review_object.submitted_by.id",
+        "x-error-codes": [
+          "KNOWLEDGE_SELF_REVIEW_FORBIDDEN"
+        ],
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin"
+          ],
+          "denied": [
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN",
+            "Admin + ProblemPermission.NONE",
+            "Regular User"
+          ]
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ObjectType"
+          },
+          {
+            "$ref": "#/components/parameters/ObjectKey"
+          },
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewAction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "审核通过",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/Unprocessable"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/admin/knowledge-reviews/{object_type}/{object_key}/reject": {
+      "post": {
+        "tags": [
+          "Knowledge Review"
+        ],
+        "operationId": "rejectKnowledgeReview",
+        "description": "仅非提交人的 Super Admin 可以驳回。当前用户等于审核对象 submitted_by 时返回 403 KNOWLEDGE_SELF_REVIEW_FORBIDDEN，业务数据和审计均不改变。",
+        "x-object-rule": "current_user.id != review_object.submitted_by.id",
+        "x-error-codes": [
+          "KNOWLEDGE_SELF_REVIEW_FORBIDDEN"
+        ],
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin"
+          ],
+          "denied": [
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN",
+            "Admin + ProblemPermission.NONE",
+            "Regular User"
+          ]
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ObjectType"
+          },
+          {
+            "$ref": "#/components/parameters/ObjectKey"
+          },
+          {
+            "$ref": "#/components/parameters/CsrfToken"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectAction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "审核驳回",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/Unprocessable"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/admin/knowledge-points/{knowledge_code}/dependencies": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/KnowledgeCodePath"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Knowledge Point"
+        ],
+        "operationId": "listKnowledgePointDependencies",
+        "description": "正式依赖邻接分页；按对方code、dependency_id升序。direction默认prerequisites；总数与管理详情一致。",
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin",
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN"
+          ],
+          "denied": [
+            "Admin + ProblemPermission.NONE",
+            "Regular User"
+          ]
+        },
+        "x-reject-unknown-query-parameters": true,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "prerequisites",
+                "dependents"
+              ],
+              "default": "prerequisites"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "查询成功",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDependencyPageEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/admin/knowledge-points/{knowledge_code}/related-problems": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/KnowledgeCodePath"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Knowledge Point"
+        ],
+        "operationId": "listKnowledgePointRelatedProblems",
+        "description": "当前正式映射关联普通题，按对象权限过滤后计数；按display_id、problem_id升序。隐藏普通题可在有权管理视图查看，比赛题不支持。",
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin",
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN"
+          ],
+          "denied": [
+            "Admin + ProblemPermission.NONE",
+            "Regular User"
+          ]
+        },
+        "x-reject-unknown-query-parameters": true,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "查询成功",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminProblemPageEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/admin/knowledge-dependencies/{dependency_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/DependencyId"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Knowledge Graph"
+        ],
+        "operationId": "getKnowledgeDependency",
+        "description": "读取当前正式边和准确version，供受控update/delete申请使用；不存在或已删除返回404。",
+        "x-access-rule": {
+          "allowed": [
+            "Super Admin",
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN"
+          ],
+          "denied": [
+            "Admin + ProblemPermission.NONE",
+            "Regular User"
+          ]
+        },
+        "responses": {
+          "200": {
+            "description": "查询成功",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DependencyEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/knowledge-points/{knowledge_code}/dependencies": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/KnowledgeCodePath"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Public Knowledge"
+        ],
+        "operationId": "listPublicKnowledgePointDependencies",
+        "description": "只读正式active邻接；direction默认prerequisites，按对方code、依赖id升序。page默认1、page_size默认20且最大100；超出最后一页返回空items和真实total，不能静默截断。offset分页不承诺跨请求冻结快照，集合变更后客户端应刷新页面。",
+        "x-access-rule": {
+          "allowed": [
+            "Regular User",
+            "Super Admin",
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN",
+            "Admin + ProblemPermission.NONE"
+          ],
+          "denied": [
+            "Anonymous"
+          ],
+          "condition": "只读active知识点；所有登录身份采用相同公开范围，不提升管理员题目权限；非active与不存在统一404。"
+        },
+        "x-reject-unknown-query-parameters": true,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "prerequisites",
+                "dependents"
+              ],
+              "default": "prerequisites"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "查询成功",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicDependencyPageEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/knowledge-points/{knowledge_code}/related-problems": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/KnowledgeCodePath"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Public Knowledge"
+        ],
+        "operationId": "listPublicKnowledgePointRelatedProblems",
+        "description": "仅当前approved映射的visible普通题；隐藏题、比赛题和pending候选既不出现在items也不计入total；按display_id、problem_id升序。page默认1、page_size默认20且最大100；超出最后一页返回空items和真实total，不能静默截断。offset分页不承诺跨请求冻结快照，集合变更后客户端应刷新页面。",
+        "x-access-rule": {
+          "allowed": [
+            "Regular User",
+            "Super Admin",
+            "Admin + ProblemPermission.ALL",
+            "Admin + ProblemPermission.OWN",
+            "Admin + ProblemPermission.NONE"
+          ],
+          "denied": [
+            "Anonymous"
+          ],
+          "condition": "只读active知识点；所有登录身份采用相同公开范围，不提升管理员题目权限；非active与不存在统一404。"
+        },
+        "x-reject-unknown-query-parameters": true,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "查询成功",
+            "headers": {
+              "X-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicProblemPageEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sessionid"
+      }
+    },
+    "headers": {
+      "ApiVersion": {
+        "description": "实际响应契约版本",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "0.9.9"
+          ]
+        }
+      }
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      "PageSize": {
+        "name": "page_size",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20
+        }
+      },
+      "CsrfToken": {
+        "name": "X-CSRFToken",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "KnowledgeCodePath": {
+        "name": "knowledge_code",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/KnowledgeCode"
+        }
+      },
+      "DependencyId": {
+        "name": "dependency_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "ProblemId": {
+        "name": "problem_id",
+        "in": "path",
+        "required": true,
+        "description": "XMUOJ Problem 数据库主键，不是展示字段 _id",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "ObjectType": {
+        "name": "object_type",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "dependency_change",
+            "problem_mapping"
+          ]
+        }
+      },
+      "ObjectKey": {
+        "name": "object_key",
+        "in": "path",
+        "required": true,
+        "description": "dependency_change 使用申请 UUID；problem_mapping 使用 review_batch_id UUID",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      }
+    },
+    "schemas": {
+      "KnowledgeCode": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]{0,63}$"
+      },
+      "Category": {
+        "type": "string",
+        "enum": [
+          "basic",
+          "data_structure",
+          "algorithm",
+          "paradigm",
+          "mathematics",
+          "string",
+          "graph"
+        ]
+      },
+      "KnowledgeStatus": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "active",
+          "deprecated"
+        ]
+      },
+      "ReviewStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "approved",
+          "rejected"
+        ]
+      },
+      "ReviewQueueStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "approved",
+          "rejected",
+          "superseded"
+        ],
+        "default": "pending"
+      },
+      "KnowledgeCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "name",
+          "description",
+          "category",
+          "level"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 5000
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "aliases": {
+            "type": "array",
+            "maxItems": 20,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "course_chapter": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "display_order": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      },
+      "KnowledgeUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version"
+        ],
+        "minProperties": 2,
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 5000
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "status": {
+            "$ref": "#/components/schemas/KnowledgeStatus"
+          },
+          "aliases": {
+            "type": "array",
+            "maxItems": 20,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "course_chapter": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "display_order": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      },
+      "KnowledgeDelete": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "reason"
+        ],
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 500
+          }
+        }
+      },
+      "KnowledgePoint": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "code",
+          "name",
+          "normalized_name",
+          "description",
+          "category",
+          "level",
+          "status",
+          "version",
+          "aliases",
+          "metadata",
+          "created_time",
+          "updated_time",
+          "created_by"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "name": {
+            "type": "string"
+          },
+          "normalized_name": {
+            "type": "string",
+            "description": "服务端按 NFKC、空白折叠、ASCII 小写算法生成"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "status": {
+            "$ref": "#/components/schemas/KnowledgeStatus"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "created_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "$ref": "#/components/schemas/NullableUserSummary"
+          }
+        }
+      },
+      "KnowledgeListItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "name",
+          "category",
+          "level",
+          "status",
+          "version",
+          "prerequisite_count",
+          "dependent_count",
+          "related_problem_count",
+          "updated_time"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "status": {
+            "$ref": "#/components/schemas/KnowledgeStatus"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "prerequisite_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "dependent_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "related_problem_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "updated_time": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AdminDependencySummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "dependency_id",
+          "code",
+          "name",
+          "relation_type",
+          "weight",
+          "version"
+        ],
+        "properties": {
+          "dependency_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "name": {
+            "type": "string"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "required",
+              "recommended"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "AdminProblemSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "problem_id",
+          "display_id",
+          "title",
+          "role",
+          "weight"
+        ],
+        "properties": {
+          "problem_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "display_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "secondary",
+              "prerequisite"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1
+          }
+        }
+      },
+      "KnowledgeAdminDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "knowledge_point",
+          "capabilities",
+          "prerequisites",
+          "dependents",
+          "related_problems"
+        ],
+        "properties": {
+          "knowledge_point": {
+            "$ref": "#/components/schemas/KnowledgePoint"
+          },
+          "capabilities": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "view",
+                "edit",
+                "change_status",
+                "delete_draft",
+                "request_dependency_change"
+              ]
+            }
+          },
+          "prerequisites": {
+            "$ref": "#/components/schemas/AdminDependencySummaryList"
+          },
+          "dependents": {
+            "$ref": "#/components/schemas/AdminDependencySummaryList"
+          },
+          "related_problems": {
+            "$ref": "#/components/schemas/AdminProblemSummaryList"
+          }
+        }
+      },
+      "AdminDependencySummaryList": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/AdminDependencySummary"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "AdminProblemSummaryList": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/AdminProblemSummary"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "DependencyChangeRequestInput": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/DependencyCreateRequestInput"
+          },
+          {
+            "$ref": "#/components/schemas/DependencyUpdateRequestInput"
+          },
+          {
+            "$ref": "#/components/schemas/DependencyDeleteRequestInput"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "operation",
+          "mapping": {
+            "create": "#/components/schemas/DependencyCreateRequestInput",
+            "update": "#/components/schemas/DependencyUpdateRequestInput",
+            "delete": "#/components/schemas/DependencyDeleteRequestInput"
+          }
+        }
+      },
+      "Dependency": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "prerequisite",
+          "dependent",
+          "relation_type",
+          "weight",
+          "source",
+          "confidence",
+          "version",
+          "updated_time"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "prerequisite": {
+            "$ref": "#/components/schemas/KnowledgePoint"
+          },
+          "dependent": {
+            "$ref": "#/components/schemas/KnowledgePoint"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "required",
+              "recommended"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "import",
+              "ai"
+            ],
+            "description": "冻结模型兼容字段；本期接口只产生 manual，不接受客户端输入，也不触发额外功能"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "冻结模型兼容字段；本期固定为 1，不展示、不计算且不接受客户端输入"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "updated_time": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MappingInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "knowledge_code",
+          "role",
+          "weight"
+        ],
+        "properties": {
+          "knowledge_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "secondary",
+              "prerequisite"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1,
+            "multipleOf": 0.001
+          }
+        }
+      },
+      "MappingBatchItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "knowledge_code",
+          "role",
+          "weight",
+          "source",
+          "confidence"
+        ],
+        "properties": {
+          "knowledge_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "secondary",
+              "prerequisite"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1,
+            "multipleOf": 0.001
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "import",
+              "ai"
+            ],
+            "description": "冻结模型兼容字段；本期接口只产生 manual"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "multipleOf": 0.001,
+            "description": "冻结模型兼容字段；本期固定为 1，不参与页面或计算"
+          }
+        }
+      },
+      "Mapping": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "knowledge_code",
+          "knowledge_name",
+          "role",
+          "weight",
+          "review_status",
+          "updated_time"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "knowledge_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "knowledge_name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "secondary",
+              "prerequisite"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1
+          },
+          "review_status": {
+            "type": "string",
+            "enum": [
+              "approved"
+            ]
+          },
+          "updated_time": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MappingSetInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "base_version",
+          "mappings"
+        ],
+        "properties": {
+          "base_version": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "提交者读取到的当前 approved_version；未标注题为 0"
+          },
+          "mappings": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/MappingInput"
+            },
+            "description": "服务层必须校验 knowledge_code 唯一且恰好一个 primary"
+          }
+        }
+      },
+      "MappingBatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "review_batch_id",
+          "problem_id",
+          "batch_version",
+          "base_version",
+          "approved_version",
+          "status",
+          "mappings",
+          "updated_time"
+        ],
+        "properties": {
+          "review_batch_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "problem_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "batch_version": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "同题每次提交递增，驳回也占用"
+          },
+          "base_version": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "只引用提交时当前 approved_version"
+          },
+          "approved_version": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true,
+            "description": "仅批准时赋值；pending/rejected 为 null"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "superseded"
+            ]
+          },
+          "mappings": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/MappingBatchItem"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "updated_time": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReviewAction": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expected_updated_time"
+        ],
+        "properties": {
+          "expected_updated_time": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RejectAction": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expected_updated_time",
+          "reason"
+        ],
+        "properties": {
+          "expected_updated_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 500
+          }
+        }
+      },
+      "PublicKnowledgePoint": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "name",
+          "description",
+          "category",
+          "level",
+          "aliases",
+          "prerequisite_count",
+          "dependent_count"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "prerequisite_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "当前active正式图中的直接邻接总数，不是当前截断图中的边数"
+          },
+          "dependent_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "当前active正式图中的直接邻接总数，不是当前截断图中的边数"
+          }
+        }
+      },
+      "DependencyProposal": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "prerequisite_code",
+          "dependent_code",
+          "relation_type",
+          "weight"
+        ],
+        "properties": {
+          "prerequisite_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "dependent_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "required",
+              "recommended"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1,
+            "multipleOf": 0.001
+          }
+        }
+      },
+      "DependencyChangeRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "request_id",
+          "operation",
+          "status",
+          "reason",
+          "submitted_by",
+          "created_time",
+          "updated_time",
+          "target_dependency_id",
+          "original_target_id",
+          "base_version",
+          "before",
+          "proposed",
+          "reviewed_by",
+          "review_reason"
+        ],
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "create",
+              "update",
+              "delete"
+            ]
+          },
+          "target_dependency_id": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true,
+            "description": "当前目标外键，删除正式边后为null；历史身份读取original_target_id"
+          },
+          "base_version": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
+          },
+          "before": {
+            "$ref": "#/components/schemas/NullableDependencyState",
+            "description": "提交时捕获的受限历史状态，提交后不随正式边变化；create为null"
+          },
+          "proposed": {
+            "$ref": "#/components/schemas/NullableDependencyProposal",
+            "description": "不可变候选，delete为null"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReviewStatus"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 500
+          },
+          "review_reason": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 500
+          },
+          "submitted_by": {
+            "$ref": "#/components/schemas/UserSummary"
+          },
+          "reviewed_by": {
+            "$ref": "#/components/schemas/NullableUserSummary"
+          },
+          "created_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "original_target_id": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true,
+            "description": "提交时正式目标ID，不可变；create为null；正式边删除后update/delete仍保留此值"
+          }
+        }
+      },
+      "PublicDependencySummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "name",
+          "relation_type",
+          "weight"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "name": {
+            "type": "string"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "required",
+              "recommended"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1,
+            "multipleOf": 0.001
+          }
+        }
+      },
+      "PublicProblemSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "display_id",
+          "title"
+        ],
+        "properties": {
+          "display_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Problem._id，非数据库主键"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "PublicKnowledgePointDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "name",
+          "description",
+          "category",
+          "level",
+          "aliases",
+          "prerequisites",
+          "dependents",
+          "related_problems",
+          "prerequisite_count",
+          "dependent_count"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "prerequisites": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicDependencySummary"
+            },
+            "maxItems": 100,
+            "description": "include_collections=true时返回全部可见项，超过100项返回409而非截断；false时显式为空数组。仅正式active邻接。"
+          },
+          "dependents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicDependencySummary"
+            },
+            "maxItems": 100,
+            "description": "include_collections=true时返回全部可见项，超过100项返回409而非截断；false时显式为空数组。仅正式active邻接。"
+          },
+          "related_problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProblemSummary"
+            },
+            "description": "include_collections=true时返回全部可见项，超过100项返回409而非截断；false时显式为空数组。仅当前approved映射关联的visible普通题，不回显隐藏题或比赛题。",
+            "maxItems": 100
+          },
+          "prerequisite_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "当前active正式图中的直接邻接总数，不是当前截断图中的边数"
+          },
+          "dependent_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "当前active正式图中的直接邻接总数，不是当前截断图中的边数"
+          }
+        }
+      },
+      "PublicGraphNode": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "name",
+          "level",
+          "category"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          }
+        }
+      },
+      "PublicGraphEdge": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "to",
+          "relation_type",
+          "weight"
+        ],
+        "properties": {
+          "from": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "to": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "required",
+              "recommended"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1,
+            "multipleOf": 0.001
+          }
+        }
+      },
+      "PublicKnowledgeEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PublicKnowledgePointDetail"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "PublicKnowledgeListEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "items",
+              "page",
+              "page_size",
+              "total"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PublicKnowledgePoint"
+                }
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "page_size": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "PublicGraphEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "nodes",
+              "edges",
+              "truncated"
+            ],
+            "properties": {
+              "nodes": {
+                "type": "array",
+                "maxItems": 500,
+                "items": {
+                  "$ref": "#/components/schemas/PublicGraphNode"
+                }
+              },
+              "edges": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PublicGraphEdge"
+                }
+              },
+              "truncated": {
+                "type": "boolean"
+              }
+            }
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "GraphNode": {
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "level",
+          "category"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer"
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GraphEdge": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "from",
+          "to",
+          "relation_type",
+          "weight",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "from": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "to": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "required",
+              "recommended"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1,
+            "multipleOf": 0.001
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "UserSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "username"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        }
+      },
+      "ReviewTargetSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "label"
+        ],
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "secondary_label": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 256
+          }
+        }
+      },
+      "ReviewItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "object_type",
+          "object_key",
+          "object_version",
+          "submitter",
+          "target_summary",
+          "status",
+          "created_time",
+          "updated_time"
+        ],
+        "properties": {
+          "object_type": {
+            "type": "string",
+            "enum": [
+              "dependency_change",
+              "problem_mapping"
+            ]
+          },
+          "object_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "object_version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "create",
+              "update",
+              "delete",
+              "replace"
+            ],
+            "nullable": true
+          },
+          "submitter": {
+            "$ref": "#/components/schemas/UserSummary"
+          },
+          "target_summary": {
+            "$ref": "#/components/schemas/ReviewTargetSummary"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReviewQueueStatus"
+          },
+          "updated_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]+$"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "message",
+              "retryable",
+              "details"
+            ],
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "retryable": {
+                "type": "boolean"
+              },
+              "details": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "KnowledgeEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/KnowledgePoint"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "KnowledgeAdminDetailEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/KnowledgeAdminDetail"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "KnowledgeListEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "items",
+              "page",
+              "page_size",
+              "total"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/KnowledgeListItem"
+                }
+              },
+              "page": {
+                "type": "integer"
+              },
+              "page_size": {
+                "type": "integer"
+              },
+              "total": {
+                "type": "integer"
+              }
+            }
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "DependencyChangeRequestEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/DependencyChangeRequest"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "GraphEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "nodes",
+              "edges",
+              "truncated"
+            ],
+            "properties": {
+              "nodes": {
+                "type": "array",
+                "maxItems": 500,
+                "items": {
+                  "$ref": "#/components/schemas/GraphNode"
+                }
+              },
+              "edges": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/GraphEdge"
+                }
+              },
+              "truncated": {
+                "type": "boolean"
+              }
+            }
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "MappingSetEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "problem_id",
+              "coverage_status",
+              "approved_version",
+              "next_batch_version",
+              "mappings",
+              "pending_batch",
+              "capabilities",
+              "problem"
+            ],
+            "properties": {
+              "problem_id": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "coverage_status": {
+                "type": "string",
+                "enum": [
+                  "unannotated",
+                  "in_review",
+                  "ready"
+                ]
+              },
+              "approved_version": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "next_batch_version": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "该题历史最大 batch_version 加 1"
+              },
+              "mappings": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Mapping"
+                },
+                "description": "仅当前 approved 集合"
+              },
+              "pending_batch": {
+                "$ref": "#/components/schemas/NullableMappingBatch"
+              },
+              "capabilities": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "view",
+                    "submit",
+                    "approve",
+                    "reject",
+                    "replace_approved"
+                  ]
+                }
+              },
+              "problem": {
+                "$ref": "#/components/schemas/ProblemReviewSummary"
+              }
+            }
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "MappingSubmissionEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/MappingBatch"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "DependencyChangeReviewDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "object_type",
+          "request",
+          "capabilities"
+        ],
+        "properties": {
+          "object_type": {
+            "type": "string",
+            "enum": [
+              "dependency_change"
+            ]
+          },
+          "request": {
+            "$ref": "#/components/schemas/DependencyChangeRequest"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/ReviewCapabilities"
+          }
+        }
+      },
+      "ProblemReviewSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "problem_id",
+          "display_id",
+          "title"
+        ],
+        "properties": {
+          "problem_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "display_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "ProblemMappingReviewDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "object_type",
+          "problem",
+          "current_approved_version",
+          "batch",
+          "capabilities"
+        ],
+        "properties": {
+          "object_type": {
+            "type": "string",
+            "enum": [
+              "problem_mapping"
+            ]
+          },
+          "problem": {
+            "$ref": "#/components/schemas/ProblemReviewSummary"
+          },
+          "current_approved_version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "batch": {
+            "$ref": "#/components/schemas/MappingBatch"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/ReviewCapabilities"
+          }
+        }
+      },
+      "ReviewCapabilities": {
+        "type": "array",
+        "uniqueItems": true,
+        "description": "当前审核用户可执行的动作。提交人查看自己的申请时必须为空；非提交人的 Super Admin 查看 pending 对象时可包含 approve 和 reject。",
+        "items": {
+          "type": "string",
+          "enum": [
+            "approve",
+            "reject"
+          ]
+        }
+      },
+      "ReviewDetail": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/DependencyChangeReviewDetail"
+          },
+          {
+            "$ref": "#/components/schemas/ProblemMappingReviewDetail"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "object_type",
+          "mapping": {
+            "dependency_change": "#/components/schemas/DependencyChangeReviewDetail",
+            "problem_mapping": "#/components/schemas/ProblemMappingReviewDetail"
+          }
+        }
+      },
+      "ReviewDetailEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ReviewDetail"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "ReviewEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ReviewItem"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "ReviewListEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "items",
+              "page",
+              "page_size",
+              "total"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ReviewItem"
+                }
+              },
+              "page": {
+                "type": "integer"
+              },
+              "page_size": {
+                "type": "integer"
+              },
+              "total": {
+                "type": "integer"
+              }
+            }
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "NullableUserSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "username"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "nullable": true
+      },
+      "NullableMappingBatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "review_batch_id",
+          "problem_id",
+          "batch_version",
+          "base_version",
+          "approved_version",
+          "status",
+          "mappings",
+          "updated_time"
+        ],
+        "properties": {
+          "review_batch_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "problem_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "batch_version": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "同题每次提交递增，驳回也占用"
+          },
+          "base_version": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "只引用提交时当前 approved_version"
+          },
+          "approved_version": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true,
+            "description": "仅批准时赋值；pending/rejected 为 null"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "superseded"
+            ]
+          },
+          "mappings": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/MappingBatchItem"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "updated_time": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "nullable": true
+      },
+      "DependencyCreateRequestInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation",
+          "reason",
+          "prerequisite_code",
+          "dependent_code",
+          "relation_type",
+          "weight"
+        ],
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "create"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 500
+          },
+          "prerequisite_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "dependent_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "required",
+              "recommended"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1,
+            "multipleOf": 0.001
+          }
+        }
+      },
+      "DependencyUpdateRequestInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation",
+          "reason",
+          "target_dependency_id",
+          "base_version",
+          "prerequisite_code",
+          "dependent_code",
+          "relation_type",
+          "weight"
+        ],
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "update"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 500
+          },
+          "target_dependency_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "update/delete 必填；create 不传"
+          },
+          "base_version": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "update/delete 必填并引用正式边 version；create 不传"
+          },
+          "prerequisite_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "dependent_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "required",
+              "recommended"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1,
+            "multipleOf": 0.001
+          }
+        }
+      },
+      "DependencyDeleteRequestInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation",
+          "reason",
+          "target_dependency_id",
+          "base_version"
+        ],
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "delete"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 500
+          },
+          "target_dependency_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "update/delete 必填；create 不传"
+          },
+          "base_version": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "update/delete 必填并引用正式边 version；create 不传"
+          }
+        }
+      },
+      "DependencyState": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "prerequisite_code",
+          "dependent_code",
+          "relation_type",
+          "weight",
+          "source",
+          "confidence",
+          "version",
+          "updated_time"
+        ],
+        "properties": {
+          "prerequisite_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "dependent_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "required",
+              "recommended"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1,
+            "multipleOf": 0.001
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "import",
+              "ai"
+            ]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "multipleOf": 0.001
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "updated_time": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "NullableDependencyState": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "prerequisite_code",
+          "dependent_code",
+          "relation_type",
+          "weight",
+          "source",
+          "confidence",
+          "version",
+          "updated_time"
+        ],
+        "properties": {
+          "prerequisite_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "dependent_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "required",
+              "recommended"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1,
+            "multipleOf": 0.001
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "import",
+              "ai"
+            ]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "multipleOf": 0.001
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "updated_time": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "nullable": true
+      },
+      "NullableDependencyProposal": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "prerequisite_code",
+          "dependent_code",
+          "relation_type",
+          "weight"
+        ],
+        "properties": {
+          "prerequisite_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "dependent_code": {
+            "$ref": "#/components/schemas/KnowledgeCode"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "required",
+              "recommended"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 1,
+            "multipleOf": 0.001
+          }
+        },
+        "nullable": true
+      },
+      "AdminDependencyPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/AdminDependencySummary"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "AdminProblemPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/AdminProblemSummary"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "AdminDependencyPageEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminDependencyPage"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "AdminProblemPageEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminProblemPage"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "DependencyEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/Dependency"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "PublicDependencyPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/PublicDependencySummary"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "PublicDependencyPageEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PublicDependencyPage"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "PublicProblemPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/PublicProblemSummary"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "PublicProblemPageEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error",
+          "data",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PublicProblemPage"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "请求字段、类型、枚举或分页参数不合法",
+        "headers": {
+          "X-API-Version": {
+            "$ref": "#/components/headers/ApiVersion"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "未登录或登录状态失效",
+        "headers": {
+          "X-API-Version": {
+            "$ref": "#/components/headers/ApiVersion"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "无功能权限；审核接口中提交人自审也返回 403 KNOWLEDGE_SELF_REVIEW_FORBIDDEN",
+        "headers": {
+          "X-API-Version": {
+            "$ref": "#/components/headers/ApiVersion"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "对象不存在或不在当前用户权限范围",
+        "headers": {
+          "X-API-Version": {
+            "$ref": "#/components/headers/ApiVersion"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "重复、状态或并发冲突",
+        "headers": {
+          "X-API-Version": {
+            "$ref": "#/components/headers/ApiVersion"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Unprocessable": {
+        "description": "业务规则校验失败",
+        "headers": {
+          "X-API-Version": {
+            "$ref": "#/components/headers/ApiVersion"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "未预期内部错误",
+        "headers": {
+          "X-API-Version": {
+            "$ref": "#/components/headers/ApiVersion"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "PaginationRequired": {
+        "description": "KNOWLEDGE_PAGINATION_REQUIRED：公开详情的至少一个可见集合超过100项。改用details.endpoints分页；仅需详情字段时请求details.detail_url。",
+        "headers": {
+          "X-API-Version": {
+            "$ref": "#/components/headers/ApiVersion"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            },
+            "example": {
+              "error": "KNOWLEDGE_PAGINATION_REQUIRED",
+              "data": {
+                "message": "集合超过详情内嵌上限，请使用公开分页接口",
+                "retryable": false,
+                "details": {
+                  "collection_limit": 100,
+                  "collections": [
+                    "related_problems"
+                  ],
+                  "endpoints": {
+                    "related_problems": "/api/knowledge-points/bfs/related-problems"
+                  },
+                  "detail_url": "/api/knowledge-points/bfs?include_collections=false"
+                }
+              },
+              "request_id": "req_h5_example"
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-contract-status": "implementation-working-draft",
+  "x-source-contract": "docs/knowledge/review-v0.9.9/knowledge-api-v1.yaml",
+  "x-contract-revision": "2026-10-07-H5",
+  "x-contract-change-history": [
+    {
+      "revision": "2026-10-07-H5",
+      "status": "implementation-working-draft",
+      "changes": [
+        "新增公开关联题与正式邻接分页，共21个知识HTTP操作。",
+        "旧公开详情每类集合最多100项；超限明确409 PAGINATION_REQUIRED，显式include_collections=false读取大节点详情，保持数组类型。"
+      ],
+      "source_package_unchanged": true
+    }
+  ]
+}

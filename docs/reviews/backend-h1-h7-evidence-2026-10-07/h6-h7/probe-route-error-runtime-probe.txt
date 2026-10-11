@@ -1,0 +1,37 @@
+direct_http_spoof_redirect PASS
+https_hsts PASS
+frontend_html PASS
+frontend_scripts PASS
+secure_cookies PASS
+csrf_rejection PASS
+import_retry_same_export PASS
+private_retryable_export PASS
+random_password_login PASS
+student_cannot_export PASS
+real_judgeserver_accepted PASS
+real_queue_profile PASS
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/requests/models.py", line 1116, in json
+    return complexjson.loads(self.text, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 2 column 1 (char 1)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/h7-runtime/probe.py", line 133, in <module>
+    payload(post(admin, "/api/admin/submission", {"id": sid}))
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/h7-runtime/probe.py", line 50, in payload
+    data = response.json()
+           ^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/requests/models.py", line 1120, in json
+    raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+requests.exceptions.JSONDecodeError: Expecting value: line 2 column 1 (char 1)

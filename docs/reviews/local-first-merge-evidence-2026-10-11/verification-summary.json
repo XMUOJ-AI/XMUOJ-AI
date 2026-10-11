@@ -1,0 +1,61 @@
+{
+  "finished_at": "2026-10-11T11:29:26.675781+00:00",
+  "profile": "xmuoj-merge-20261011",
+  "postgres_image": "postgres:14.23-alpine",
+  "postgres_version": "14.23",
+  "postgres_locale": "en_US.utf8 (Alpine musl)",
+  "redis_image": "redis:7",
+  "redis_python_version": "5.0.8",
+  "database": "xmuoj_merge_20261011",
+  "test_database": "test_xmuoj_merge_20261011",
+  "tests": {
+    "check": "tests",
+    "command": [
+      "/Users/jingweihao/大创/XMUOJ-AI/.venv/bin/python",
+      "manage.py",
+      "test",
+      "--settings=oj.settings",
+      "--noinput"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 45.747
+  },
+  "flake8": {
+    "command": "../.venv/bin/flake8 --statistics .",
+    "exit_code": 0,
+    "cwd": "/Users/jingweihao/大创/XMUOJ-AI/backend"
+  },
+  "migrations": {
+    "check": "migrations",
+    "command": [
+      "/Users/jingweihao/大创/XMUOJ-AI/.venv/bin/python",
+      "manage.py",
+      "makemigrations",
+      "--check",
+      "--dry-run",
+      "--settings=oj.settings"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.422
+  },
+  "first_run_debian_result": {
+    "check": "tests",
+    "command": [
+      "/Users/jingweihao/大创/XMUOJ-AI/.venv/bin/python",
+      "manage.py",
+      "test",
+      "--settings=oj.settings",
+      "--noinput"
+    ],
+    "exit_code": 1,
+    "elapsed_seconds": 39.592
+  },
+  "first_run_failure": "KnowledgeAPITests.test_public_projection_filters_and_admin_counts_are_consistent depended on musl collation; Debian/glibc en_US.utf8 sorts other before P001, while historical Alpine/musl sorts P001 before other.",
+  "source_files_sha256": {
+    "backend/conf/views.py": "b1f4aaedbd041ac27ddcfb9676663846611df95ca4f936d57a7f2fcd7b2cbcd9",
+    "backend/conf/tests.py": "0347b7efa6cfead27a29d8181b4817395e990d698149bcf7134504d6acb862b1",
+    "backend/deploy/requirements.txt": "19918a9b1825580862138b6fa59478cd22d90478f0e17f538fdc70c8aaac093a"
+  },
+  "old_profiles": "default and xmuoj remained stopped; old data and containers untouched",
+  "source_edits_by_agent": false
+}

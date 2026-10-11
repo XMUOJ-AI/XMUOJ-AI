@@ -1,0 +1,85 @@
+[
+  {
+    "test": "OpenAPI 3.0.3 document validation",
+    "valid": true,
+    "errors": []
+  },
+  {
+    "test": "Snapshot Draft202012 schema validation",
+    "valid": true,
+    "errors": []
+  },
+  {
+    "test": "Unannotated problem with pending_batch=null",
+    "valid": false,
+    "errors": [
+      {
+        "path": "data/pending_batch",
+        "message": "None for not nullable"
+      },
+      {
+        "path": "data/pending_batch",
+        "message": "None is not of type 'object'"
+      }
+    ]
+  },
+  {
+    "test": "Pending create dependency response with before=null reviewed_by=null",
+    "valid": false,
+    "errors": [
+      {
+        "path": "before",
+        "message": "None for not nullable"
+      },
+      {
+        "path": "before",
+        "message": "None is not of type 'object'"
+      },
+      {
+        "path": "reviewed_by",
+        "message": "None for not nullable"
+      },
+      {
+        "path": "reviewed_by",
+        "message": "None is not of type 'object'"
+      }
+    ]
+  },
+  {
+    "test": "Dependency review detail discriminator dependency_change",
+    "valid": false,
+    "errors": [
+      {
+        "exception": "_RefResolutionError",
+        "message": "Unresolvable JSON pointer: 'components/schemas/dependency_change'"
+      }
+    ]
+  },
+  {
+    "test": "Input create without endpoint fields (should be rejected by business rule)",
+    "valid": true,
+    "errors": []
+  },
+  {
+    "test": "Input delete with proposal field (should be rejected by business rule)",
+    "valid": true,
+    "errors": []
+  },
+  {
+    "test": "Approved mapping snapshot with no primary (service must reject)",
+    "valid": true,
+    "errors": []
+  },
+  {
+    "test": "Concurrency counterexample (graph simulation, no DB)",
+    "first_candidate_cyclic": false,
+    "second_candidate_cyclic": false,
+    "endpoint_locks_disjoint": true,
+    "union_cyclic": true
+  },
+  {
+    "test": "OpenAPI local references",
+    "count": 241,
+    "unresolved": []
+  }
+]

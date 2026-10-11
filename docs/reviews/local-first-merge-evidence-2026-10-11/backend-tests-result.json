@@ -1,0 +1,12 @@
+{
+  "check": "tests",
+  "command": [
+    "/Users/jingweihao/\u5927\u521b/XMUOJ-AI/.venv/bin/python",
+    "manage.py",
+    "test",
+    "--settings=oj.settings",
+    "--noinput"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 45.747
+}

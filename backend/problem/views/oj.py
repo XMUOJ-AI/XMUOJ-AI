@@ -11,17 +11,16 @@ from contest.models import ContestRuleType, ContestStatus, ContestType
 import hashlib
 import json
 import os
-import shutil
-import tempfile
 import zipfile
 from wsgiref.util import FileWrapper
 from django.conf import settings
 from utils.shortcuts import rand_str, natural_sort_key
-from django.http import StreamingHttpResponse, FileResponse
+from django.http import StreamingHttpResponse
 from utils.api import APIError
 from utils.constants import CONTEST_PASSWORD_SESSION_KEY
 
 from ..utils import is_problem_public_test_case_download_enabled
+
 
 class ProblemTagAPI(APIView):
     def get(self, request):

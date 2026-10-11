@@ -40,13 +40,15 @@ class GenerateUserSerializer(serializers.Serializer):
     suffix = serializers.CharField(max_length=16, allow_blank=True)
     number_from = serializers.IntegerField()
     number_to = serializers.IntegerField()
-    password_length = serializers.IntegerField(max_value=16, default=8)
+    password_length = serializers.IntegerField(min_value=8, max_value=32, default=16)
+
 
 class ChangeUserpasswordSerializer(serializers.Serializer):
-    suffix = serializers.CharField(max_length=16, allow_blank=False, default='123456')
+    suffix = serializers.CharField(max_length=16, allow_blank=False, default="123456")
     match_type = serializers.CharField()
     right_length = serializers.IntegerField()
     target_name = serializers.CharField(max_length=16, allow_blank=False)
+
 
 class ImportUserSeralizer(serializers.Serializer):
     users = serializers.ListField(
@@ -98,7 +100,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def get_real_name(self, obj):
         return obj.real_name if self.show_real_name else None
-    
+
     def get_school(self, obj):
         return obj.school
 

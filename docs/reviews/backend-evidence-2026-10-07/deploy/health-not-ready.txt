@@ -1,0 +1,22 @@
+Application HTTP probe failed
+HEALTHCHECK_EXIT=1
+[2026-10-07 06:16:49 +0000] [880] [INFO] Booting worker with pid: 880
+[2026-10-07 06:18:52 +0000] [693] [INFO] Handling signal: term
+[2026-10-07 06:18:53 +0000] [880] [INFO] Worker exiting (pid: 880)
+[2026-10-07 06:18:54 +0000] [693] [INFO] Shutting down: Master
+[2026-10-07 06:19:07 +0000] [941] [INFO] Starting gunicorn 21.2.0
+[2026-10-07 06:19:07 +0000] [941] [INFO] Listening at: http://127.0.0.1:8080 (941)
+[2026-10-07 06:19:07 +0000] [941] [INFO] Using worker: gthread
+[2026-10-07 06:19:07 +0000] [948] [INFO] Booting worker with pid: 948
+[2026-10-07 06:16:35] - [DEBUG] - [dramatiq.worker.WorkerThread:449]  - Running worker thread...
+[2026-10-07 06:16:35] - [DEBUG] - [dramatiq.worker.WorkerThread:449]  - Running worker thread...
+[2026-10-07 06:16:35] - [INFO] - [dramatiq.WorkerProcess(0):423]  - Worker process is ready for action.
+[2026-10-07 06:16:36] - [DEBUG] - [dramatiq.worker.ConsumerThread(default):326]  - Pushing message '9369dfb6-29b1-4d09-b6ff-eba65a65fa83' onto work queue.
+[2026-10-07 06:16:36] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message process_learning_event(1) with id '9369dfb6-29b1-4d09-b6ff-eba65a65fa83'.
+[2026-10-07 06:16:36] - [DEBUG] - [dramatiq.worker.ConsumerThread(default):326]  - Pushing message 'f128bcd5-9d53-4fe8-8e19-eb5c5f908d79' onto work queue.
+[2026-10-07 06:16:36] - [DEBUG] - [dramatiq.worker.ConsumerThread(default):326]  - Pushing message 'aac6a79e-5365-41f3-a23c-1528fbadf30c' onto work queue.
+[2026-10-07 06:16:36] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message process_learning_event(1) with id 'f128bcd5-9d53-4fe8-8e19-eb5c5f908d79'.
+[2026-10-07 06:16:36] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message process_learning_event(1) with id 'aac6a79e-5365-41f3-a23c-1528fbadf30c'.
+[2026-10-07 06:16:40] - [DEBUG] - [dramatiq.worker.ConsumerThread(default):350]  - Acknowledging message 'aac6a79e-5365-41f3-a23c-1528fbadf30c'.
+[2026-10-07 06:16:40] - [DEBUG] - [dramatiq.worker.ConsumerThread(default):350]  - Acknowledging message 'f128bcd5-9d53-4fe8-8e19-eb5c5f908d79'.
+[2026-10-07 06:16:40] - [DEBUG] - [dramatiq.worker.ConsumerThread(default):350]  - Acknowledging message '9369dfb6-29b1-4d09-b6ff-eba65a65fa83'.

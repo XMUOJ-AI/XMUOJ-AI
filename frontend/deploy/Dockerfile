@@ -1,6 +1,6 @@
-FROM node:6.11-alpine
+FROM node:24-alpine
 
-RUN apk add --no-cache nginx git python build-base
+RUN apk add --no-cache nginx git python3 make g++
 
 VOLUME [ "/OJ_FE", "/var/log/nginx/", "/data/avatar"]
 EXPOSE 80

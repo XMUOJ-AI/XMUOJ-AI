@@ -1,0 +1,9 @@
+ALL_PINNED_REQUIREMENTS_MATCH_PASS
+Traceback (most recent call last):
+  File "/app/audit_settings.py", line 5, in <module>
+    assert settings.production_env
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/conf/__init__.py", line 83, in __getattr__
+    val = getattr(self._wrapped, name)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Settings' object has no attribute 'production_env'

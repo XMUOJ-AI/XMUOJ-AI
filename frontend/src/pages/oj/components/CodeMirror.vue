@@ -4,7 +4,7 @@
       <Col :span=12>
       <div>
         <span>{{$t('m.Language')}}:</span>
-        <Select :value="language" @on-change="onLangChange" class="adjust">
+        <Select :model-value="language" @on-change="onLangChange" class="adjust">
           <Option v-for="item in languages" :key="item" :value="item">{{item}}
           </Option>
         </Select>
@@ -24,7 +24,7 @@
       <Col :span=12>
       <div class="fl-right">
         <span>{{$t('m.Theme')}}:</span>
-        <Select :value="theme" @on-change="onThemeChange" class="adjust">
+        <Select :model-value="theme" @on-change="onThemeChange" class="adjust">
           <Option v-for="item in themes" :key="item.label" :value="item.value">{{item.label}}
           </Option>
         </Select>
@@ -37,7 +37,7 @@
 </template>
 <script>
   import utils from '@/utils/utils'
-  import { codemirror } from 'vue-codemirror-lite'
+  import codemirror from './CodeMirrorInput.vue'
 
   // theme
   import 'codemirror/theme/monokai.css'
@@ -61,6 +61,7 @@
 
   export default {
     name: 'CodeMirror',
+    emits: ['update:value', 'changeLang', 'changeTheme', 'resetCode'],
     components: {
       codemirror
     },
@@ -118,9 +119,9 @@
           mode[lang.name] = lang.content_type
         })
         this.mode = mode
-        this.editor.setOption('mode', this.mode[this.language])
+        if (this.editor) this.editor.setOption('mode', this.mode[this.language])
       })
-      this.editor.focus()
+      if (this.editor) this.editor.focus()
     },
     methods: {
       onEditorCodeChange (newCode) {
@@ -142,10 +143,12 @@
       },
       onUploadFileDone () {
         let f = document.getElementById('file-uploader').files[0]
+        if (!f) return
         let fileReader = new window.FileReader()
         let self = this
         fileReader.onload = function (e) {
           var text = e.target.result
+          if (!self.editor) return
           self.editor.setValue(text)
           document.getElementById('file-uploader').value = ''
         }
@@ -155,12 +158,12 @@
     computed: {
       editor () {
         // get current editor object
-        return this.$refs.myEditor.editor
+        return this.$refs.myEditor && this.$refs.myEditor.editor
       }
     },
     watch: {
       'theme' (newVal, oldVal) {
-        this.editor.setOption('theme', newVal)
+        if (this.editor) this.editor.setOption('theme', newVal)
       }
     }
   }

@@ -1,14 +1,14 @@
 <template>
   <Panel shadow :padding="10">
-    <div slot="title">
+    <template #title><div>
       {{title}}
-    </div>
-    <div slot="extra">
+    </div></template>
+    <template #extra><div>
       <Button v-if="listVisible" type="info" @click="init" :loading="btnLoading">{{$t('m.Refresh')}}</Button>
       <Button v-else type="ghost" icon="ios-undo" @click="goBack">{{$t('m.Back')}}</Button>
-    </div>
+    </div></template>
 
-    <transition-group name="announcement-animate" mode="in-out">
+    <transition-group name="announcement-animate" tag="span">
       <div class="no-announcement" v-if="!announcements.length" key="no-announcement">
         <p>{{$t('m.No_Announcements')}}</p>
       </div>
@@ -18,7 +18,7 @@
             <div class="flex-container">
               <div class="title"><a class="entry" @click="goAnnouncement(announcement)">
                 {{announcement.title}}</a></div>
-              <div class="date">{{announcement.create_time | localtime }}</div>
+              <div class="date">{{ $filters.localtime(announcement.create_time) }}</div>
               <div class="creator"> {{$t('m.By')}} {{announcement.created_by.username}}</div>
             </div>
           </li>

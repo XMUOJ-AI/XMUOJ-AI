@@ -1,0 +1,13 @@
+  Applying django_dramatiq.0003_auto_20200204_0842... OK
+  Applying learning.0001_initial... OK
+  Applying learning.0002_align_learning_contract... OK
+  Applying options.0001_initial... OK
+  Applying options.0002_auto_20180501_0436... OK
+  Applying options.0003_migrate_languages_options... OK
+  Applying options.0004_reconcile_existing_models... OK
+  Applying problem_import.0001_initial... OK
+  Applying rag.0001_initial... OK
+  Applying sessions.0001_initial... OK
+Django VERSION (3, 2, 25, 'final', 0)
+CommandError: Set DJANGO_SUPERUSER_PASSWORD before the first startup
+EMPTY_DB_NO_PASSWORD_FAIL_CLOSED_PASS

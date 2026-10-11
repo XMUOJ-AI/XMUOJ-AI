@@ -1,75 +1,106 @@
-import os
-import re
-import xlsxwriter
+import secrets
+import string
 
-from django.db import transaction, IntegrityError
+from django.db import connection, transaction, IntegrityError
 from django.db.models import Q
+from django.db.models.functions import Upper
 from django.http import HttpResponse
 from django.contrib.auth.hashers import make_password
-from django.contrib import auth
+from django.utils import timezone
+from django.views.decorators.debug import sensitive_variables
 
 from submission.models import Submission
-from utils.api import APIView, validate_serializer
+from utils.api import APIError, APIView, validate_serializer
+from utils.contract_api import transaction_lock
 from utils.shortcuts import rand_str
 
 from ..decorators import super_admin_required
-from ..models import AdminType, ProblemPermission, User, UserProfile
+from ..models import AdminType, ProblemPermission, User, UserProfile, UserCredentialExport
+from ..credential_exports import (cleanup_expired_exports, create_export, export_metadata, read_export,
+                                  remove_export_file, request_digest, EXPORT_ID_PATTERN)
 from ..serializers import EditUserSerializer, UserAdminSerializer, GenerateUserSerializer, ChangeUserpasswordSerializer
 from ..serializers import ImportUserSeralizer, BatchResetPasswordSerializer
 
 
+def bulk_username_matches(usernames):
+    """Use PostgreSQL's UPPER comparison, exactly as the login iexact lookup does."""
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT UPPER(name) FROM unnest(%s::text[]) WITH ORDINALITY AS names(name, position) ORDER BY position",
+                       [usernames])
+        keys = [row[0] for row in cursor.fetchall()]
+    if len(set(keys)) != len(keys):
+        raise APIError("Duplicate usernames in import")
+    existing = {}
+    for user in User.objects.select_for_update().annotate(login_key=Upper("username")).filter(login_key__in=keys).order_by("id"):
+        if user.login_key in existing:
+            raise APIError("Multiple existing accounts match the same login; no users were changed")
+        existing[user.login_key] = user
+    return {name: existing[key] for name, key in zip(usernames, keys) if key in existing}
+
+
 class UserAdminAPI(APIView):
+    @sensitive_variables()
     @validate_serializer(ImportUserSeralizer)
     @super_admin_required
     def post(self, request):
-        """
-        Import User
-        """
+        """Import students; repeat requests recover the same private export."""
         data = request.data["users"]
-
-        user_list = []
-        count = 0
         for user_data in data:
             if len(user_data) != 3 or len(user_data[0]) > 32:
-                return self.error(f"Error occurred while processing data '{user_data}'")
+                return self.error("Each row must contain a username (at most 32 characters), name and classroom")
+        if not data:
+            return self.error("empty user list")
+        original_digest = request_digest(data)
+        data = [[row[0].lower(), row[1], row[2]] for row in data]
+        if any(len(row[0]) > 32 for row in data):
+            return self.error("Username should not more than 32 characters")
+        if len({row[0] for row in data}) != len(data):
+            return self.error("Duplicate usernames in import")
 
-            # check if user already exists
-            user = User.objects.filter(username=user_data[0]).first()
-            if user is not None:
-                # already exists, update classroom(school)
-                p = UserProfile.objects.get(user=user)
-                p.school = user_data[2]
-                p.save()
-                count = count + 1
-            else:
-                #username real_name classroom(school)
-                user_list.append(User(username=user_data[0],password=make_password('123456')))
-        
-        if not user_list:
-            if count > 0:
-                return self.success()
-            else:
-                return self.error('empty user list')
-        else:
-            try:
-                with transaction.atomic():
-                    ret = User.objects.bulk_create(user_list)
-                    UserProfile.objects.bulk_create([UserProfile(user=user) for user in ret])
-
-                    for user_data in data:
-                        user = User.objects.get(username=user_data[0])
-                        p = UserProfile.objects.get(user=user)
-                        p.real_name = user_data[1]
-                        p.school = user_data[2]
-                        p.language = 'zh-CN'
-                        p.save()
-
-                return self.success()
-            except IntegrityError as e:
-                # Extract detail from exception message
-                #    duplicate key value violates unique constraint "user_username_key"
-                #    DETAIL:  Key (username)=(root11) already exists.
-                return self.error(str(e).split("\n")[1])
+        created_export = None
+        try:
+            cleanup_expired_exports()
+            with transaction.atomic():
+                # A shared creation lock also covers absent names across different
+                # administrators; historical mixed-case rows remain unchanged.
+                transaction_lock("account_bulk_creation", "usernames")
+                User.objects.select_for_update().get(pk=request.user.pk)
+                digest = request_digest(data)
+                existing = bulk_username_matches([row[0] for row in data])
+                receipt = UserCredentialExport.objects.filter(
+                    created_by=request.user, operation="import", request_digest__in=[digest, original_digest],
+                    expires_at__gt=timezone.now()).order_by("-created_at").first()
+                if receipt:
+                    return self.success(export_metadata(receipt))
+                new_rows, credentials = [], []
+                for username, real_name, classroom in data:
+                    if username in existing:
+                        profile = UserProfile.objects.get(user=existing[username])
+                        profile.school = classroom
+                        profile.save(update_fields=["school"])
+                    else:
+                        new_rows.append((username, real_name, classroom))
+                        credentials.append((username, secrets.token_urlsafe(18)))
+                users = User.objects.bulk_create([
+                    User(username=username, password=make_password(password)) for username, password in credentials])
+                UserProfile.objects.bulk_create([
+                    UserProfile(user=user, real_name=row[1], school=row[2], language="zh-CN")
+                    for user, row in zip(users, new_rows)
+                ])
+                if credentials:
+                    created_export = create_export(request.user, "import", digest, credentials, len(existing))
+                    result = export_metadata(created_export)
+                else:
+                    result = {"file_id": None, "created_count": 0, "updated_count": len(existing), "expires_at": None}
+            return self.success(result)
+        except Exception as error:
+            if created_export:
+                remove_export_file(created_export.id)
+            if isinstance(error, IntegrityError):
+                return self.error("Import conflicted with another account change; no users were changed, please retry")
+            if isinstance(error, OSError):
+                return self.error("Credential export unavailable; no users were changed, please retry")
+            raise
 
     @validate_serializer(EditUserSerializer)
     @super_admin_required
@@ -165,70 +196,74 @@ class UserAdminAPI(APIView):
 class GenerateUserAPI(APIView):
     @super_admin_required
     def get(self, request):
-        """
-        download users excel
-        """
-        file_id = request.GET.get("file_id")
-        if not file_id:
-            return self.error("Invalid Parameter, file_id is required")
-        if not re.match(r"^[a-zA-Z0-9]+$", file_id):
-            return self.error("Illegal file_id")
-        file_path = f"/tmp/{file_id}.xlsx"
-        if not os.path.isfile(file_path):
-            return self.error("File does not exist")
-        with open(file_path, "rb") as f:
-            raw_data = f.read()
-        os.remove(file_path)
-        response = HttpResponse(raw_data)
-        response["Content-Disposition"] = f"attachment; filename=users.xlsx"
-        response["Content-Type"] = "application/xlsx"
+        """List the creator's active exports or download one, without consuming it."""
+        cleanup_expired_exports()
+        exports = UserCredentialExport.objects.filter(created_by=request.user, expires_at__gt=timezone.now())
+        if request.GET.get("list") == "1":
+            response = self.success([export_metadata(export) for export in exports.order_by("-created_at")[:100]])
+        else:
+            file_id = request.GET.get("file_id", "")
+            if not EXPORT_ID_PATTERN.fullmatch(file_id):
+                return self.error("Credential export unavailable or expired")
+            export = exports.filter(pk=file_id).first()
+            if export is None:
+                return self.error("Credential export unavailable or expired")
+            try:
+                raw_data = read_export(export)
+            except OSError:
+                return self.error("Credential export unavailable or expired")
+            response = HttpResponse(raw_data, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            response["Content-Disposition"] = "attachment; filename=users.xlsx"
+        response["Cache-Control"] = "no-store, private"
+        response["Pragma"] = "no-cache"
+        response["X-Content-Type-Options"] = "nosniff"
         return response
 
+    @sensitive_variables()
     @validate_serializer(GenerateUserSerializer)
     @super_admin_required
     def post(self, request):
-        """
-        Generate User
-        """
-        data = request.data
+        original_digest = request_digest(request.data)
+        data = dict(request.data, prefix=request.data["prefix"].lower(), suffix=request.data["suffix"].lower())
         number_max_length = max(len(str(data["number_from"])), len(str(data["number_to"])))
         if number_max_length + len(data["prefix"]) + len(data["suffix"]) > 32:
             return self.error("Username should not more than 32 characters")
         if data["number_from"] > data["number_to"]:
             return self.error("Start number must be lower than end number")
 
-        file_id = rand_str(8)
-        filename = f"/tmp/{file_id}.xlsx"
-        workbook = xlsxwriter.Workbook(filename)
-        worksheet = workbook.add_worksheet()
-        worksheet.set_column("A:B", 20)
-        worksheet.write("A1", "Username")
-        worksheet.write("B1", "Password")
-        i = 1
-
-        user_list = []
-        for number in range(data["number_from"], data["number_to"] + 1):
-            raw_password = rand_str(data["password_length"])
-            user = User(username=f"{data['prefix']}{number}{data['suffix']}", password=make_password(raw_password))
-            user.raw_password = raw_password
-            user_list.append(user)
-
+        created_export = None
         try:
+            cleanup_expired_exports()
             with transaction.atomic():
+                transaction_lock("account_bulk_creation", "usernames")
+                User.objects.select_for_update().get(pk=request.user.pk)
+                digest = request_digest(data)
+                usernames = [f"{data['prefix']}{number}{data['suffix']}" for number in range(data["number_from"], data["number_to"] + 1)]
+                existing = bulk_username_matches(usernames)
+                receipt = UserCredentialExport.objects.filter(
+                    created_by=request.user, operation="generate", request_digest__in=[digest, original_digest],
+                    expires_at__gt=timezone.now()).order_by("-created_at").first()
+                if receipt:
+                    return self.success(export_metadata(receipt))
+                if existing:
+                    return self.error("Username already exists; no users were created")
+                credentials = [(username, "".join(
+                    secrets.choice(string.ascii_letters + string.digits) for _ in range(data["password_length"])))
+                    for username in usernames]
+                users = User.objects.bulk_create([
+                    User(username=username, password=make_password(password)) for username, password in credentials])
+                UserProfile.objects.bulk_create([UserProfile(user=user) for user in users])
+                created_export = create_export(request.user, "generate", digest, credentials)
+            return self.success(export_metadata(created_export))
+        except Exception as error:
+            if created_export:
+                remove_export_file(created_export.id)
+            if isinstance(error, IntegrityError):
+                return self.error("Username already exists; no users were created")
+            if isinstance(error, OSError):
+                return self.error("Credential export unavailable; no users were created, please retry")
+            raise
 
-                ret = User.objects.bulk_create(user_list)
-                UserProfile.objects.bulk_create([UserProfile(user=user) for user in ret])
-                for item in user_list:
-                    worksheet.write_string(i, 0, item.username)
-                    worksheet.write_string(i, 1, item.raw_password)
-                    i += 1
-                workbook.close()
-                return self.success({"file_id": file_id})
-        except IntegrityError as e:
-            # Extract detail from exception message
-            #    duplicate key value violates unique constraint "user_username_key"
-            #    DETAIL:  Key (username)=(root11) already exists.
-            return self.error(str(e).split("\n")[1])
 
 class ChangeUserpasswordAPI(APIView):
     @validate_serializer(ChangeUserpasswordSerializer)
@@ -239,7 +274,7 @@ class ChangeUserpasswordAPI(APIView):
         match_type = data["match_type"]
         right_length = data["right_length"]
         target_name = data["target_name"]
-        
+
         if match_type == "type_username":
             try:
                 for user in User.objects.filter(username__contains=target_name):

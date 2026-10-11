@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xmuoj.example/schemas/problem-testcase-manifest-v1.schema.json",
+  "title": "XMUOJ-AI testcase source manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "rule_type", "spj", "total_score", "cases"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "rule_type": {"enum": ["ACM", "OI"]},
+    "spj": {"const": false},
+    "total_score": {"type": ["integer", "null"], "minimum": 1},
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1000,
+      "items": {"$ref": "#/$defs/case"}
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"rule_type": {"const": "ACM"}}, "required": ["rule_type"]},
+      "then": {
+        "properties": {
+          "total_score": {"type": "null"},
+          "cases": {
+            "items": {
+              "properties": {
+                "score": {"type": "null"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"rule_type": {"const": "OI"}}, "required": ["rule_type"]},
+      "then": {
+        "properties": {
+          "total_score": {"type": "integer"},
+          "cases": {
+            "items": {
+              "properties": {
+                "score": {"type": "integer", "minimum": 1}
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "safePath": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))testcases/[A-Za-z0-9._/-]+$",
+      "maxLength": 500
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "input_path", "output_path", "score", "input_sha256", "output_sha256"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$"},
+        "input_path": {"allOf": [{"$ref": "#/$defs/safePath"}, {"pattern": "\\.in$"}]},
+        "output_path": {"allOf": [{"$ref": "#/$defs/safePath"}, {"pattern": "\\.out$"}]},
+        "score": {"type": ["integer", "null"], "minimum": 1},
+        "input_sha256": {"$ref": "#/$defs/sha256"},
+        "output_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "batch_id": "20260809-bfs-dfs-001",
+  "files": [
+    {
+      "media_type": "application/json",
+      "path": "1/problem.json",
+      "sha256": "8f0587a35a99e01e8324bd12471c2200bf7ff1383b1f6e8aec561c30f9f04fb3",
+      "size_bytes": 888
+    },
+    {
+      "media_type": "text/plain",
+      "path": "1/testcase/1.in",
+      "sha256": "f251ddc12234e0da8d3b778bd0f7463fb477f16f47757f5617dc8b4ff4d4f14a",
+      "size_bytes": 4
+    },
+    {
+      "media_type": "text/plain",
+      "path": "1/testcase/1.out",
+      "sha256": "1121cfccd5913f0a63fec40a6ffd44ea64f9dc135c66634ba001d10bcf4302a2",
+      "size_bytes": 2
+    },
+    {
+      "media_type": "application/x-ndjson",
+      "path": "metadata/problems.jsonl",
+      "sha256": "0001b62b80998ba63889578d4ac48b14ebd50a332e2b1f68f1c325246899fe52",
+      "size_bytes": 1225
+    },
+    {
+      "media_type": "application/json",
+      "path": "metadata/raw/luogu_P1001.json",
+      "sha256": "c9e806361aeaba6899036872a6be6fe5d4c59be8a2f2666a83e0608774fa2550",
+      "size_bytes": 203
+    },
+    {
+      "media_type": "text/csv",
+      "path": "tag_mapping.csv",
+      "sha256": "56f9189b78b12bedbeba3b0ba5922a7f6a65a343f7177ee0ce97cde669cd19ba",
+      "size_bytes": 153
+    }
+  ],
+  "format": "xmuoj-qduoj-batch",
+  "generated_at": "2026-08-09T10:00:00Z",
+  "importable_count": 1,
+  "problem_count": 1,
+  "problems": [
+    {
+      "delivery_status": "ready",
+      "directory": "1",
+      "metadata_line": 1,
+      "metadata_path": "metadata/problems.jsonl",
+      "problem_key": "luogu_P1001"
+    }
+  ],
+  "producer": {
+    "contact": "data-team",
+    "name": "xmuoj-data-pipeline",
+    "version": "0.1.0"
+  },
+  "schema_version": "1.0.0",
+  "source_platforms": [
+    "luogu"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "host_process": {
+    "AGENT_MODEL_URL": false,
+    "AGENT_MODEL_NAME": false,
+    "AGENT_MODEL_API_KEY": false,
+    "RAG_EMBEDDING_URL": false,
+    "RAG_EMBEDDING_MODEL": false,
+    "RAG_EMBEDDING_API_KEY": false,
+    "RAG_MILVUS_URL": false,
+    "RAG_MILVUS_TOKEN": false
+  },
+  "existing_backend_container": {
+    "AGENT_MODEL_URL": false,
+    "AGENT_MODEL_NAME": false,
+    "AGENT_MODEL_API_KEY": false,
+    "RAG_EMBEDDING_URL": false,
+    "RAG_EMBEDDING_MODEL": false,
+    "RAG_EMBEDDING_API_KEY": false,
+    "RAG_MILVUS_URL": false,
+    "RAG_MILVUS_TOKEN": false
+  },
+  "note": "Presence only; no values or credentials recorded. No service requests made."
+}

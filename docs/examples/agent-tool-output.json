@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "data": {
+    "patterns": [
+      {
+        "code": "BFS_VISITED_TOO_LATE",
+        "cause_short": "visited 标记时机过晚",
+        "fix_direction": "检查节点是否在入队时立即标记。",
+        "confidence": 0.78,
+        "source": "reviewed"
+      }
+    ]
+  },
+  "meta": {
+    "schema_version": "1.0.0",
+    "source_version": "2026-08-09T10:00:00Z",
+    "cached": false,
+    "truncated": false
+  }
+}

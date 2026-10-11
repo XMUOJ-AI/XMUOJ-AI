@@ -1,0 +1,9 @@
+ * Discovered tasks module: 'django_dramatiq.tasks'
+ * Discovered tasks module: 'account.tasks'
+ * Discovered tasks module: 'utils.tasks'
+ * Discovered tasks module: 'judge.tasks'
+ * Discovered tasks module: 'problem_import.tasks'
+ * Discovered tasks module: 'learning.tasks'
+ * Discovered tasks module: 'agent_service.tasks'
+SERVER_PRIVATE_STORAGE_AND_ALL_QUEUES_PASS
+BACKFILL_RECOVERY_FIXTURE_INSERTED

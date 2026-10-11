@@ -21,7 +21,7 @@ from .utils import parse_problem_template, PUBLIC_TEST_CASE_DOWNLOAD_KEY
 
 DEFAULT_PROBLEM_DATA = {"_id": "A-110", "title": "test", "description": "<p>test</p>", "input_description": "test",
                         "output_description": "test", "time_limit": 1000, "memory_limit": 256, "difficulty": "Low",
-                        "visible": True, "tags": ["test"], "languages": ["C", "C++", "Java", "Python2"], "template": {},
+                        "visible": True, "tags": ["test"], "languages": ["C", "C++", "Java", "Python3"], "template": {},
                         "samples": [{"input": "test", "output": "test"}], "spj": False, "spj_language": "C",
                         "spj_code": "", "spj_compile_ok": True, "test_case_id": "499b26290cc7994e0b497212e842ea85",
                         "test_case_score": [{"output_name": "1.out", "input_name": "1.in", "output_size": 0,
@@ -136,7 +136,7 @@ class ProblemTagAdminAPITest(APITestCase):
         problem = ProblemCreateTestBase.add_problem(DEFAULT_PROBLEM_DATA, self.user)
         problem.tags.set([tag])
 
-        resp = self.client.delete(self.url, data={"id": tag.id})
+        resp = self.client.delete(f"{self.url}?id={tag.id}")
         self.assertSuccess(resp)
         self.assertFalse(ProblemTag.objects.filter(id=tag.id).exists())
         self.assertEqual(problem.tags.count(), 0)
@@ -355,6 +355,7 @@ class ContestProblemAdminTest(APITestCase):
     def setUp(self):
         self.url = self.reverse("contest_problem_admin_api")
         self.batch_lang_url = self.reverse("contest_problem_batch_language_admin_api")
+        ProblemCreateTestBase.ensure_test_case_dir(DEFAULT_PROBLEM_DATA["test_case_id"])
         self.create_admin()
         self.contest = self.client.post(self.reverse("contest_admin_api"), data=DEFAULT_CONTEST_DATA).data["data"]
         ProblemTag.objects.create(name="test", normalized_name="test")
@@ -387,8 +388,9 @@ class ContestProblemAdminTest(APITestCase):
         data2 = copy.deepcopy(DEFAULT_PROBLEM_DATA)
         data2["contest_id"] = self.contest["id"]
         data2["_id"] = "A-111"
-        self.client.post(self.url, data=data1)
-        self.client.post(self.url, data=data2)
+        self.assertSuccess(self.client.post(self.url, data=data1))
+        self.assertSuccess(self.client.post(self.url, data=data2))
+        self.assertEqual(Problem.objects.filter(contest_id=self.contest["id"]).count(), 2)
 
         resp = self.client.post(self.batch_lang_url, data={
             "contest_id": self.contest["id"],

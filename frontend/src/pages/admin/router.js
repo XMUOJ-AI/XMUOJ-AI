@@ -1,14 +1,12 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 // 引入 view 组件
 import { Announcement, Conf, Contest, ContestList, Home, JudgeServer, Login,
-  Problem, ProblemList, User, PruneTestCase, Dashboard, ProblemImportOrExport, ProblemTagGovernance } from './views'
-Vue.use(VueRouter)
+  Problem, ProblemList, User, PruneTestCase, Dashboard, ProblemImportOrExport, ProblemTagGovernance,
+  KnowledgeList, KnowledgeDetail, KnowledgeGraph, ProblemKnowledge, KnowledgeReviews } from './views'
 
-export default new VueRouter({
-  mode: 'history',
-  base: '/admin/',
-  scrollBehavior: () => ({y: 0}),
+export default createRouter({
+  history: createWebHistory('/admin/'),
+  scrollBehavior: () => ({left: 0, top: 0}),
   routes: [
     {
       path: '/login',
@@ -75,6 +73,31 @@ export default new VueRouter({
           component: ProblemTagGovernance
         },
         {
+          path: '/knowledge',
+          name: 'admin-knowledge-list',
+          component: KnowledgeList
+        },
+        {
+          path: '/knowledge/graph',
+          name: 'admin-knowledge-graph',
+          component: KnowledgeGraph
+        },
+        {
+          path: '/knowledge/reviews',
+          name: 'admin-knowledge-reviews',
+          component: KnowledgeReviews
+        },
+        {
+          path: '/knowledge/:code',
+          name: 'admin-knowledge-detail',
+          component: KnowledgeDetail
+        },
+        {
+          path: '/problem/:problemId/knowledge',
+          name: 'admin-problem-knowledge',
+          component: ProblemKnowledge
+        },
+        {
           path: '/contest/create',
           name: 'create-contest',
           component: Contest
@@ -112,7 +135,7 @@ export default new VueRouter({
       ]
     },
     {
-      path: '*', redirect: '/login'
+      path: '/:pathMatch(.*)*', redirect: '/login'
     }
   ]
 })

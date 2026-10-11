@@ -1,0 +1,17 @@
+
+> onlinejudge@2.7.6 build:dll
+> webpack --config=build/webpack.dll.conf.js
+
+current version is "20261007-14441"
+cleaning old dll..
+building ..
+Hash: 794a9425a110e2b094e5
+Version: webpack 3.12.0
+Time: 1020ms
+                Asset    Size  Chunks                    Chunk Names
+vendor.dll.794a942.js  284 kB       0  [emitted]  [big]  vendor
+   [1] (webpack)/buildin/global.js 509 bytes {0} [built]
+  [13] dll vendor 12 bytes {0} [built]
+  [37] (webpack)/buildin/module.js 517 bytes {0} [built]
+  [38] ./node_modules/moment/locale zh-cn 187 bytes {0} [optional] [built]
+    + 42 hidden modules

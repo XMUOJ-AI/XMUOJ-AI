@@ -1,0 +1,3 @@
+nginx: [warn] the "listen ... http2" directive is deprecated, use the "http2" directive instead in /app/deploy/nginx/nginx.conf:47
+nginx: the configuration file /app/deploy/nginx/nginx.conf syntax is ok
+nginx: configuration file /app/deploy/nginx/nginx.conf test is successful

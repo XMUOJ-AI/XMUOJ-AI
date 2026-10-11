@@ -3,6 +3,7 @@ import json
 import logging
 
 from django.http import HttpResponse, QueryDict
+from django.db.models.deletion import ProtectedError
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
@@ -152,6 +153,8 @@ class APIView(View):
             if e.err:
                 ret["err"] = e.err
             return self.error(**ret)
+        except ProtectedError:
+            return self.error(err="resource-in-use", msg="Resource has retained history or references; disable or archive it instead")
         except Exception as e:
             logger.exception(e)
             return self.server_error()

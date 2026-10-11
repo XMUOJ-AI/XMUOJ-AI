@@ -1,0 +1,487 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xmuoj.local/schemas/knowledge-snapshot-schema-v1.json",
+  "title": "XMUOJ Knowledge Review Snapshot Schema",
+  "x-contract-version": "0.9.9",
+  "description": "知识模块实施工作快照定义（0.9.9，未冻结）。事件快照只追加；依赖原目标ID与before/proposed不可变，映射批次payload单独使用$defs/mapping_payload。",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/knowledge_point_delete_snapshot"
+    },
+    {
+      "$ref": "#/$defs/dependency_change_snapshot"
+    },
+    {
+      "$ref": "#/$defs/mapping_batch_snapshot"
+    }
+  ],
+  "$defs": {
+    "knowledge_code": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    },
+    "knowledge_point_delete_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_type",
+        "before",
+        "after"
+      ],
+      "properties": {
+        "snapshot_type": {
+          "const": "knowledge_point"
+        },
+        "before": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "name",
+            "category",
+            "level",
+            "status",
+            "version"
+          ],
+          "properties": {
+            "code": {
+              "$ref": "#/$defs/knowledge_code"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "category": {
+              "type": "string",
+              "enum": [
+                "basic",
+                "data_structure",
+                "algorithm",
+                "paradigm",
+                "mathematics",
+                "string",
+                "graph"
+              ]
+            },
+            "level": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            },
+            "status": {
+              "const": "draft"
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "after": {
+          "type": "null"
+        }
+      }
+    },
+    "dependency_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prerequisite_code",
+        "dependent_code",
+        "relation_type",
+        "weight",
+        "source",
+        "confidence",
+        "version",
+        "updated_time"
+      ],
+      "properties": {
+        "prerequisite_code": {
+          "$ref": "#/$defs/knowledge_code"
+        },
+        "dependent_code": {
+          "$ref": "#/$defs/knowledge_code"
+        },
+        "relation_type": {
+          "type": "string",
+          "enum": [
+            "required",
+            "recommended"
+          ]
+        },
+        "weight": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "multipleOf": 0.001
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "import",
+            "ai"
+          ],
+          "description": "冻结模型兼容字段；本期接口只产生 manual"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "multipleOf": 0.001,
+          "description": "冻结模型兼容字段；本期固定为 1，不参与页面或计算"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "updated_time": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "dependency_proposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prerequisite_code",
+        "dependent_code",
+        "relation_type",
+        "weight"
+      ],
+      "properties": {
+        "prerequisite_code": {
+          "$ref": "#/$defs/knowledge_code"
+        },
+        "dependent_code": {
+          "$ref": "#/$defs/knowledge_code"
+        },
+        "relation_type": {
+          "type": "string",
+          "enum": [
+            "required",
+            "recommended"
+          ]
+        },
+        "weight": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "multipleOf": 0.001
+        }
+      }
+    },
+    "dependency_change_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_type",
+        "request_id",
+        "operation",
+        "original_target_id",
+        "base_version",
+        "before",
+        "proposed",
+        "status"
+      ],
+      "properties": {
+        "snapshot_type": {
+          "const": "dependency_change"
+        },
+        "request_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        "base_version": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "before": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/dependency_state"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proposed": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/dependency_proposal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        },
+        "original_target_id": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "create"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "base_version": {
+                "type": "null"
+              },
+              "before": {
+                "type": "null"
+              },
+              "proposed": {
+                "$ref": "#/$defs/dependency_proposal"
+              },
+              "original_target_id": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "update"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "base_version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "before": {
+                "$ref": "#/$defs/dependency_state"
+              },
+              "proposed": {
+                "$ref": "#/$defs/dependency_proposal"
+              },
+              "original_target_id": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "delete"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "base_version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "before": {
+                "$ref": "#/$defs/dependency_state"
+              },
+              "proposed": {
+                "type": "null"
+              },
+              "original_target_id": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "mapping_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "knowledge_code",
+        "role",
+        "weight",
+        "source",
+        "confidence"
+      ],
+      "properties": {
+        "knowledge_code": {
+          "$ref": "#/$defs/knowledge_code"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "secondary",
+            "prerequisite"
+          ]
+        },
+        "weight": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "multipleOf": 0.001
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "import",
+            "ai"
+          ],
+          "description": "冻结模型兼容字段；本期接口只产生 manual"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "multipleOf": 0.001,
+          "description": "冻结模型兼容字段；本期固定为 1，不参与页面或计算"
+        }
+      }
+    },
+    "mapping_batch_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_type",
+        "review_batch_id",
+        "problem_id",
+        "batch_version",
+        "base_version",
+        "approved_version",
+        "status",
+        "mappings"
+      ],
+      "properties": {
+        "snapshot_type": {
+          "const": "problem_mapping"
+        },
+        "review_batch_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "problem_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "batch_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "base_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "approved_version": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "approved",
+            "rejected",
+            "superseded"
+          ]
+        },
+        "mappings": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/mapping_item"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "approved",
+                  "superseded"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "approved_version": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "pending",
+                  "rejected"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "approved_version": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "mapping_payload": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "$ref": "#/$defs/mapping_item"
+      },
+      "description": "KnowledgeMappingBatch.payload：仅不可变候选映射数组。状态与版本以模型列为准，审核事件完整快照由列生成。恰好一个primary、knowledge_code唯一由领域服务校验。"
+    }
+  },
+  "x-contract-status": "implementation-working-draft"
+}

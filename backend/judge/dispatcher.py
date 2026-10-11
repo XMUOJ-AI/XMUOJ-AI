@@ -1,11 +1,13 @@
 import hashlib
 import json
 import logging
+from contextlib import contextmanager
 from urllib.parse import urljoin
 
 import requests
-from django.db import transaction, IntegrityError
-from django.db.models import F
+from django.conf import settings
+from django.db import connection, transaction, IntegrityError
+from django.db.models import Count, F
 
 from account.models import User
 from conf.models import JudgeServer
@@ -17,50 +19,9 @@ from submission.models import JudgeStatus, Submission
 from utils.cache import cache
 from utils.constants import CacheKey
 
-# from googletrans import Translator
-# import re
-
 logger = logging.getLogger(__name__)
-"""
-def GoogleTranslate(msg):
-    translator = Translator(service_urls=['translate.google.cn'])
-    # 逐句翻译
-    lines = msg.splitlines()
-    trans = ''
-    for line in lines:
-        if line is None: # 空行不翻译
-            trans += '\n'
-        elif line.find('-fmax-errors=3') != -1: # 最后几行直接翻译
-            trans += '由于 -fmax-errors=3，编译终止。\n'
-        elif line.find('cc1') != -1: # 最后几行直接翻译
-            trans += 'cc1：所有警告都被视为错误\n'        	  
-        elif line.find('main.c') == -1: # 代码行不翻译，直接拼
-            trans += line + '\n'        
-        else:
-            # 替换''中为GGG
-            p1 = re.compile(r"['](.*?)[']")
-            g1 = re.findall(p1, line)
-            t1 = re.sub(p1, 'GGG', line)
 
-            # 替换[]中为HHH
-            p2 = re.compile(r"[\[](.*?)[\]]")
-            g2 = re.findall(p2, t1)
-            t2 = re.sub(p2, 'HHH', t1)
 
-            translation = translator.translate(t2, src='en', dest='zh-cn')
-            result = translation.text
-
-            for g in g1:
-                result = result.replace('GGG', " '"+g+"' ", 1)
-
-            for g in g2:
-                result = result.replace('HHH', " ["+g+"] ", 1)
-            
-            trans += result + '\n'
-
-    return trans
-"""
-        
 # 继续处理在队列中的问题
 def process_pending_task():
     if cache.llen(CacheKey.waiting_queue):
@@ -102,9 +63,11 @@ class DispatcherBase(object):
         if data:
             kwargs["json"] = data
         try:
-            return requests.post(url, **kwargs).json()
+            response = requests.post(url, timeout=(5, getattr(settings, "JUDGE_RESPONSE_TIMEOUT", 120)), **kwargs)
+            response.raise_for_status()
+            return response.json()
         except Exception as e:
-            logger.exception(e)
+            logger.error("judge_request_failed type=%s", type(e).__name__)
 
 
 class SPJCompiler(DispatcherBase):
@@ -129,12 +92,27 @@ class SPJCompiler(DispatcherBase):
                 return result["data"]
 
 
+@contextmanager
+def submission_worker_lock(submission_id):
+    # Do not hold a database transaction while waiting on a remote judge.
+    key = int.from_bytes(hashlib.sha256(("judge-worker:" + submission_id).encode()).digest()[:8],
+                         "big", signed=True)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_try_advisory_lock(%s)", [key])
+        acquired = cursor.fetchone()[0]
+    try:
+        yield acquired
+    finally:
+        if acquired:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT pg_advisory_unlock(%s)", [key])
+
+
 class JudgeDispatcher(DispatcherBase):
     def __init__(self, submission_id, problem_id):
         super().__init__()
         self.submission = Submission.objects.get(id=submission_id)
         self.contest_id = self.submission.contest_id
-        self.last_result = self.submission.result if self.submission.info else None
 
         if self.contest_id:
             self.problem = Problem.objects.select_related("contest").get(id=problem_id, contest_id=self.contest_id)
@@ -164,6 +142,17 @@ class JudgeDispatcher(DispatcherBase):
             self.submission.statistic_info["score"] = score
 
     def judge(self):
+        with submission_worker_lock(self.submission.id) as acquired:
+            if not acquired:
+                return
+            self.submission.refresh_from_db()
+            # Terminal delivery is a replay unless an administrator explicitly
+            # requested another judge run. JUDGING permits retry after a crash.
+            if self.submission.result not in (JudgeStatus.PENDING, JudgeStatus.JUDGING) and not self.submission.statistic_info.get("_rejudge_pending"):
+                return
+            self._judge()
+
+    def _judge(self):
         language = self.submission.language
         sub_config = list(filter(lambda item: language == item["name"], SysOptions.languages))[0]
         spj_config = {}
@@ -198,11 +187,20 @@ class JudgeDispatcher(DispatcherBase):
                 data = {"submission_id": self.submission.id, "problem_id": self.problem.id}
                 cache.lpush(CacheKey.waiting_queue, json.dumps(data))
                 return
-            Submission.objects.filter(id=self.submission.id).update(result=JudgeStatus.JUDGING)
+            self.submission.result = JudgeStatus.JUDGING
+            self.submission.statistic_info = {}
+            self.submission.info = {}
+            self.submission.save(update_fields=["result", "statistic_info", "info"])
             resp = self._request(urljoin(server.service_url, "/judge"), data=data)
 
-        if not resp:
-            Submission.objects.filter(id=self.submission.id).update(result=JudgeStatus.SYSTEM_ERROR)
+        if not isinstance(resp, dict) or "err" not in resp or "data" not in resp or (not resp["err"] and not resp["data"]):
+            self.submission.result = JudgeStatus.SYSTEM_ERROR
+            self.submission.statistic_info = {"score": 0}
+            with transaction.atomic():
+                self.submission.save()
+                if not self.contest_id:
+                    self.update_problem_status()
+            process_pending_task()
             return
 
         if resp["err"]:
@@ -223,113 +221,66 @@ class JudgeDispatcher(DispatcherBase):
                 self.submission.result = error_test_case[0]["result"]
             else:
                 self.submission.result = JudgeStatus.PARTIALLY_ACCEPTED
-        self.submission.save()
-
-        if self.contest_id:
-            if self.contest.status != ContestStatus.CONTEST_UNDERWAY or \
-                    User.objects.get(id=self.submission.user_id).is_contest_admin(self.contest):
-                logger.info(
-                    "Contest debug mode, id: " + str(self.contest_id) + ", submission id: " + self.submission.id)
-                return
-            with transaction.atomic():
+        # Result, legacy statistics and the learning outbox share one commit.
+        # Duplicate delivery cannot leave a finalized result with counters applied twice.
+        with transaction.atomic():
+            self.submission.save()
+            if self.contest_id:
+                if self.contest.status != ContestStatus.CONTEST_UNDERWAY or \
+                        User.objects.get(id=self.submission.user_id).is_contest_admin(self.contest):
+                    logger.info("Contest debug mode, id: %s, submission id: %s", self.contest_id, self.submission.id)
+                    return
                 self.update_contest_problem_status()
                 self.update_contest_rank()
-        else:
-            if self.last_result:
-                self.update_problem_status_rejudge()
             else:
                 self.update_problem_status()
-
-        # 至此判题结束，尝试处理任务队列中剩余的任务
         process_pending_task()
 
     def update_problem_status_rejudge(self):
-        result = str(self.submission.result)
-        problem_id = str(self.problem.id)
-        with transaction.atomic():
-            # update problem status
-            problem = Problem.objects.select_for_update().get(contest_id=self.contest_id, id=self.problem.id)
-            if self.last_result != JudgeStatus.ACCEPTED and self.submission.result == JudgeStatus.ACCEPTED:
-                problem.accepted_number += 1
-            problem_info = problem.statistic_info
-            problem_info[self.last_result] = problem_info.get(self.last_result, 1) - 1
-            problem_info[result] = problem_info.get(result, 0) + 1
-            problem.save(update_fields=["accepted_number", "statistic_info"])
-
-            profile = User.objects.select_for_update().get(id=self.submission.user_id).userprofile
-            if problem.rule_type == ProblemRuleType.ACM:
-                acm_problems_status = profile.acm_problems_status.get("problems", {})
-                if acm_problems_status[problem_id]["status"] != JudgeStatus.ACCEPTED:
-                    acm_problems_status[problem_id]["status"] = self.submission.result
-                    if self.submission.result == JudgeStatus.ACCEPTED:
-                        profile.accepted_number += 1
-                profile.acm_problems_status["problems"] = acm_problems_status
-                profile.save(update_fields=["accepted_number", "acm_problems_status"])
-
-            else:
-                oi_problems_status = profile.oi_problems_status.get("problems", {})
-                score = self.submission.statistic_info["score"]
-                if oi_problems_status[problem_id]["status"] != JudgeStatus.ACCEPTED:
-                    # minus last time score, add this tim score
-                    profile.add_score(this_time_score=score,
-                                      last_time_score=oi_problems_status[problem_id]["score"])
-                    oi_problems_status[problem_id]["score"] = score
-                    oi_problems_status[problem_id]["status"] = self.submission.result
-                    if self.submission.result == JudgeStatus.ACCEPTED:
-                        profile.accepted_number += 1
-                profile.oi_problems_status["problems"] = oi_problems_status
-                profile.save(update_fields=["accepted_number", "oi_problems_status"])
+        return self.update_problem_status()
 
     def update_problem_status(self):
-        result = str(self.submission.result)
-        problem_id = str(self.problem.id)
+        # Derive aggregates from durable terminal submissions. This handles AC ->
+        # WA -> AC, compile-error rejudges and another accepted submission without
+        # increment/decrement bookkeeping or JSON integer/string-key ambiguity.
         with transaction.atomic():
-            # update problem status
-            problem = Problem.objects.select_for_update().get(contest_id=self.contest_id, id=self.problem.id)
-            problem.submission_number += 1
-            if self.submission.result == JudgeStatus.ACCEPTED:
-                problem.accepted_number += 1
-            problem_info = problem.statistic_info
-            problem_info[result] = problem_info.get(result, 0) + 1
+            problem = Problem.objects.select_for_update().get(contest_id=None, id=self.problem.id)
+            completed = Submission.objects.filter(problem=problem, contest_id=None).exclude(
+                result__in=(JudgeStatus.PENDING, JudgeStatus.JUDGING))
+            counts = {str(row["result"]): row["count"]
+                      for row in completed.order_by().values("result").annotate(count=Count("pk"))}
+            problem.statistic_info = counts
+            problem.submission_number = sum(counts.values())
+            problem.accepted_number = counts.get(str(JudgeStatus.ACCEPTED), 0)
             problem.save(update_fields=["accepted_number", "submission_number", "statistic_info"])
 
-            # update_userprofile
             user = User.objects.select_for_update().get(id=self.submission.user_id)
-            user_profile = user.userprofile
-            user_profile.submission_number += 1
-            if problem.rule_type == ProblemRuleType.ACM:
-                acm_problems_status = user_profile.acm_problems_status.get("problems", {})
-                if problem_id not in acm_problems_status:
-                    acm_problems_status[problem_id] = {"status": self.submission.result, "_id": self.problem._id}
-                    if self.submission.result == JudgeStatus.ACCEPTED:
-                        user_profile.accepted_number += 1
-                elif acm_problems_status[problem_id]["status"] != JudgeStatus.ACCEPTED:
-                    acm_problems_status[problem_id]["status"] = self.submission.result
-                    if self.submission.result == JudgeStatus.ACCEPTED:
-                        user_profile.accepted_number += 1
-                user_profile.acm_problems_status["problems"] = acm_problems_status
-                user_profile.save(update_fields=["submission_number", "accepted_number", "acm_problems_status"])
-
+            profile = user.userprofile
+            rows = completed.filter(user_id=user.pk)
+            selected = rows.filter(result=JudgeStatus.ACCEPTED).order_by("-create_time", "-id").first()
+            selected = selected or rows.order_by("-create_time", "-id").first()
+            field = "acm_problems_status" if problem.rule_type == ProblemRuleType.ACM else "oi_problems_status"
+            document = getattr(profile, field) or {}
+            statuses = document.get("problems", {})
+            problem_id = str(problem.pk)
+            if selected:
+                value = {"status": selected.result, "_id": problem._id}
+                if problem.rule_type == ProblemRuleType.OI:
+                    value["score"] = (selected.statistic_info or {}).get("score", 0)
+                statuses[problem_id] = value
             else:
-                oi_problems_status = user_profile.oi_problems_status.get("problems", {})
-                score = self.submission.statistic_info["score"]
-                if problem_id not in oi_problems_status:
-                    user_profile.add_score(score)
-                    oi_problems_status[problem_id] = {"status": self.submission.result,
-                                                      "_id": self.problem._id,
-                                                      "score": score}
-                    if self.submission.result == JudgeStatus.ACCEPTED:
-                        user_profile.accepted_number += 1
-                elif oi_problems_status[problem_id]["status"] != JudgeStatus.ACCEPTED:
-                    # minus last time score, add this time score
-                    user_profile.add_score(this_time_score=score,
-                                           last_time_score=oi_problems_status[problem_id]["score"])
-                    oi_problems_status[problem_id]["score"] = score
-                    oi_problems_status[problem_id]["status"] = self.submission.result
-                    if self.submission.result == JudgeStatus.ACCEPTED:
-                        user_profile.accepted_number += 1
-                user_profile.oi_problems_status["problems"] = oi_problems_status
-                user_profile.save(update_fields=["submission_number", "accepted_number", "oi_problems_status"])
+                statuses.pop(problem_id, None)
+            document["problems"] = statuses
+            setattr(profile, field, document)
+            acm = (profile.acm_problems_status or {}).get("problems", {})
+            oi = (profile.oi_problems_status or {}).get("problems", {})
+            profile.accepted_number = sum(value.get("status") == JudgeStatus.ACCEPTED
+                                          for value in list(acm.values()) + list(oi.values()))
+            profile.total_score = sum(value.get("score", 0) or 0 for value in oi.values())
+            profile.submission_number = Submission.objects.filter(
+                user_id=user.pk, contest_id=None, problem__contest_id=None).exclude(
+                result__in=(JudgeStatus.PENDING, JudgeStatus.JUDGING)).count()
+            profile.save(update_fields=[field, "accepted_number", "submission_number", "total_score"])
 
     def update_contest_problem_status(self):
         with transaction.atomic():

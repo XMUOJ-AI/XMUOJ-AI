@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "valid_http": 200,
+  "invalid_utf8_http": 400,
+  "raw_unicode_blocked_by_browser": true,
+  "stored_reasons": [
+    "教学支持：进度 100% + 工单%2F / 🙂"
+  ],
+  "decoded_exactly_once": true
+}

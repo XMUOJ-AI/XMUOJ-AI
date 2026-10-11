@@ -4,5 +4,7 @@ node_modules/
 __pycache__/
 *.pyc
 *.log
+!docs/reviews/local-first-merge-evidence-2026-10-11/*.log
 .env
 dist/
+.DS_Store

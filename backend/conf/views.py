@@ -137,26 +137,17 @@ class JudgeServerHeartbeatAPI(CSRFExemptAPIView):
         if hashlib.sha256(SysOptions.judge_server_token.encode("utf-8")).hexdigest() != client_token:
             return self.error("Invalid token")
 
-        try:
-            server = JudgeServer.objects.get(hostname=data["hostname"])
-            server.judger_version = data["judger_version"]
-            server.cpu_core = data["cpu_core"]
-            server.memory_usage = data["memory"]
-            server.cpu_usage = data["cpu"]
-            server.service_url = data["service_url"]
-            server.ip = request.ip
-            server.last_heartbeat = timezone.now()
-            server.save(update_fields=["judger_version", "cpu_core", "memory_usage", "service_url", "ip", "last_heartbeat"])
-        except JudgeServer.DoesNotExist:
-            JudgeServer.objects.create(hostname=data["hostname"],
-                                       judger_version=data["judger_version"],
-                                       cpu_core=data["cpu_core"],
-                                       memory_usage=data["memory"],
-                                       cpu_usage=data["cpu"],
-                                       ip=request.META["REMOTE_ADDR"],
-                                       service_url=data["service_url"],
-                                       last_heartbeat=timezone.now(),
-                                       )
+        # The hostname constraint resolves simultaneous first heartbeats; the row
+        # lock preserves dispatcher slot counts and administrator disable state.
+        JudgeServer.objects.update_or_create(hostname=data["hostname"], defaults={
+            "judger_version": data["judger_version"],
+            "cpu_core": data["cpu_core"],
+            "memory_usage": data["memory"],
+            "cpu_usage": data["cpu"],
+            "service_url": data["service_url"],
+            "ip": request.ip,
+            "last_heartbeat": timezone.now,
+        })
         # 新server上线 处理队列中的，防止没有新的提交而导致一直waiting
         process_pending_task()
 
@@ -216,7 +207,8 @@ class ReleaseNotesAPI(APIView):
             releases = resp.json()
         except (RequestException, ValueError):
             return self.success()
-        with open("docs/data.json", "r") as f:
+        release_data_path = os.path.join(settings.BASE_DIR, "docs", "data.json")
+        with open(release_data_path, "r", encoding="utf-8") as f:
             local_version = json.load(f)["update"][0]["version"]
         releases["local_version"] = local_version
         return self.success(releases)

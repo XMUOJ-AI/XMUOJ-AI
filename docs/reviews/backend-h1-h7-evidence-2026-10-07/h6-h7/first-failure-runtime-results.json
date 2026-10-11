@@ -1,0 +1,71 @@
+{
+  "direct_http_spoof_redirect": {
+    "passed": true,
+    "detail": null
+  },
+  "https_hsts": {
+    "passed": true,
+    "detail": null
+  },
+  "frontend_html": {
+    "passed": true,
+    "detail": null
+  },
+  "frontend_scripts": {
+    "passed": true,
+    "detail": [
+      {
+        "url": "/static/js/vendor.dll.794a942.js",
+        "status": 200,
+        "hsts": "max-age=3600"
+      },
+      {
+        "url": "/static/js/manifest.e98795589107ab420940.js",
+        "status": 200,
+        "hsts": "max-age=3600"
+      },
+      {
+        "url": "/static/js/vendor.24bfea10b5ce8a236a50.js",
+        "status": 200,
+        "hsts": "max-age=3600"
+      },
+      {
+        "url": "/static/js/oj.ad9dd57d2d2296ec8b5b.js",
+        "status": 200,
+        "hsts": "max-age=3600"
+      }
+    ]
+  },
+  "secure_cookies": {
+    "passed": true,
+    "detail": null
+  },
+  "csrf_rejection": {
+    "passed": true,
+    "detail": null
+  },
+  "import_retry_same_export": {
+    "passed": true,
+    "detail": null
+  },
+  "private_retryable_export": {
+    "passed": true,
+    "detail": null
+  },
+  "random_password_login": {
+    "passed": true,
+    "detail": null
+  },
+  "student_cannot_export": {
+    "passed": true,
+    "detail": null
+  },
+  "real_judgeserver_accepted": {
+    "passed": false,
+    "detail": {
+      "submission_id": "c342c6a79bf5987f0bdec93c3a83eb99",
+      "result": 6,
+      "elapsed_seconds": 240.06
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "check": "migrations",
+  "command": [
+    "/Users/jingweihao/\u5927\u521b/XMUOJ-AI/.venv/bin/python",
+    "manage.py",
+    "makemigrations",
+    "--check",
+    "--dry-run",
+    "--settings=oj.settings"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 0.422
+}

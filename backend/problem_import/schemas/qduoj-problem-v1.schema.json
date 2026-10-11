@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xmuoj.example/schemas/qduoj-problem-v1.schema.json",
+  "title": "XMUOJ QDUOJ-compatible problem.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["display_id", "title", "description", "input_description", "output_description", "hint", "test_case_score", "time_limit", "memory_limit", "samples", "template", "spj", "rule_type", "source", "allow_public_test_case_download", "answers", "tags"],
+  "properties": {
+    "display_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "title": {"type": "string", "minLength": 1, "maxLength": 128},
+    "description": {"$ref": "#/$defs/formatValue"},
+    "input_description": {"$ref": "#/$defs/formatValue"},
+    "output_description": {"$ref": "#/$defs/formatValue"},
+    "hint": {"$ref": "#/$defs/formatValue"},
+    "test_case_score": {
+      "type": ["array", "null"],
+      "items": {"$ref": "#/$defs/testCaseScore"}
+    },
+    "time_limit": {"type": "integer", "minimum": 1, "maximum": 60000},
+    "memory_limit": {"type": "integer", "minimum": 1, "maximum": 10240},
+    "samples": {"type": "array", "minItems": 1, "maxItems": 20, "items": {"$ref": "#/$defs/sample"}},
+    "template": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/template"}
+    },
+    "spj": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/spj"}]},
+    "rule_type": {"enum": ["ACM", "OI"]},
+    "source": {"type": ["string", "null"], "maxLength": 200},
+    "allow_public_test_case_download": {"type": "boolean"},
+    "answers": {"type": "array", "items": {"$ref": "#/$defs/answer"}},
+    "tags": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 128}}
+  },
+  "$defs": {
+    "formatValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "value"],
+      "properties": {"format": {"enum": ["html", "markdown"]}, "value": {"type": "string"}}
+    },
+    "sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "output"],
+      "properties": {"input": {"type": "string"}, "output": {"type": "string"}}
+    },
+    "testCaseScore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "input_name", "output_name"],
+      "properties": {
+        "score": {"type": "integer", "minimum": 1},
+        "input_name": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,32}$"},
+        "output_name": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,32}$"}
+      }
+    },
+    "template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prepend", "template", "append"],
+      "properties": {"prepend": {"type": "string"}, "template": {"type": "string"}, "append": {"type": "string"}}
+    },
+    "spj": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "language"],
+      "properties": {"code": {"type": "string", "minLength": 1}, "language": {"type": "string", "minLength": 1, "maxLength": 50}}
+    },
+    "answer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "language"],
+      "properties": {"code": {"type": "string", "minLength": 1}, "language": {"type": "string", "minLength": 1, "maxLength": 50}}
+    }
+  }
+}

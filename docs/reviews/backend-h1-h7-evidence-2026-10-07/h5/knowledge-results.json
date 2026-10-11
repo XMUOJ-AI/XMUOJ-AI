@@ -1,0 +1,18 @@
+{
+  "revision": "2026-10-07-H5",
+  "knowledge_http_operations": 21,
+  "schema_and_examples": "tools/problem_batch/validate_contracts.py passed",
+  "new_public_gets": 2,
+  "legacy_collection_limit": 100,
+  "over_limit_status": 409,
+  "legacy_small_arrays_unchanged": true,
+  "tests": {
+    "knowledge": 25,
+    "seconds": 55.959,
+    "new_pagination_cases": 3,
+    "new_cases_seconds": 4.867
+  },
+  "read_scope": "all authenticated identities; active formal dependencies and visible ordinary approved problems only",
+  "consumers": "frontend has no knowledge HTTP consumer; agent uses ORM and rag.search directly",
+  "source_package": "not edited"
+}

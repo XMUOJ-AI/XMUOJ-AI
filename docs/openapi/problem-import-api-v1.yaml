@@ -1,0 +1,409 @@
+openapi: 3.0.3
+info:
+  title: XMUOJ-AI Problem Import API
+  version: 1.0.0
+  description: |
+    第一期 QDUOJ-compatible ZIP 异步导入管理 API。
+    所有端点仅允许启用的题目管理员访问；写请求使用 Django Session 时必须校验 CSRF。
+    problem_permission=Own 的管理员仅能读取和提交自己上传的批次；
+    problem_permission=All 的管理员及 Super Admin 可操作所有批次。
+    批次详情、题目分页、问题分页及 commit 使用相同对象授权；
+    不存在或无权访问的批次统一返回 404 IMPORT_NOT_FOUND，不返回批次详情。
+    problem_permission=None 的普通管理员没有导入权限。
+servers:
+  - url: /api/admin/problem-import
+security:
+  - sessionCookie: []
+tags:
+  - name: Problem Import
+paths:
+  /batches:
+    post:
+      tags: [Problem Import]
+      summary: 上传 QDUOJ-compatible ZIP 并异步校验
+      description: |
+        ZIP SHA-256 与 batch_id 在全局去重。相同 ZIP 仅在调用方有权访问原批次时返回原批次，
+        不更改上传人；无权访问原批次，或相同 batch_id 对应另一 ZIP 时，
+        均返回通用 409 IMPORT_BATCH_CONFLICT，不返回原批次 ID、哈希、状态或 Location。
+      operationId: uploadProblemImportBatch
+      parameters:
+        - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [archive]
+              properties:
+                archive:
+                  type: string
+                  format: binary
+      responses:
+        '202':
+          description: 批次已接收，正在异步校验
+          headers:
+            X-API-Version:
+              $ref: '#/components/headers/ApiVersion'
+            Location:
+              description: 批次状态资源
+              schema: {type: string}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BatchEnvelope'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '413': {$ref: '#/components/responses/PayloadTooLarge'}
+  /batches/{batch_id}:
+    get:
+      tags: [Problem Import]
+      summary: 查询批次状态和汇总
+      operationId: getProblemImportBatch
+      parameters:
+        - $ref: '#/components/parameters/BatchId'
+      responses:
+        '200':
+          description: 批次状态
+          headers:
+            X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BatchEnvelope'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /batches/{batch_id}/problems:
+    get:
+      tags: [Problem Import]
+      summary: 游标分页查询批次题目
+      description: 按 (line_number, id) 稳定升序；cursor 是服务端生成的不透明字符串。
+      operationId: listProblemImportBatchProblems
+      parameters:
+        - $ref: '#/components/parameters/BatchId'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/ProblemStatus'
+      responses:
+        '200':
+          description: 题目分页结果
+          headers:
+            X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ProblemPageEnvelope'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /batches/{batch_id}/errors:
+    get:
+      tags: [Problem Import]
+      summary: 游标分页查询校验和导入问题
+      description: 按 (line_number, id) 稳定升序；批次级 fatal 问题的 line_number 为 null。
+      operationId: listProblemImportBatchErrors
+      parameters:
+        - $ref: '#/components/parameters/BatchId'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - name: level
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [fatal, error, warning, info]
+      responses:
+        '200':
+          description: 问题分页结果
+          headers:
+            X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/IssuePageEnvelope'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /batches/{batch_id}/commit:
+    post:
+      tags: [Problem Import]
+      summary: 异步提交已经校验的题目
+      description: |
+        对象授权在批次行锁及事务内重新检查，且早于幂等结果返回；已有幂等记录不能绕过当前权限。
+        OWN 管理员仅能提交自己上传的批次；All 管理员及 Super Admin 可提交所有批次。
+        同一用户、同一批次和相同 Idempotency-Key 的重复请求返回原接受结果。
+      operationId: commitProblemImportBatch
+      parameters:
+        - $ref: '#/components/parameters/BatchId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CommitRequest'}
+            example:
+              allow_partial: false
+              problem_ids: [101, 102]
+              acknowledged_warning_codes: [IMPORT_KNOWLEDGE_CODE_UNKNOWN]
+      responses:
+        '202':
+          description: 提交任务已接受，或返回同一幂等请求的已有结果
+          headers:
+            X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+            Location:
+              description: 批次状态资源
+              schema: {type: string}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BatchEnvelope'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: sessionid
+  headers:
+    ApiVersion:
+      description: 实际响应契约版本
+      schema:
+        type: string
+        enum: [1.0.0]
+  parameters:
+    BatchId:
+      name: batch_id
+      in: path
+      required: true
+      description: manifest.batch_id，对应 ProblemImportBatch.batch_key。
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9._-]{1,64}$'
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: 不透明游标；客户端不得解析或构造。
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 500
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 500
+        default: 100
+    ProblemStatus:
+      name: status
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/ProblemStatus'
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: 管理员与端点范围内唯一；同键不同请求体返回 409。
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 100
+    CsrfToken:
+      name: X-CSRFToken
+      in: header
+      required: true
+      description: Django Session 写请求的 CSRF token。
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 256
+  responses:
+    BadRequest:
+      description: 请求或游标不合法
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    Unauthorized:
+      description: 未认证
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    Forbidden:
+      description: 非题目管理员、无题目权限或 CSRF 校验失败
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    NotFound:
+      description: 批次不存在或无权访问；统一 IMPORT_NOT_FOUND，不泄露批次详情
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    Conflict:
+      description: 批次、状态或幂等键冲突；上传命中无权访问的已有 ZIP 返回通用 IMPORT_BATCH_CONFLICT
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+    PayloadTooLarge:
+      description: ZIP 超过 Web API 限制
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorEnvelope'}
+  schemas:
+    BatchStatus:
+      type: string
+      enum: [uploaded, validating, validated, importing, imported, partial, failed, cancelled]
+    ProblemStatus:
+      type: string
+      enum: [pending, validated, duplicate, ready, importing, imported, failed, skipped]
+    Summary:
+      type: object
+      additionalProperties: false
+      required: [total, valid, warnings, errors, duplicates, imported, skipped]
+      properties:
+        total: {type: integer, minimum: 0}
+        valid: {type: integer, minimum: 0}
+        warnings: {type: integer, minimum: 0}
+        errors: {type: integer, minimum: 0}
+        duplicates: {type: integer, minimum: 0}
+        imported: {type: integer, minimum: 0}
+        skipped: {type: integer, minimum: 0}
+    Batch:
+      type: object
+      additionalProperties: false
+      required: [batch_id, schema_version, status, archive_sha256, summary, created_time]
+      properties:
+        batch_id: {type: string}
+        schema_version: {type: string, enum: [1.0.0]}
+        status: {$ref: '#/components/schemas/BatchStatus'}
+        archive_sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+        summary: {$ref: '#/components/schemas/Summary'}
+        created_time: {type: string, format: date-time}
+        validated_time: {type: string, format: date-time, nullable: true}
+        committed_time: {type: string, format: date-time, nullable: true}
+    BatchEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error, data, request_id]
+      properties:
+        error: {type: string, nullable: true}
+        data: {$ref: '#/components/schemas/Batch'}
+        request_id: {type: string}
+    CollectedProblem:
+      type: object
+      additionalProperties: false
+      required: [id, line_number, problem_key, source_platform, source_id, status, issue_count]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          description: CollectedProblem.id；commit.problem_ids 使用本字段。
+        line_number: {type: integer, minimum: 1}
+        problem_key: {type: string}
+        source_platform: {type: string}
+        source_id: {type: string}
+        title: {type: string}
+        status: {$ref: '#/components/schemas/ProblemStatus'}
+        issue_count: {type: integer, minimum: 0}
+        imported_problem_id: {type: integer, minimum: 1, nullable: true}
+    Issue:
+      type: object
+      additionalProperties: false
+      required: [id, line_number, level, code, field, message]
+      properties:
+        id: {type: integer, minimum: 1}
+        line_number: {type: integer, minimum: 1, nullable: true}
+        level: {type: string, enum: [fatal, error, warning, info]}
+        code: {type: string, pattern: '^[A-Z][A-Z0-9_]+$'}
+        field: {type: string, nullable: true}
+        message: {type: string}
+    PageMeta:
+      type: object
+      additionalProperties: false
+      required: [next_cursor, has_more, limit]
+      properties:
+        next_cursor: {type: string, nullable: true}
+        has_more: {type: boolean}
+        limit: {type: integer, minimum: 1, maximum: 500}
+    ProblemPageData:
+      type: object
+      additionalProperties: false
+      required: [items, page]
+      properties:
+        items: {type: array, items: {$ref: '#/components/schemas/CollectedProblem'}}
+        page: {$ref: '#/components/schemas/PageMeta'}
+    ProblemPageEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error, data, request_id]
+      properties:
+        error: {type: string, nullable: true}
+        data: {$ref: '#/components/schemas/ProblemPageData'}
+        request_id: {type: string}
+    IssuePageData:
+      type: object
+      additionalProperties: false
+      required: [items, page]
+      properties:
+        items: {type: array, items: {$ref: '#/components/schemas/Issue'}}
+        page: {$ref: '#/components/schemas/PageMeta'}
+    IssuePageEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error, data, request_id]
+      properties:
+        error: {type: string, nullable: true}
+        data: {$ref: '#/components/schemas/IssuePageData'}
+        request_id: {type: string}
+    CommitRequest:
+      type: object
+      additionalProperties: false
+      required: [allow_partial, problem_ids, acknowledged_warning_codes]
+      properties:
+        allow_partial: {type: boolean, default: false}
+        problem_ids:
+          type: array
+          uniqueItems: true
+          description: CollectedProblem.id；空数组表示批次内全部 ready 记录。
+          items: {type: integer, minimum: 1}
+        acknowledged_warning_codes:
+          type: array
+          uniqueItems: true
+          items: {type: string, pattern: '^[A-Z][A-Z0-9_]+$'}
+    ErrorData:
+      type: object
+      additionalProperties: false
+      required: [message, retryable, details]
+      properties:
+        message: {type: string}
+        retryable: {type: boolean}
+        details: {type: object, additionalProperties: true}
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error, data, request_id]
+      properties:
+        error: {type: string, pattern: '^[A-Z][A-Z0-9_]+$'}
+        data: {$ref: '#/components/schemas/ErrorData'}
+        request_id: {type: string}

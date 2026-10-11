@@ -1,0 +1,29 @@
+Append  (cost=0.29..611.64 rows=101 width=12) (actual time=51.622..515.621 rows=20 loops=1)
+  Buffers: shared hit=83
+  ->  GroupAggregate  (cost=0.29..597.41 rows=100 width=12) (actual time=51.557..514.974 rows=20 loops=1)
+        Group Key: problem_knowledge.knowledge_point_id
+        Buffers: shared hit=81
+        ->  Index Only Scan using problem_knowledge_knowledge_point_id_5e851a89 on problem_knowledge  (cost=0.29..495.39 rows=20204 width=4) (actual time=0.553..240.841 rows=20000 loops=1)
+              Index Cond: (knowledge_point_id = ANY ('{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20}'::integer[]))
+              Heap Fetches: 40
+              Buffers: shared hit=81
+  ->  GroupAggregate  (cost=12.69..12.72 rows=1 width=12) (actual time=0.363..0.384 rows=0 loops=1)
+        Group Key: problem_knowledge_1.knowledge_point_id
+        Buffers: shared hit=2
+        ->  Sort  (cost=12.69..12.70 rows=1 width=4) (actual time=0.353..0.368 rows=0 loops=1)
+              Sort Key: problem_knowledge_1.knowledge_point_id
+              Sort Method: quicksort  Memory: 25kB
+              Buffers: shared hit=2
+              ->  Nested Loop  (cost=0.64..12.68 rows=1 width=4) (actual time=0.159..0.169 rows=0 loops=1)
+                    Buffers: shared hit=2
+                    ->  Index Scan using problem_contest_id_328e013a on problem u0  (cost=0.29..8.31 rows=1 width=4) (actual time=0.146..0.148 rows=0 loops=1)
+                          Index Cond: (contest_id IS NOT NULL)
+                          Buffers: shared hit=2
+                    ->  Index Only Scan using pk_unique_knowledge on problem_knowledge problem_knowledge_1  (cost=0.34..4.37 rows=1 width=8) (never executed)
+                          Index Cond: (problem_id = u0.id)
+                          Filter: (knowledge_point_id = ANY ('{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20}'::integer[]))
+                          Heap Fetches: 0
+Planning:
+  Buffers: shared hit=15
+Planning Time: 41.004 ms
+Execution Time: 534.511 ms

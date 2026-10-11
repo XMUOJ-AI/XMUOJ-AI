@@ -41,10 +41,10 @@
           <div class="uh-refresh-wrap" v-if="refreshVisible">
             <Poptip trigger="hover" placement="right-start">
               <a class="uh-refresh-link"><Icon type="ios-refresh"></Icon> 刷新题目 ID</a>
-              <div slot="content">
+              <template #content><div>
                 <p>如果题号不存在，可点击重新生成。</p>
                 <Button type="info" size="small" @click="freshProblemDisplayID">重新生成</Button>
-              </div>
+              </div></template>
             </Poptip>
           </div>
         </div>
@@ -52,7 +52,7 @@
 
       <!-- 右侧主内容区 -->
       <div class="uh-main">
-        <Tabs v-model="activeTab" class="uh-tabs">
+        <Tabs v-model="activeTab" :animated="false" class="uh-tabs">
 
           <!-- Tab: 已解决题目 -->
           <TabPane label="公共题库" name="problems">
@@ -123,6 +123,12 @@
             </div>
           </TabPane>
 
+          <TabPane v-if="isOwnHome" label="学习路径" name="learning-path">
+            <LearningPath v-if="activeTab === 'learning-path'" />
+          </TabPane>
+          <TabPane v-if="isOwnHome && user.id" label="学习反馈" name="learning-feedback">
+            <LearningFeedback v-if="activeTab === 'learning-feedback'" />
+          </TabPane>
         </Tabs>
       </div>
 
@@ -134,19 +140,19 @@
       width="820"
       :footer-hide="true"
     >
-      <div slot="header" class="uh-modal-header">
+      <template #header><div class="uh-modal-header">
         <span>实验详情</span>
-        <Button 
-          v-if="contestDetail && !contestDetailLoading" 
-          type="text" 
-          size="small" 
+        <Button
+          v-if="contestDetail && !contestDetailLoading"
+          type="text"
+          size="small"
           @click="calibrateContest(contestDetail.contest_id)"
           :loading="calibrateLoading"
           class="uh-refresh-btn"
         >
           <Icon type="ios-refresh"></Icon> 刷新数据
         </Button>
-      </div>
+      </div></template>
       <div v-if="contestDetailLoading" style="text-align:center;padding:40px 0;">
         <Spin></Spin>
       </div>
@@ -175,12 +181,15 @@
 </template>
 <script>
   import { mapActions, mapGetters } from 'vuex'
+  import LearningPath from './LearningPath.vue'
+  import LearningFeedback from './LearningFeedback.vue'
   import time from '@/utils/time'
   import api from '@oj/api'
 
   const SHOW_LIMIT = 30
 
   export default {
+    components: { LearningPath, LearningFeedback },
     data () {
       return {
         username: '',
@@ -205,9 +214,9 @@
             minWidth: 220,
             render: (h, params) => {
               return h('a', {
-                on: {
-                  click: () => this.goContestProblem(this.contestDetail.contest_id, params.row.display_id)
-                }
+
+                onClick: () => this.goContestProblem(this.contestDetail.contest_id, params.row.display_id)
+
               }, `${params.row.display_id} - ${params.row.title}`)
             }
           },
@@ -248,6 +257,9 @@
     },
     computed: {
       ...mapGetters(['isSuperAdmin', 'user']),
+      isOwnHome () {
+        return !this.$route.query.username || this.$route.query.username === this.user.username
+      },
       displayedProblems () {
         return this.showAll ? this.problems : this.problems.slice(0, this.showLimit)
       },
@@ -257,11 +269,18 @@
         return false
       }
     },
+    created () {
+      this.syncTab()
+    },
     mounted () {
       this.init()
     },
     methods: {
       ...mapActions(['changeDomTitle']),
+      syncTab () {
+        const tab = this.$route.query.tab
+        this.activeTab = ['problems', 'contests', ...(this.isOwnHome ? ['learning-path'] : []), ...(this.isOwnHome && this.user.id ? ['learning-feedback'] : [])].includes(tab) ? tab : 'problems'
+      },
       init () {
         const qUsername = this.$route.query.username
         // Permission gate: only SuperAdmin may view other people's home page.
@@ -315,7 +334,7 @@
           // Reload contest detail to show updated data
           this.showContestDetail(contestID)
         }).catch(err => {
-          this.$error('配准失败：' + (err.data && err.data.data || err.data || '未知错误'))
+          this.$error('配准失败：' + ((err.data && err.data.data) || err.data || '未知错误'))
         }).finally(() => {
           this.calibrateLoading = false
         })
@@ -366,8 +385,16 @@
       }
     },
     watch: {
+      'user.id' () { this.syncTab() },
       '$route' (newVal, oldVal) {
-        if (newVal !== oldVal) this.init()
+        this.syncTab()
+        if (newVal.query.username !== oldVal.query.username) this.init()
+      },
+      activeTab (tab) {
+        if (tab === this.$route.query.tab || (!this.$route.query.tab && tab === 'problems')) return
+        const query = { ...this.$route.query, tab }
+        if (tab !== 'learning-path') delete query.step
+        this.$router.replace({ name: 'user-home', query })
       }
     }
   }
@@ -498,10 +525,10 @@
   }
 
   .uh-tabs {
-    /deep/ .ivu-tabs-nav-scroll {
+    :deep(.ivu-tabs-nav-scroll) {
       padding: 0 20px;
     }
-    /deep/ .ivu-tabs-bar {
+    :deep(.ivu-tabs-bar) {
       margin-bottom: 0;
       border-bottom: 1px solid #f0f0f0;
     }
@@ -691,6 +718,6 @@
   }
 
   .uh-detail-table {
-    /deep/ a { color: #2d8cf0; cursor: pointer; }
+    :deep(a) { color: #2d8cf0; cursor: pointer; }
   }
 </style>

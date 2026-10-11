@@ -1,0 +1,8 @@
+untrusted_cannot_forge_proxy PASS
+trusted_protocol_https PASS
+trusted_protocol_uppercase PASS
+trusted_protocol_comma PASS
+trusted_protocol_http PASS
+trusted_client_ip_restored PASS
+heartbeat_requires_token PASS
+Restored direct TLS mode. Actual production gateway remains unverified.

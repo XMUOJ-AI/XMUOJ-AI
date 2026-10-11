@@ -1,0 +1,99 @@
+
+> onlinejudge@2.7.6 build
+> node build/build.js
+
+current version is "20261007-14441"
+All entries: 
+oj
+- ./src/pages/oj/index.js
+
+admin
+- ./src/pages/admin/index.js
+
+Hash: 1210f15fe20816d73c82
+Version: webpack 3.12.0
+Time: 7136ms
+                                                 Asset       Size  Chunks                    Chunk Names
+                    static/fonts/ionicons.05acfdb.woff    67.9 kB          [emitted]         
+                     static/fonts/ionicons.24712f6.ttf     189 kB          [emitted]         
+                     static/fonts/ionicons.2c2ae06.eot     121 kB          [emitted]         
+                       static/img/ionicons.621bd38.svg     334 kB          [emitted]  [big]  
+            static/fonts/KaTeX_Main-Italic.29c8639.ttf    47.6 kB          [emitted]         
+      static/fonts/KaTeX_SansSerif-Regular.5c58d16.ttf    29.8 kB          [emitted]         
+           static/fonts/KaTeX_Main-Regular.5c94aef.ttf    69.5 kB          [emitted]         
+     static/fonts/KaTeX_SansSerif-Regular.2555754.woff    16.2 kB          [emitted]         
+         static/fonts/KaTeX_Fraktur-Bold.d5b59ec.woff2    20.4 kB          [emitted]         
+       static/fonts/KaTeX_SansSerif-Bold.6e0830b.woff2    15.7 kB          [emitted]         
+       static/fonts/KaTeX_SansSerif-Italic.4059868.ttf      31 kB          [emitted]         
+          static/fonts/KaTeX_Size4-Regular.ad76725.ttf      11 kB          [emitted]         
+       static/fonts/KaTeX_Fraktur-Regular.b7d9c46.woff    22.1 kB          [emitted]         
+       static/fonts/KaTeX_Script-Regular.755e249.woff2    12.1 kB          [emitted]         
+     static/fonts/KaTeX_Caligraphic-Bold.4ec58be.woff2    10.4 kB          [emitted]         
+       static/fonts/KaTeX_Caligraphic-Bold.021dd4d.ttf    19.3 kB          [emitted]         
+        static/fonts/KaTeX_Main-BoldItalic.e8b44b9.ttf    44.5 kB          [emitted]         
+        static/fonts/KaTeX_Script-Regular.d524c9a.woff    13.4 kB          [emitted]         
+    static/fonts/KaTeX_Typewriter-Regular.3fe216d.woff    20.3 kB          [emitted]         
+          static/fonts/KaTeX_Fraktur-Bold.c4c8cab.woff    22.6 kB          [emitted]         
+       static/fonts/KaTeX_Math-BoldItalic.b13731e.woff    22.3 kB          [emitted]         
+     static/fonts/KaTeX_Typewriter-Regular.2570235.ttf    35.9 kB          [emitted]         
+      static/fonts/KaTeX_Math-BoldItalic.d747bd1.woff2    19.7 kB          [emitted]         
+          static/fonts/KaTeX_AMS-Regular.e78e28b.woff2    32.9 kB          [emitted]         
+         static/fonts/KaTeX_Main-Regular.5c734d7.woff2    32.5 kB          [emitted]         
+       static/fonts/KaTeX_Main-BoldItalic.4c57dbc.woff    25.4 kB          [emitted]         
+         static/fonts/KaTeX_SansSerif-Bold.7dc027c.ttf    33.7 kB          [emitted]         
+      static/fonts/KaTeX_Main-BoldItalic.284a17f.woff2    21.9 kB          [emitted]         
+          static/fonts/KaTeX_Size1-Regular.7342d45.ttf    12.9 kB          [emitted]         
+          static/fonts/KaTeX_Size2-Regular.eb130dc.ttf    12.2 kB          [emitted]         
+      static/fonts/KaTeX_Caligraphic-Bold.1e802ca.woff    11.7 kB          [emitted]         
+     static/fonts/KaTeX_SansSerif-Italic.fba01c9.woff2      15 kB          [emitted]         
+           static/fonts/KaTeX_Main-Italic.99be0e1.woff    26.2 kB          [emitted]         
+        static/fonts/KaTeX_Math-BoldItalic.9a2834a.ttf    39.3 kB          [emitted]         
+  static/fonts/KaTeX_Caligraphic-Regular.7edb53b.woff2    10.2 kB          [emitted]         
+            static/fonts/KaTeX_Main-Bold.8e1e01c.woff2    30.2 kB          [emitted]         
+      static/fonts/KaTeX_SansSerif-Italic.727a9b0.woff    17.6 kB          [emitted]         
+           static/fonts/KaTeX_Fraktur-Bold.a31e7cb.ttf    35.7 kB          [emitted]         
+          static/fonts/KaTeX_Main-Italic.e533d5a.woff2    22.7 kB          [emitted]         
+              static/fonts/KaTeX_Main-Bold.9ceff51.ttf    60.8 kB          [emitted]         
+    static/fonts/KaTeX_Caligraphic-Regular.d49f2d5.ttf    18.7 kB          [emitted]         
+   static/fonts/KaTeX_Caligraphic-Regular.d3b46c3.woff    11.5 kB          [emitted]         
+          static/fonts/KaTeX_Main-Regular.b741441.woff    38.1 kB          [emitted]         
+         static/fonts/KaTeX_Script-Regular.d12ea9e.ttf    24.6 kB          [emitted]         
+      static/fonts/KaTeX_Fraktur-Regular.32a5339.woff2    19.8 kB          [emitted]         
+        static/fonts/KaTeX_SansSerif-Bold.3fb4195.woff    18.5 kB          [emitted]         
+            static/fonts/KaTeX_Math-Italic.291e76b.ttf      41 kB          [emitted]         
+           static/fonts/KaTeX_Math-Italic.f030390.woff    22.8 kB          [emitted]         
+          static/fonts/KaTeX_Math-Italic.4ad08b8.woff2    20.1 kB          [emitted]         
+   static/fonts/KaTeX_Typewriter-Regular.6cc31ea.woff2    17.3 kB          [emitted]         
+        static/fonts/KaTeX_Fraktur-Regular.a48dad4.ttf    34.4 kB          [emitted]         
+             static/fonts/KaTeX_Main-Bold.22086eb.woff    35.5 kB          [emitted]         
+    static/fonts/KaTeX_SansSerif-Regular.d929cd6.woff2    13.7 kB          [emitted]         
+           static/fonts/KaTeX_AMS-Regular.7f06b4e.woff    38.9 kB          [emitted]         
+            static/fonts/KaTeX_AMS-Regular.aaf4eee.ttf      71 kB          [emitted]         
+            static/img/fontawesome-webfont.912ec66.svg     444 kB          [emitted]  [big]  
+          static/fonts/fontawesome-webfont.b06871f.ttf     166 kB          [emitted]         
+          static/fonts/fontawesome-webfont.674f50d.eot     166 kB          [emitted]         
+         static/fonts/fontawesome-webfont.fee66e7.woff      98 kB          [emitted]         
+        static/fonts/fontawesome-webfont.af7ae50.woff2    77.2 kB          [emitted]         
+               static/fonts/element-icons.535877f.woff    28.2 kB          [emitted]         
+                static/fonts/element-icons.732389d.ttf      56 kB          [emitted]         
+                   static/js/0.79b9e35b95d6abd3b6d2.js    45.9 kB       0  [emitted]         contest
+                   static/js/1.8f0e9f4d3670187aa316.js    57.5 kB       1  [emitted]         setting
+                   static/js/2.bc7baa4746d346205dda.js    11.6 kB       2  [emitted]         submission
+                   static/js/3.d134e37f27ae1c7c8972.js    6.36 kB       3  [emitted]         userRank
+                   static/js/4.4e7d9ecbe39e0fb55187.js    6.12 kB       4  [emitted]         password
+                   static/js/5.e61326e0a7c72ba20100.js     257 kB       5  [emitted]  [big]  Problem
+                  static/js/oj.ad9dd57d2d2296ec8b5b.js    1.79 MB       6  [emitted]  [big]  oj
+              static/js/vendor.24bfea10b5ce8a236a50.js     457 kB       7  [emitted]  [big]  vendor
+               static/js/admin.5cc53202a3cbf58d0e36.js    1.62 MB       8  [emitted]  [big]  admin
+            static/js/manifest.e98795589107ab420940.js    1.53 kB       9  [emitted]         manifest
+    static/css/oj.9a60902a7ef812f1fd201987366f7c16.css     308 kB       6  [emitted]  [big]  oj
+ static/css/admin.87541c2ed48bffc52fd700e41bcbf9da.css     322 kB       8  [emitted]  [big]  admin
+static/css/vendor.85055a479e1ae7522d5e23653d0415d3.css    92.1 kB       7  [emitted]         vendor
+                       static/js/vendor.dll.794a942.js     284 kB          [emitted]  [big]  
+                                 static/css/loader.css    2.14 kB          [emitted]         
+                                            index.html    1.39 kB          [emitted]         
+                                      admin/index.html  911 bytes          [emitted]         
+
+  Congratulations, the project built complete without error
+
+ You can now check the onlinejudge in http://YouIP/

@@ -3,17 +3,17 @@
     <Form ref="formLogin" :model="formLogin" :rules="ruleLogin">
       <FormItem prop="username">
         <Input type="text" v-model="formLogin.username" :placeholder="$t('m.LoginUsername')" size="large" @on-enter="handleLogin">
-        <Icon type="ios-person-outline" slot="prepend"></Icon>
+        <template #prepend><Icon type="ios-person-outline"></Icon></template>
         </Input>
       </FormItem>
       <FormItem prop="password">
         <Input type="password" v-model="formLogin.password" :placeholder="$t('m.LoginPassword')" size="large" @on-enter="handleLogin">
-        <Icon type="ios-locked-outline" slot="prepend"></Icon>
+        <template #prepend><Icon type="ios-locked-outline"></Icon></template>
         </Input>
       </FormItem>
       <FormItem prop="tfa_code" v-if="tfaRequired">
         <Input v-model="formLogin.tfa_code" :placeholder="$t('m.TFA_Code')">
-        <Icon type="ios-lightbulb-outline" slot="prepend"></Icon>
+        <template #prepend><Icon type="ios-lightbulb-outline"></Icon></template>
         </Input>
       </FormItem>
     </Form>
@@ -85,7 +85,13 @@
           api.login(formData).then(res => {
             this.btnLoginLoading = false
             this.changeModalStatus({visible: false})
-            this.getProfile()
+            this.getProfile().then(() => {
+              const destination = sessionStorage.getItem('knowledge-return-to')
+              if (destination && destination.startsWith('/knowledge')) {
+                sessionStorage.removeItem('knowledge-return-to')
+                this.$router.push(destination)
+              }
+            }).catch(() => {})
             this.$success(this.$i18n.t('m.Welcome_back'))
           }, _ => {
             this.btnLoginLoading = false

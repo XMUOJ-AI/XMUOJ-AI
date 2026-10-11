@@ -1,0 +1,4 @@
+PROFILE                 STATUS     ARCH       CPUS    MEMORY    DISK     RUNTIME    ADDRESS
+default                 Stopped    aarch64    3       4GiB      30GiB    docker     
+xmuoj                   Stopped    x86_64     3       4GiB      30GiB    docker     
+xmuoj-merge-20261011    Stopped    aarch64    2       3GiB      12GiB    docker     

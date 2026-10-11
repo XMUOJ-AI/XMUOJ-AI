@@ -1,0 +1,46 @@
+GUARD: migration executor connected exclusively to xmuoj_rollback PostgreSQL 14.23
+before_reverse trigger rejected UPDATE with SQLSTATE 23514
+PASS learning0002 rename reverse+upgrade retained count/rating/confidence ['7', '3', '1234.5678', '0.750']
+PASS full reverse: new tables absent = 30 ; knowledge triggers absent
+after_upgrade trigger rejected UPDATE with SQLSTATE 23514
+System check identified no issues (0 silenced).
+No changes detected
+[
+  {
+    "name": "custom_dump_restore_new_clone",
+    "status": "passed"
+  },
+  {
+    "name": "learning_0002_reverse_and_forward_preserves_rating_row",
+    "status": "passed",
+    "values": [
+      "7",
+      "3",
+      "1234.5678",
+      "0.750"
+    ],
+    "scope": "one representative populated rating row; not all migration data"
+  },
+  {
+    "name": "new_apps_and_legacy_reconciliation_reversed",
+    "status": "passed",
+    "new_tables_absent": 30,
+    "data_loss": "All new module tables and their rows removed; contest.is_exam also removed"
+  },
+  {
+    "name": "leaf_upgrade_tables_and_triggers_restored",
+    "status": "passed",
+    "legacy_probe_json_preserved": true,
+    "removed_new_module_data_restored": false
+  },
+  {
+    "name": "django_check_and_no_model_migration_drift",
+    "status": "passed"
+  },
+  {
+    "name": "source_migration_and_legacy_counts_unchanged",
+    "status": "passed",
+    "scope": "migration list and User/Problem counts; source never used for writes by this script"
+  }
+]
+Closed all Django connections to rollback clone

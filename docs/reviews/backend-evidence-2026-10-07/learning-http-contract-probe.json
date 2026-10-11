@@ -1,0 +1,77 @@
+{
+  "scope": "Django HTTP responses on real PostgreSQL test database; no external provider",
+  "responses": [
+    {
+      "method": "POST",
+      "path": "/recommendation/refresh",
+      "status": 200,
+      "schema": "passed"
+    },
+    {
+      "method": "GET",
+      "path": "/learning/profile",
+      "status": 200,
+      "schema": "passed"
+    },
+    {
+      "method": "GET",
+      "path": "/learning/profile",
+      "status": 400,
+      "schema": "passed"
+    },
+    {
+      "method": "GET",
+      "path": "/learning/weakness",
+      "status": 200,
+      "schema": "passed"
+    },
+    {
+      "method": "GET",
+      "path": "/learning/weakness",
+      "status": 400,
+      "schema": "passed"
+    },
+    {
+      "method": "GET",
+      "path": "/recommendation/path",
+      "status": 200,
+      "schema": "passed"
+    },
+    {
+      "method": "GET",
+      "path": "/recommendation/path",
+      "status": 400,
+      "schema": "passed"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/learning/student/{student_id}/profile",
+      "status": 200,
+      "schema": "passed"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/learning/student/{student_id}/profile",
+      "status": 400,
+      "schema": "passed"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/learning/class/knowledge-stats",
+      "status": 200,
+      "schema": "passed"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/learning/class/knowledge-stats",
+      "status": 400,
+      "schema": "passed"
+    },
+    {
+      "method": "POST",
+      "path": "/recommendation/refresh",
+      "status": 403,
+      "schema": "passed"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import Vue from 'vue'
+import ui from '@/services/ui'
 import storage from '@/utils/storage'
 import { STORAGE_KEY } from '@/utils/constants'
 import ojAPI from '@oj/api'
@@ -66,21 +66,21 @@ function compareDisplayId (left, right) {
 
 function downloadFile (url) {
   return new Promise((resolve, reject) => {
-    Vue.prototype.$http.get(url, {responseType: 'blob'}).then(resp => {
+    ui.$http.get(url, {responseType: 'blob'}).then(resp => {
       let headers = resp.headers
       if (headers['content-type'].indexOf('json') !== -1) {
         let fr = new window.FileReader()
         if (resp.data.error) {
-          Vue.prototype.$error(resp.data.error)
+          ui.$error(resp.data.error)
         } else {
-          Vue.prototype.$error('Invalid file format')
+          ui.$error('Invalid file format')
         }
         fr.onload = (event) => {
           let data = JSON.parse(event.target.result)
           if (data.error) {
-            Vue.prototype.$error(data.data)
+            ui.$error(data.data)
           } else {
-            Vue.prototype.$error('Invalid file format')
+            ui.$error('Invalid file format')
           }
         }
         let b = new window.Blob([resp.data], {type: 'application/json'})

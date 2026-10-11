@@ -20,15 +20,15 @@
           <el-table-column
             prop="create_time"
             label="CreateTime">
-            <template slot-scope="scope">
-              {{ scope.row.create_time | localtime }}
+            <template #default="scope">
+              {{$filters.localtime(scope.row.create_time)}}
             </template>
           </el-table-column>
           <el-table-column
             prop="last_update_time"
             label="LastUpdateTime">
-            <template slot-scope="scope">
-              {{scope.row.last_update_time | localtime }}
+            <template #default="scope">
+              {{$filters.localtime(scope.row.last_update_time)}}
             </template>
           </el-table-column>
           <el-table-column
@@ -39,7 +39,7 @@
             width="100"
             prop="visible"
             label="Visible">
-            <template slot-scope="scope">
+            <template #default="scope">
               <el-switch v-model="scope.row.visible"
                          active-text=""
                          inactive-text=""
@@ -51,21 +51,21 @@
             fixed="right"
             label="Option"
             width="200">
-            <div slot-scope="scope">
-              <icon-btn name="Edit" icon="edit" @click.native="openAnnouncementDialog(scope.row.id)"></icon-btn>
-              <icon-btn name="Delete" icon="trash" @click.native="deleteAnnouncement(scope.row.id)"></icon-btn>
-            </div>
+            <template #default="scope"><div>
+              <icon-btn name="Edit" icon="edit" @click="openAnnouncementDialog(scope.row.id)"></icon-btn>
+              <icon-btn name="Delete" icon="trash" @click="deleteAnnouncement(scope.row.id)"></icon-btn>
+            </div></template>
           </el-table-column>
         </el-table>
         <div class="panel-options">
-          <el-button type="primary" size="small" @click="openAnnouncementDialog(null)" icon="el-icon-plus">Create</el-button>
+          <el-button type="primary" size="small" @click="openAnnouncementDialog(null)"><template #icon><i class="el-icon-plus" aria-hidden="true"></i></template>Create</el-button>
           <el-pagination
             v-if="!contestID"
             class="page"
             layout="prev, pager, next, sizes"
             @current-change="currentChange"
             @size-change="handlePageSizeChange"
-            :current-page="currentPage"
+            v-model:current-page="currentPage"
             :page-size="pageSize"
             :page-sizes="pageSizes"
             :total="total">
@@ -74,7 +74,7 @@
       </div>
     </Panel>
     <!--对话框-->
-    <el-dialog :title="announcementDialogTitle" :visible.sync="showEditAnnouncementDialog"
+    <el-dialog :title="announcementDialogTitle" v-model="showEditAnnouncementDialog"
                @open="onOpenEditDialog" :close-on-click-modal="false">
       <el-form label-position="top">
         <el-form-item :label="$t('m.Announcement_Title')" required>
@@ -95,10 +95,10 @@
           </el-switch>
         </div>
       </el-form>
-      <span slot="footer" class="dialog-footer">
-          <cancel @click.native="showEditAnnouncementDialog = false"></cancel>
-          <save type="primary" @click.native="submitAnnouncement"></save>
-        </span>
+      <template #footer><span class="dialog-footer">
+          <cancel @click="showEditAnnouncementDialog = false"></cancel>
+          <save type="primary" @click="submitAnnouncement"></save>
+        </span></template>
     </el-dialog>
   </div>
 </template>

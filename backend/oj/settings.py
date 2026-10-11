@@ -10,15 +10,30 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 import os
-import raven
 from copy import deepcopy
 from utils.shortcuts import get_env
+from .https import https_config
 
 production_env = get_env("OJ_ENV", "dev") == "production"
+SENTRY_DSN = os.environ.get("SENTRY_DSN", "").strip()
+sentry_enabled = production_env and bool(SENTRY_DSN)
 if production_env:
     from .production_settings import *
 else:
     from .dev_settings import *
+
+HTTPS_CONFIG = https_config(os.environ)
+SESSION_COOKIE_SECURE = HTTPS_CONFIG["mode"] != "off"
+CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
+# Gunicorn is loopback-only. Nginx overwrites this header using the connection
+# scheme or an explicitly trusted TLS proxy; never expose Gunicorn directly.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https") if SESSION_COOKIE_SECURE else None
+SECURE_HSTS_SECONDS = HTTPS_CONFIG["hsts_seconds"]
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+# Redirect at Nginx so the loopback readiness probe and JudgeServer heartbeat
+# remain available without trusting public client headers.
+SECURE_SSL_REDIRECT = False
 
 with open(os.path.join(DATA_DIR, "config", "secret.key"), "r") as f:
     SECRET_KEY = f.read()
@@ -32,12 +47,13 @@ VENDOR_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'rest_framework',
     'django_dramatiq',
     'django_dbconn_retry',
 ]
 
-if production_env:
+if sentry_enabled:
     VENDOR_APPS.append('raven.contrib.django.raven_compat')
 
 
@@ -51,6 +67,11 @@ LOCAL_APPS = [
     'submission',
     'options',
     'judge',
+    'knowledge.apps.KnowledgeConfig',
+    'problem_import',
+    'learning.apps.LearningConfig',
+    'rag',
+    'agent_service',
 ]
 
 INSTALLED_APPS = VENDOR_APPS + LOCAL_APPS
@@ -60,11 +81,12 @@ MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'account.middleware.APITokenAuthMiddleware',
+    'utils.contract_api.ContractBoundaryMiddleware',
+    'utils.contract_api.ContractTokenAuthMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'account.middleware.AdminRoleRequiredMiddleware',
+    'utils.contract_api.ContractAdminRoleMiddleware',
     'account.middleware.SessionRecordMiddleware',
     # 'account.middleware.LogSqlMiddleware',
 )
@@ -137,7 +159,7 @@ UPLOAD_DIR = f"{DATA_DIR}{UPLOAD_PREFIX}"
 STATICFILES_DIRS = [os.path.join(DATA_DIR, "public")]
 
 
-LOGGING_HANDLERS = ['console', 'sentry'] if production_env else ['console']
+LOGGING_HANDLERS = ['console', 'sentry'] if sentry_enabled else ['console']
 LOGGING = {
    'version': 1,
    'disable_existing_loggers': False,
@@ -183,6 +205,9 @@ LOGGING = {
    },
 }
 
+if not sentry_enabled:
+    LOGGING["handlers"].pop("sentry")
+
 REST_FRAMEWORK = {
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     'DEFAULT_RENDERER_CLASSES': (
@@ -217,6 +242,8 @@ DRAMATIQ_BROKER = {
     "BROKER": "dramatiq.brokers.redis.RedisBroker",
     "OPTIONS": {
         "url": f"{REDIS_URL}/4",
+        "socket_connect_timeout": 2,
+        "socket_timeout": 5,
     },
     "MIDDLEWARE": [
         # "dramatiq.middleware.Prometheus",
@@ -239,9 +266,7 @@ DRAMATIQ_RESULT_BACKEND = {
     }
 }
 
-RAVEN_CONFIG = {
-    'dsn': 'https://b200023b8aed4d708fb593c5e0a6ad3d:1fddaba168f84fcf97e0d549faaeaff0@sentry.io/263057'
-}
+RAVEN_CONFIG = {"dsn": SENTRY_DSN}
 
 IP_HEADER = "HTTP_X_REAL_IP"
 

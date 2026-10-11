@@ -1,0 +1,17 @@
+{
+  "indexes_bytes": {
+    "rag_chunk_content_fts_gin": 5267456,
+    "rag_chunk_content_trgm_gin": 25968640,
+    "rag_chunk_document_id_3528cce3": 1802240,
+    "rag_chunk_embedding_id_5a002747_like": 663552,
+    "rag_chunk_embedding_id_key": 663552,
+    "rag_chunk_metadat_9db3e7_gin": 2605056,
+    "rag_chunk_order_unique": 5251072,
+    "rag_chunk_pkey": 4284416
+  },
+  "chunk_heap_bytes": 204800000,
+  "chunk_total_including_indexes_bytes": 251420672,
+  "document_total_including_indexes_bytes": 29147136,
+  "index_migration_wall_seconds": 342.44,
+  "scope": "100000 deterministic synthetic chunks; existing metadata/PK/FK indexes are included separately; not a storage estimate for production"
+}

@@ -1,0 +1,17 @@
+
+> onlinejudge@2.7.6 test
+> vitest run
+
+
+ RUN  v5.0.1 /Users/jingweihao/大创/XMUOJ-AI/frontend
+
+
+ Test Files  20 passed (20)
+      Tests  92 passed (92)
+   Start at  19:31:12
+   Duration  4.13s (environment 43%, tests 32%, transform 13%, import 11%, setup 1%)
+
+Environment  jsdom was created 20 times · 10.90s total, 43% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+

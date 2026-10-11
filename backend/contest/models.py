@@ -47,9 +47,9 @@ class Contest(models.Model):
     # 是否有权查看problem 的一些统计信息 诸如submission_number, accepted_number 等
     def problem_details_permission(self, user):
         return self.rule_type == ContestRuleType.ACM or \
-               self.status == ContestStatus.CONTEST_ENDED or \
-               user.is_authenticated and user.is_contest_admin(self) or \
-               self.real_time_rank
+            self.status == ContestStatus.CONTEST_ENDED or \
+            user.is_authenticated and user.is_contest_admin(self) or \
+            self.real_time_rank
 
     class Meta:
         db_table = "contest"
@@ -133,7 +133,7 @@ class ContestParticipation(models.Model):
         from submission.models import Submission, JudgeStatus
 
         problem_id_map = dict(Problem.objects.filter(contest_id=contest.id, visible=True)
-                  .values_list("id", "_id"))
+                              .values_list("id", "_id"))
 
         submission_number = obj.submission_number
         accepted_number = obj.accepted_number

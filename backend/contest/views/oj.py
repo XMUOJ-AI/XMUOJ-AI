@@ -10,7 +10,6 @@ from utils.api import APIView, validate_serializer
 from utils.constants import CacheKey, CONTEST_PASSWORD_SESSION_KEY
 from utils.shortcuts import datetime2str, check_is_id
 from account.models import AdminType, User, UserProfile
-from account.models import AdminType
 from account.decorators import login_required, check_contest_permission, check_contest_password
 
 from utils.constants import ContestRuleType, ContestStatus, ContestType
@@ -177,7 +176,7 @@ class ContestRankAPI(APIView):
             worksheet.write("A1", "UserID")
             worksheet.write("C1", "学号")
             worksheet.write("D1", "姓名")
-            worksheet.write("B1", "班级") 
+            worksheet.write("B1", "班级")
             if self.contest.rule_type == ContestRuleType.OI:
                 worksheet.write("E1", "总分")
                 for item in range(contest_problems.count()):
@@ -186,9 +185,9 @@ class ContestRankAPI(APIView):
                     worksheet.write_string(index + 1, 0, str(item["user"]["id"]))
                     worksheet.write_string(index + 1, 2, item["user"]["username"])
                     worksheet.write_string(index + 1, 3, item["user"]["real_name"] or "")
-                    usera = User.objects.get(id=item["user"]["id"])                                       
-                    user = UserProfile.objects.get(user=usera) 
-                    worksheet.write_string(index + 1, 1, user.school or "")  
+                    usera = User.objects.get(id=item["user"]["id"])
+                    user = UserProfile.objects.get(user=usera)
+                    worksheet.write_string(index + 1, 1, user.school or "")
                     worksheet.write_string(index + 1, 4, str(item["total_score"]))
                     for k, v in item["submission_info"].items():
                         worksheet.write_string(index + 1, 5 + problem_ids.index(int(k)), str(v))

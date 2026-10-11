@@ -1,8 +1,9 @@
 <template>
-  <el-button type="primary">{{$t('m.Save')}}</el-button>
+  <el-button type="primary" @click="$emit('click', $event)">{{$t('m.Save')}}</el-button>
 </template>
 <script>
   export default{
-    name: 'Save'
+    name: 'Save',
+    emits: ['click']
   }
 </script>

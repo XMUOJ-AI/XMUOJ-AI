@@ -1,0 +1,104 @@
+Using existing test database for alias 'default'...
+Django VERSION (3, 2, 25, 'final', 0)
+System check identified no issues (0 silenced).
+..............................................................................[2026-10-07 09:10:57] - [ERROR] - [django.request:224]  - Service Unavailable: /api/agent/v1/runs
+[2026-10-07 09:10:57] - [ERROR] - [django.request:224]  - Service Unavailable: /api/agent/v1/runs
+.....1 reviewed error patterns imported
+..............................................................................................Recovered 0 learning events
+Recovered 1 learning events
+Recovered 0 learning events
+.Recovered 0 learning events
+Recovered 1 learning events
+.Recovered 1 learning events
+Recovered 1 learning events
+Recovered 1 learning events
+Recovered 1 learning events
+.Recovered 1 learning events
+.Updated class owned (5147aa5b-e13e-4c17-9346-1409a019bd86); merged 1 teachers and 1 students
+....Updated class test-class (97355f62-87c8-4f88-b0aa-cfd37d7f10f7); merged 1 teachers and 1 students
+............................Problem Tag Audit
+- total tags: 2
+- active tags: 2
+- duplicate groups: 1
+- zero problem tags: 2
+- low frequency tags: 0
+
+Duplicate groups:
+- greedy => Greedy, greedy
+
+Zero problem tags:
+- Greedy (25)
+- greedy (26)
+....................................[2026-10-07 09:12:37] - [ERROR] - [django.request:224]  - Internal Server Error: /api/test-failure
+[2026-10-07 09:12:37] - [ERROR] - [django.request:224]  - Internal Server Error: /api/test-failure
+...........[2026-10-07 09:13:02] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'agent_fixture'.
+[2026-10-07 09:13:02] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):248]  - Running consumer thread...
+[2026-10-07 09:13:02] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'agent_fixture.DQ'.
+[2026-10-07 09:13:02] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):248]  - Running consumer thread...
+[2026-10-07 09:13:02] - [DEBUG] - [dramatiq.worker.WorkerThread:449]  - Running worker thread...
+[2026-10-07 09:13:02] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message '0c8aa97c-e1b9-4ad0-ac32-89a38af80260' on queue 'agent_fixture'.
+[2026-10-07 09:13:02] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):326]  - Pushing message '0c8aa97c-e1b9-4ad0-ac32-89a38af80260' onto work queue.
+[2026-10-07 09:13:02] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message fixture_agent_execute('b4f15554-483a-4b64-8348-e30b06f52112') with id '0c8aa97c-e1b9-4ad0-ac32-89a38af80260'.
+[2026-10-07 09:13:03] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):350]  - Acknowledging message '0c8aa97c-e1b9-4ad0-ac32-89a38af80260'.
+[2026-10-07 09:13:04] - [INFO] - [dramatiq.worker.Worker:128]  - Shutting down...
+[2026-10-07 09:13:04] - [DEBUG] - [dramatiq.worker.Worker:133]  - Stopping workers...
+[2026-10-07 09:13:04] - [DEBUG] - [dramatiq.worker.WorkerThread:548]  - Stopping worker thread...
+[2026-10-07 09:13:04] - [DEBUG] - [dramatiq.worker.WorkerThread:465]  - Worker thread stopped.
+[2026-10-07 09:13:04] - [DEBUG] - [dramatiq.worker.Worker:138]  - Workers stopped.
+[2026-10-07 09:13:04] - [DEBUG] - [dramatiq.worker.Worker:139]  - Stopping consumers...
+[2026-10-07 09:13:04] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):411]  - Stopping consumer thread...
+[2026-10-07 09:13:04] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):411]  - Stopping consumer thread...
+[2026-10-07 09:13:04] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):294]  - Consumer thread stopped.
+[2026-10-07 09:13:04] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):294]  - Consumer thread stopped.
+[2026-10-07 09:13:04] - [DEBUG] - [dramatiq.worker.Worker:144]  - Consumers stopped.
+[2026-10-07 09:13:04] - [DEBUG] - [dramatiq.worker.Worker:146]  - Requeueing in-memory messages...
+[2026-10-07 09:13:04] - [DEBUG] - [dramatiq.worker.Worker:156]  - Done requeueing in-progress messages.
+[2026-10-07 09:13:04] - [DEBUG] - [dramatiq.worker.Worker:158]  - Closing consumers...
+[2026-10-07 09:13:04] - [DEBUG] - [dramatiq.worker.Worker:162]  - Consumers closed.
+[2026-10-07 09:13:04] - [INFO] - [dramatiq.worker.Worker:164]  - Worker has been shut down.
+.............[2026-10-07 09:13:58] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF cookie not set.): /api/admin/submission/rejudge
+......................[2026-10-07 09:15:31] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'default'.
+[2026-10-07 09:15:31] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'default': not whitelisted.
+[2026-10-07 09:15:31] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'agent'.
+[2026-10-07 09:15:31] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'agent': not whitelisted.
+[2026-10-07 09:15:31] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'problem_import'.
+[2026-10-07 09:15:31] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):248]  - Running consumer thread...
+[2026-10-07 09:15:31] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'agent.DQ'.
+[2026-10-07 09:15:31] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'agent.DQ': not whitelisted.
+[2026-10-07 09:15:31] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'problem_import.DQ'.
+[2026-10-07 09:15:31] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):248]  - Running consumer thread...
+[2026-10-07 09:15:31] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'default.DQ'.
+[2026-10-07 09:15:31] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'default.DQ': not whitelisted.
+[2026-10-07 09:15:31] - [DEBUG] - [dramatiq.worker.WorkerThread:449]  - Running worker thread...
+[2026-10-07 09:15:31] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message '10b8790c-3b39-41ba-9159-087ac71ef8fd' on queue 'problem_import'.
+[2026-10-07 09:15:32] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):326]  - Pushing message '10b8790c-3b39-41ba-9159-087ac71ef8fd' onto work queue.
+[2026-10-07 09:15:32] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message validate_import_batch('ba7e99e6-038a-4004-bed9-2dd1f760a25b') with id '10b8790c-3b39-41ba-9159-087ac71ef8fd'.
+[2026-10-07 09:15:32] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):350]  - Acknowledging message '10b8790c-3b39-41ba-9159-087ac71ef8fd'.
+[2026-10-07 09:15:32] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message '1441a5ce-0a4b-49e8-9149-73e1c203e58e' on queue 'problem_import'.
+[2026-10-07 09:15:32] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):326]  - Pushing message '1441a5ce-0a4b-49e8-9149-73e1c203e58e' onto work queue.
+[2026-10-07 09:15:32] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message commit_import_batch('ba7e99e6-038a-4004-bed9-2dd1f760a25b') with id '1441a5ce-0a4b-49e8-9149-73e1c203e58e'.
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):350]  - Acknowledging message '1441a5ce-0a4b-49e8-9149-73e1c203e58e'.
+[2026-10-07 09:15:33] - [INFO] - [dramatiq.worker.Worker:128]  - Shutting down...
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.Worker:133]  - Stopping workers...
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.WorkerThread:548]  - Stopping worker thread...
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.WorkerThread:465]  - Worker thread stopped.
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.Worker:138]  - Workers stopped.
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.Worker:139]  - Stopping consumers...
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):411]  - Stopping consumer thread...
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):411]  - Stopping consumer thread...
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):294]  - Consumer thread stopped.
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):294]  - Consumer thread stopped.
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.Worker:144]  - Consumers stopped.
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.Worker:146]  - Requeueing in-memory messages...
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.Worker:156]  - Done requeueing in-progress messages.
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.Worker:158]  - Closing consumers...
+[2026-10-07 09:15:33] - [DEBUG] - [dramatiq.worker.Worker:162]  - Consumers closed.
+[2026-10-07 09:15:33] - [INFO] - [dramatiq.worker.Worker:164]  - Worker has been shut down.
+.......[2026-10-07 09:16:01] - [ERROR] - [django.request:224]  - Service Unavailable: /api/admin/problem-import/batches
+[2026-10-07 09:16:01] - [ERROR] - [django.request:224]  - Service Unavailable: /api/admin/problem-import/batches
+..........
+----------------------------------------------------------------------
+Ran 312 tests in 375.492s
+
+OK
+Preserving test database for alias 'default'...

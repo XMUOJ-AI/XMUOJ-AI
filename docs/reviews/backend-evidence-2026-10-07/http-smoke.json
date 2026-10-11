@@ -1,0 +1,37 @@
+[
+  {
+    "path": "/api/knowledge-points",
+    "status": 401,
+    "api_version": "0.9.9",
+    "request_id_present": true,
+    "json": true
+  },
+  {
+    "path": "/api/admin/knowledge-points",
+    "status": 401,
+    "api_version": "0.9.9",
+    "request_id_present": true,
+    "json": true
+  },
+  {
+    "path": "/api/learning/profile",
+    "status": 401,
+    "api_version": "1.0.0",
+    "request_id_present": true,
+    "json": true
+  },
+  {
+    "path": "/api/agent/v1/runs",
+    "status": 401,
+    "api_version": "1.0.0",
+    "request_id_present": true,
+    "json": true
+  },
+  {
+    "path": "/api/admin/problem-import/batches",
+    "status": 401,
+    "api_version": "1.0.0",
+    "request_id_present": true,
+    "json": true
+  }
+]
