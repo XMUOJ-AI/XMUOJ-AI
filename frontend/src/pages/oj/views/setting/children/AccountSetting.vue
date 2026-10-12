@@ -74,6 +74,10 @@
         callback()
       }
       return {
+        accountId: null,
+        accountEpoch: 0,
+        accountAlive: true,
+        logoutTimer: null,
         loading: {
           btnPassword: false,
           btnEmail: false
@@ -113,12 +117,44 @@
         }
       }
     },
-    mounted () {
-      this.formEmail.old_email = this.$store.getters.user.email || ''
+    computed: {
+      account () { return this.$store.getters.user }
+    },
+    watch: {
+      account: {
+        immediate: true,
+        deep: true,
+        handler (account) {
+          const id = account.id == null ? null : String(account.id)
+          if (id !== this.accountId) {
+            this.accountId = id
+            this.accountEpoch++
+            clearTimeout(this.logoutTimer)
+            Object.keys(this.formPassword).forEach(field => { this.formPassword[field] = '' })
+            Object.keys(this.formEmail).forEach(field => { this.formEmail[field] = '' })
+            Object.keys(this.loading).forEach(field => { this.loading[field] = false })
+            Object.keys(this.visible).forEach(field => { this.visible[field] = false })
+          }
+          this.formEmail.old_email = account.email || ''
+        }
+      }
+    },
+    beforeUnmount () {
+      this.accountAlive = false
+      this.accountEpoch++
+      clearTimeout(this.logoutTimer)
     },
     methods: {
+      currentAccount (epoch) {
+        const user = this.$store.getters.user
+        const accountId = user.id == null ? null : String(user.id)
+        return this.accountAlive && epoch === this.accountEpoch && accountId !== null && accountId === this.accountId
+      },
       changePassword () {
+        const epoch = this.accountEpoch
+        if (!this.currentAccount(epoch)) return
         this.validateForm('formPassword').then(valid => {
+          if (!this.currentAccount(epoch)) return
           this.loading.btnPassword = true
           let data = Object.assign({}, this.formPassword)
           delete data.again_password
@@ -126,14 +162,17 @@
             delete data.tfa_code
           }
           api.changePassword(data).then(res => {
+            if (!this.currentAccount(epoch)) return
             this.loading.btnPassword = false
             this.visible.passwordAlert = true
             this.$success('Update password successfully')
-            setTimeout(() => {
+            this.logoutTimer = setTimeout(() => {
+              if (!this.currentAccount(epoch)) return
               this.visible.passwordAlert = false
               this.$router.push({name: 'logout'})
             }, 5000)
           }, res => {
+            if (!this.currentAccount(epoch)) return
             if (res.data.data === 'tfa_required') {
               this.visible.tfaRequired = true
             }
@@ -142,18 +181,23 @@
         })
       },
       changeEmail () {
+        const epoch = this.accountEpoch
+        if (!this.currentAccount(epoch)) return
         this.validateForm('formEmail').then(valid => {
+          if (!this.currentAccount(epoch)) return
           this.loading.btnEmail = true
           let data = Object.assign({}, this.formEmail)
           if (!this.visible.tfaRequired) {
             delete data.tfa_code
           }
           api.changeEmail(data).then(res => {
+            if (!this.currentAccount(epoch)) return
             this.loading.btnEmail = false
             this.visible.emailAlert = true
             this.$success('Change email successfully')
             this.$refs.formEmail.resetFields()
           }, res => {
+            if (!this.currentAccount(epoch)) return
             if (res.data.data === 'tfa_required') {
               this.visible.tfaRequired = true
             }
@@ -182,4 +226,3 @@
     }
   }
 </style>
-

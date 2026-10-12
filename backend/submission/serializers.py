@@ -20,7 +20,7 @@ class SubmissionModelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Submission
-        fields = "__all__"
+        exclude = ("ip",)
 
 
 # 不显示submission info的serializer, 用于ACM rule_type

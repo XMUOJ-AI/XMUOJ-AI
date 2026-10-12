@@ -15,7 +15,7 @@ from utils.cache import cache
 from utils.constants import CacheKey, ContestStatus
 from utils.shortcuts import rand_str
 from utils.tasks import delete_files
-from ..models import Contest, ContestAnnouncement, ACMContestRank, OIContestRank
+from ..models import Contest, ContestAnnouncement, ACMContestRank
 from ..serializers import (ContestAnnouncementSerializer, ContestAdminSerializer,
                            CreateConetestSeriaizer, CreateContestAnnouncementSerializer,
                            EditConetestSeriaizer, EditContestAnnouncementSerializer,
@@ -64,9 +64,15 @@ class ContestAPI(APIView):
             cache_key = f"{CacheKey.contest_rank_cache}:{contest.id}"
             cache.delete(cache_key)
 
-        for k, v in data.items():
-            setattr(contest, k, v)
-        contest.save()
+        from contest.scoring import rebuild_contest_scores
+        with transaction.atomic():
+            contest = Contest.objects.select_for_update().get(pk=contest.pk)
+            changed_window = contest.start_time != data["start_time"] or contest.end_time != data["end_time"]
+            for k, v in data.items():
+                setattr(contest, k, v)
+            contest.save()
+            if changed_window:
+                rebuild_contest_scores(contest.pk)
         return self.success(ContestAdminSerializer(contest).data)
 
     def get(self, request):
@@ -79,7 +85,7 @@ class ContestAPI(APIView):
             except Contest.DoesNotExist:
                 return self.error("Contest does not exist")
 
-        contests = Contest.objects.select_related('created_by').all().order_by("-create_time")
+        contests = Contest.objects.select_related("created_by").all().order_by("-create_time")
         if request.user.is_admin():
             contests = contests.filter(created_by=request.user)
 
@@ -216,6 +222,7 @@ class ContestAnnouncementAPI(APIView):
 class ACMContestHelper(APIView):
     @check_contest_permission(check_type="ranks")
     def get(self, request):
+        ensure_created_by(self.contest, request.user)
         ranks = ACMContestRank.objects.filter(contest=self.contest, accepted_number__gt=0) \
             .values("id", "user__username", "user__userprofile__real_name", "submission_info")
         results = []
@@ -236,16 +243,19 @@ class ACMContestHelper(APIView):
     @check_contest_permission(check_type="ranks")
     @validate_serializer(ACMContesHelperSerializer)
     def put(self, request):
+        ensure_created_by(self.contest, request.user)
         data = request.data
-        try:
-            rank = ACMContestRank.objects.get(pk=data["rank_id"])
-        except ACMContestRank.DoesNotExist:
-            return self.error("Rank id does not exist")
-        problem_rank_status = rank.submission_info.get(data["problem_id"])
-        if not problem_rank_status:
-            return self.error("Problem id does not exist")
-        problem_rank_status["checked"] = data["checked"]
-        rank.save(update_fields=("submission_info",))
+        with transaction.atomic():
+            Contest.objects.select_for_update().get(pk=self.contest.pk)
+            try:
+                rank = ACMContestRank.objects.get(pk=data["rank_id"], contest=self.contest)
+            except ACMContestRank.DoesNotExist:
+                return self.error("Rank id does not exist")
+            problem_rank_status = rank.submission_info.get(data["problem_id"])
+            if not problem_rank_status:
+                return self.error("Problem id does not exist")
+            problem_rank_status["checked"] = data["checked"]
+            rank.save(update_fields=("submission_info",))
         return self.success()
 
 
@@ -254,7 +264,7 @@ class DownloadContestSubmissions(APIView):
         problem_ids = contest.problem_set.all().values_list("id", "_id")
         id2display_id = {k[0]: k[1] for k in problem_ids}
         ac_map = {k[0]: False for k in problem_ids}
-        if dlType == "0": # download all
+        if dlType == "0":  # download all
             submissions = Submission.objects.filter(contest=contest).order_by("-create_time")
         else:
             submissions = Submission.objects.filter(contest=contest, result=JudgeStatus.ACCEPTED).order_by("-create_time")

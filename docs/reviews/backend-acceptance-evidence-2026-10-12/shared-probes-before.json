@@ -1,0 +1,7 @@
+{
+  "one_token_two_requests_accepted": [
+    true,
+    true
+  ],
+  "prune_escaped_root_and_deleted_sentinel": true
+}

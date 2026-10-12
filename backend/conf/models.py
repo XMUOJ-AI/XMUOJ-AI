@@ -3,7 +3,7 @@ from django.utils import timezone
 
 
 class JudgeServer(models.Model):
-    hostname = models.TextField()
+    hostname = models.TextField(unique=True)
     ip = models.TextField(null=True)
     judger_version = models.TextField()
     cpu_core = models.IntegerField()

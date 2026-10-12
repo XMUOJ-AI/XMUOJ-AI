@@ -1,0 +1,63 @@
+{
+  "all_results_equal": true,
+  "before_samples": 3,
+  "after_samples": 15,
+  "measurements": {
+    "english_multiword": {
+      "before_median_ms": 6199.32012501522,
+      "after_median_ms": 329.2058749939315,
+      "before_min_ms": 6078.471042012097,
+      "before_max_ms": 6809.71145798685,
+      "after_min_ms": 295.94279199955054,
+      "after_max_ms": 1077.8493329999037,
+      "after_observed_p95_ms": 1077.8493329999037,
+      "median_speedup": 18.831134545000136,
+      "ids_scores_order_equal": true
+    },
+    "chinese_three": {
+      "before_median_ms": 6266.8556249991525,
+      "after_median_ms": 310.21058399346657,
+      "before_min_ms": 5905.538708000677,
+      "before_max_ms": 7661.558083986165,
+      "after_min_ms": 267.9019579954911,
+      "after_max_ms": 426.1768340074923,
+      "after_observed_p95_ms": 426.1768340074923,
+      "median_speedup": 20.201940063821745,
+      "ids_scores_order_equal": true
+    },
+    "chinese_two": {
+      "before_median_ms": 7693.885415996192,
+      "after_median_ms": 1250.4469160048757,
+      "before_min_ms": 6466.123291000258,
+      "before_max_ms": 7718.849666998722,
+      "after_min_ms": 806.1907920055091,
+      "after_max_ms": 2299.1454159782734,
+      "after_observed_p95_ms": 2299.1454159782734,
+      "median_speedup": 6.152908466180897,
+      "ids_scores_order_equal": true
+    },
+    "chinese_one": {
+      "before_median_ms": 7149.539292004192,
+      "after_median_ms": 1057.9383749864064,
+      "before_min_ms": 6646.486500016181,
+      "before_max_ms": 8740.314791997662,
+      "after_min_ms": 735.0281669932883,
+      "after_max_ms": 3291.3471659994684,
+      "after_observed_p95_ms": 3291.3471659994684,
+      "median_speedup": 6.757992205449639,
+      "ids_scores_order_equal": true
+    }
+  },
+  "exploration": {
+    "global_union_chinese_two": {
+      "status": "timeout",
+      "statement_timeout_seconds": 30,
+      "phase": "warmup",
+      "not_adopted": true,
+      "raw_log": "indexed.txt"
+    },
+    "global_union_chinese_one": {
+      "status": "not_run_after_previous_timeout"
+    }
+  }
+}

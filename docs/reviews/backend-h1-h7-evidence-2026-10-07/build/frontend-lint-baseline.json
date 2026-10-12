@@ -1,0 +1,21 @@
+{
+  "errors": 334,
+  "files": [
+    {
+      "path": "frontend/src/pages/oj/views/contest/children/ContestProblemList.vue",
+      "unchanged_since_h1_h7_snapshot": true
+    },
+    {
+      "path": "frontend/src/pages/oj/views/user/UserHome.vue",
+      "unchanged_since_h1_h7_snapshot": true
+    },
+    {
+      "path": "frontend/src/plugins/highlight.js",
+      "unchanged_since_h1_h7_snapshot": true
+    },
+    {
+      "path": "frontend/src/plugins/highlightjs-line-numbers2.js",
+      "unchanged_since_h1_h7_snapshot": true
+    }
+  ]
+}

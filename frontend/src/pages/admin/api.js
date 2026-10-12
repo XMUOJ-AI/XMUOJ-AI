@@ -1,9 +1,9 @@
-import Vue from 'vue'
+import ui from '@/services/ui'
 import router from './router'
 import axios from 'axios'
 import utils from '@/utils/utils'
 
-Vue.prototype.$http = axios
+ui.$http = axios
 axios.defaults.baseURL = '/api'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
 axios.defaults.xsrfCookieName = 'csrftoken'
@@ -90,6 +90,17 @@ export default {
       data: {
         users
       }
+    })
+  },
+  getUserCredentialExports () {
+    return ajax('admin/generate_user', 'get', {params: {list: 1}})
+  },
+  downloadUserCredentials (fileId) {
+    return axios.get('admin/generate_user', {params: {file_id: fileId}, responseType: 'blob'}).then(res => {
+      if (!(res.headers['content-type'] || '').includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
+        throw new Error('凭据导出不可用或已过期，请确认仍以创建本批账号的超级管理员登录。')
+      }
+      return res.data
     })
   },
   generateUser (data) {
@@ -396,22 +407,22 @@ function ajax (url, method, options) {
     }).then(res => {
       // API正常返回(status=20x), 是否错误通过有无error判断
       if (res.data.error !== null) {
-        Vue.prototype.$error(res.data.data)
+        ui.$error(res.data && res.data.data ? res.data.data : 'Request failed')
         reject(res)
         // // 若后端返回为登录，则为session失效，应退出当前登录用户
-        if (res.data.data.startsWith('Please login')) {
+        if (String(res.data.data).startsWith('Please login')) {
           router.push({name: 'login'})
         }
       } else {
         resolve(res)
         if (method !== 'get') {
-          Vue.prototype.$success('Succeeded')
+          ui.$success('Succeeded')
         }
       }
     }, res => {
       // API请求异常，一般为Server error 或 network error
       reject(res)
-      Vue.prototype.$error(res.data.data)
+      ui.$error(res.data && res.data.data ? res.data.data : 'Request failed')
     })
   })
 }

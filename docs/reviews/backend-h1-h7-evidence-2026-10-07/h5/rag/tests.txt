@@ -1,0 +1,9 @@
+Using existing test database for alias 'default'...
+Django VERSION (3, 2, 25, 'final', 0)
+System check identified no issues (0 silenced).
+.................
+----------------------------------------------------------------------
+Ran 17 tests in 20.998s
+
+OK
+Preserving test database for alias 'default'...

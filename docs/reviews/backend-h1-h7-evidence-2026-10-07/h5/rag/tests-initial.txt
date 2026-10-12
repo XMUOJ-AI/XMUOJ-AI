@@ -1,0 +1,20 @@
+Using existing test database for alias 'default'...
+Django VERSION (3, 2, 25, 'final', 0)
+System check identified no issues (0 silenced).
+.........F.......
+======================================================================
+FAIL: test_postgres_english_multiword_rank_and_deduplication (rag.tests.RagTests.test_postgres_english_multiword_rank_and_deduplication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/test/utils.py", line 387, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/rag/tests.py", line 219, in test_postgres_english_multiword_rank_and_deduplication
+    self.assertEqual(hits[2]["score"], 0)
+AssertionError: 1e-20 != 0
+
+----------------------------------------------------------------------
+Ran 17 tests in 35.410s
+
+FAILED (failures=1)
+Preserving test database for alias 'default'...

@@ -1,0 +1,14 @@
+{
+  "check": "test-upgrade-smoke",
+  "command": [
+    "/tmp/xmuoj-remediation-20261012/venv/bin/python",
+    "manage.py",
+    "test",
+    "plugin.test_auth",
+    "utils.test_dramatiq_config",
+    "--settings=oj.settings",
+    "--noinput"
+  ],
+  "exit_code": 1,
+  "elapsed_seconds": 0.163
+}

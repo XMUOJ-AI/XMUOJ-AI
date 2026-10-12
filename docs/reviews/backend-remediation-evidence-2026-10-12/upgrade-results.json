@@ -1,0 +1,37 @@
+[
+  {
+    "check": "upgrade-old-migrate",
+    "exit_code": 0,
+    "elapsed_seconds": 2.383
+  },
+  {
+    "check": "upgrade-seed",
+    "exit_code": 0,
+    "elapsed_seconds": 0.234
+  },
+  {
+    "check": "upgrade-new-migrate",
+    "exit_code": 0,
+    "elapsed_seconds": 0.476
+  },
+  {
+    "check": "upgrade-preservation",
+    "exit_code": 0,
+    "elapsed_seconds": 0.264
+  },
+  {
+    "check": "migration-drift",
+    "exit_code": 0,
+    "elapsed_seconds": 0.264
+  },
+  {
+    "check": "system-check",
+    "exit_code": 0,
+    "elapsed_seconds": 0.212
+  },
+  {
+    "check": "migration-plan",
+    "exit_code": 0,
+    "elapsed_seconds": 0.29
+  }
+]

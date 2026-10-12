@@ -1,0 +1,22 @@
+Using existing test database for alias 'default'...
+Django VERSION (3, 2, 25, 'final', 0)
+System check identified no issues (0 silenced).
+........................................................................................Problem Tag Audit
+- total tags: 2
+- active tags: 2
+- duplicate groups: 1
+- zero problem tags: 2
+- low frequency tags: 0
+
+Duplicate groups:
+- greedy => Greedy, greedy
+
+Zero problem tags:
+- Greedy (61)
+- greedy (62)
+..........
+----------------------------------------------------------------------
+Ran 98 tests in 18.846s
+
+OK
+Preserving test database for alias 'default'...

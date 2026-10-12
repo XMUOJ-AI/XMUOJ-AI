@@ -1,14 +1,13 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import { createStore } from 'vuex'
 import user from './modules/user'
 import contest from './modules/contest'
 import api from '@oj/api'
 import types from './types'
 import i18n from '@/i18n'
-Vue.use(Vuex)
 const debug = process.env.NODE_ENV !== 'production'
 
 const rootState = {
+  route: { params: {}, query: {}, meta: {} },
   website: {},
   modalStatus: {
     mode: 'login', // or 'register',
@@ -26,6 +25,7 @@ const rootGetters = {
 }
 
 const rootMutations = {
+  SYNC_ROUTE (state, route) { state.route = route },
   [types.UPDATE_WEBSITE_CONF] (state, payload) {
     state.website = payload.websiteConfig
   },
@@ -59,7 +59,7 @@ const rootActions = {
   }
 }
 
-export default new Vuex.Store({
+export default createStore({
   modules: {
     user,
     contest

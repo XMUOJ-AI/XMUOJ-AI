@@ -1,0 +1,11 @@
+验收基线：duduking19@e5341ee，初始工作区干净。首轮只读完成后才开始整改。
+依据：项目需求/技术设计原件、docs/README、完成矩阵、当前工作OpenAPI/Schema、运行部署与H1-H7历史记录。
+基线：Django318项，317通过/1 error（ZIP夹具时间戳非确定性）；backend cwd flake8通过；contracts通过；题包工具6项通过；部署11项通过。
+首轮关键阻断及顺序：
+1 权限/敏感信息：匿名成绩与榜单泄露、跨管理员复制题/插题、停用session可操作、ACM助手跨比赛、session先删后鉴权、旧上传权限/CSRF缺失、共享OI提交IP、旧异常日志原文、Agent私网路径。
+2 文件/事务：prune路径穿越与在用测试目录删除、旧ZIP/FPS半成品事务、ZIP解压无界、富文本上传CSRF与主动内容。
+3 并发/恢复：令牌桶读改写非原子（1令牌2请求均成功）；判题首次投递/等待队列丢失；worker硬退出占槽；审核队列读取竞态。
+4 超时/契约：RAG读取剩余时限失效；SMTP/Redis连接无时限；deprecated字段限制失效；测试ZIP夹具非确定性。
+人工跳过：比赛重判/计分口径、AI完整代码与教学片段边界、原始需求超出36项工作契约的教学分析/近期反馈范围、真实模型/语料/生产容量和恢复环境。
+额外功能缺口：plugin登录返回auth_token，但中间件只接APPKEY，不消费auth_token；需确认插件客户端认证协议再改。
+基线主机服务：启动原隔离Colima profile xmuoj-merge-20261011，原default/xmuoj保持停止。测试库新名test_xmuoj_acceptance_20261012，不操作业务库。

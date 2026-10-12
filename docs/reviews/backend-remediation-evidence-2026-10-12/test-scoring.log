@@ -1,0 +1,11 @@
+Creating test database for alias 'default'...
+....................................................[2026-10-12 03:05:29] - [WARNING] - [django.security.csrf:253]  - Forbidden (CSRF cookie not set.): /api/admin/submission/rejudge
+..
+----------------------------------------------------------------------
+Ran 54 tests in 14.548s
+
+OK
+Destroying test database for alias 'default'...
+Django VERSION (5, 2, 18, 'final', 0)
+Found 54 test(s).
+System check identified no issues (0 silenced).

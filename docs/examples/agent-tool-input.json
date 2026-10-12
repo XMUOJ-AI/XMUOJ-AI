@@ -1,0 +1,20 @@
+{
+  "tool_name": "get_error_patterns",
+  "tool_version": "1.0.0",
+  "context": {
+    "request_id": "req_01JEXAMPLE",
+    "run_id": "45c1f7e8-8844-4cc1-a508-74ac31ce132a",
+    "user_id": 1001,
+    "service_type": "submission_feedback",
+    "scopes": [
+      "problem:read",
+      "submission:self:read",
+      "rag:student:read"
+    ]
+  },
+  "arguments": {
+    "problem_id": "P305",
+    "code_snippet": "while (!q.empty()) { auto u = q.front(); q.pop(); /* ... */ }",
+    "verdict": "WA"
+  }
+}

@@ -1,0 +1,23 @@
+Creating test database for alias 'default'...
+Django VERSION (3, 2, 25, 'final', 0)
+System check identified no issues (0 silenced).
+.....................Recovered 0 learning events
+Recovered 1 learning events
+Recovered 0 learning events
+.Recovered 0 learning events
+Recovered 1 learning events
+.Recovered 1 learning events
+Recovered 1 learning events
+Recovered 1 learning events
+Recovered 1 learning events
+.Recovered 1 learning events
+.Updated class owned (c61d47e5-ec5d-4894-89a0-121f01b4a0f3); merged 1 teachers and 1 students
+....Updated class test-class (77454c94-adf6-4e10-8ede-b00e5f4180ea); merged 1 teachers and 1 students
+.................[2026-10-07 08:49:02] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF cookie not set.): /api/admin/submission/rejudge
+........[2026-10-07 08:49:45] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF cookie not set.): /api/admin/submission/rejudge
+..
+----------------------------------------------------------------------
+Ran 56 tests in 147.271s
+
+OK
+Destroying test database for alias 'default'...

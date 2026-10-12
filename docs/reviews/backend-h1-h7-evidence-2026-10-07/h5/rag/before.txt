@@ -1,0 +1,4 @@
+before english_multiword original_or median_ms 6199.32 min/max_ms 6078.471 6809.711
+before chinese_three original_or median_ms 6266.856 min/max_ms 5905.539 7661.558
+before chinese_two original_or median_ms 7693.885 min/max_ms 6466.123 7718.85
+before chinese_one original_or median_ms 7149.539 min/max_ms 6646.487 8740.315

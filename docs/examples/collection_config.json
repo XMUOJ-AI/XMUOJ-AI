@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0.0",
+  "job_name": "public-problem-sample",
+  "sources": [
+    {
+      "platform": "luogu",
+      "enabled": true,
+      "base_url": "https://www.luogu.com.cn/",
+      "selectors": {
+        "title": "h1",
+        "statement": ".problem-card"
+      },
+      "auth_secret_ref": null
+    }
+  ],
+  "network": {
+    "timeout_seconds": 20,
+    "max_concurrency": 2,
+    "requests_per_second": 0.5,
+    "user_agent": "XMUOJ-AI-Research/1.0",
+    "retry": {
+      "max_attempts": 3,
+      "base_delay_seconds": 1,
+      "max_delay_seconds": 30
+    }
+  },
+  "compliance": {
+    "respect_robots_txt": true,
+    "exclude_private": true,
+    "exclude_active_contests": true,
+    "allowed_license_codes": ["source-platform-terms"],
+    "exclude_url_patterns": ["/contest/*"]
+  },
+  "output": {
+    "schema_version": "1.0.0",
+    "directory": "build/collection/public-problem-sample",
+    "write_raw_snapshots": true
+  }
+}

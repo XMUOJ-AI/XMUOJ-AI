@@ -1,0 +1,27 @@
+Django VERSION (3, 2, 25, 'final', 0)
+Operations to perform:
+  Apply all migrations: account, agent_service, announcement, auth, conf, contenttypes, contest, django_dramatiq, knowledge, learning, options, problem, problem_import, rag, sessions, submission
+Running migrations:
+  Applying conf.0005_judgeserver_hostname_unique... OK
+Django VERSION (3, 2, 25, 'final', 0)
+An administrator already exists; bootstrap skipped
+Django VERSION (3, 2, 25, 'final', 0)
+2026-10-07 09:40:33,765 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2026-10-07 09:40:33,904 INFO RPC interface 'supervisor' initialized
+2026-10-07 09:40:33,908 CRIT Server 'inet_http_server' running without any HTTP authentication checking
+2026-10-07 09:40:33,914 INFO supervisord started with pid 1
+2026-10-07 09:40:34,970 INFO spawned: 'cleanup-credentials' with pid 176
+2026-10-07 09:40:35,130 INFO spawned: 'dramatiq' with pid 177
+2026-10-07 09:40:35,303 INFO spawned: 'gunicorn' with pid 178
+2026-10-07 09:40:35,525 INFO spawned: 'nginx' with pid 179
+2026-10-07 09:40:35,717 INFO spawned: 'recover-agent' with pid 180
+2026-10-07 09:40:35,976 INFO spawned: 'recover-import' with pid 181
+2026-10-07 09:40:36,253 INFO spawned: 'recover-learning' with pid 182
+2026-10-07 09:40:36,344 INFO reaped unknown pid 164 (exit status 0)
+2026-10-07 09:40:40,024 INFO success: cleanup-credentials entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+2026-10-07 09:40:40,033 INFO success: dramatiq entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+2026-10-07 09:40:41,063 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+2026-10-07 09:40:41,067 INFO success: nginx entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+2026-10-07 09:40:41,069 INFO success: recover-agent entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+2026-10-07 09:40:41,072 INFO success: recover-import entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+2026-10-07 09:40:41,073 INFO success: recover-learning entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)

@@ -1,0 +1,941 @@
+openapi: 3.0.3
+info:
+  title: XMUOJ-AI Agent API
+  version: 1.0.0
+  description: '第一期受控 Agent 的公共 HTTP API。内部 Agent 工具不通过本 API 直接暴露。
+
+    所有 user_id 和权限均从认证上下文获得。
+
+    '
+  x-contract-status: implementation-working-draft
+servers:
+- url: /api/agent/v1
+  description: Same-origin XMUOJ backend
+tags:
+- name: Agent Runs
+- name: Agent Feedback
+security:
+- sessionCookie: []
+paths:
+  /runs:
+    post:
+      tags:
+      - Agent Runs
+      summary: 创建 Agent 运行
+      operationId: createAgentRun
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRunRequest'
+            examples:
+              submissionFeedback:
+                value:
+                  service_type: submission_feedback
+                  submission_id: abc123
+                  options:
+                    language: zh-CN
+                    detail_level: brief
+              socraticHint:
+                value:
+                  service_type: socratic_hint
+                  problem_id: P305
+                  conversation_id: 9f58ed7f-9d6a-4c3e-a366-4189f373a63a
+                  student_explanation: 我认为需要从起点逐层搜索，但不知道如何避免重复。
+                  options:
+                    language: zh-CN
+                    detail_level: normal
+      responses:
+        '200':
+          description: 命中缓存或返回同一幂等请求的既有运行
+          headers:
+            X-API-Version:
+              $ref: '#/components/headers/ApiVersion'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunEnvelope'
+        '202':
+          description: 已创建异步运行
+          headers:
+            X-API-Version:
+              $ref: '#/components/headers/ApiVersion'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /runs/{run_id}:
+    get:
+      tags:
+      - Agent Runs
+      summary: 查询 Agent 运行状态和结果
+      operationId: getAgentRun
+      parameters:
+      - $ref: '#/components/parameters/RunId'
+      responses:
+        '200':
+          description: 运行存在且属于当前用户
+          headers:
+            X-API-Version:
+              $ref: '#/components/headers/ApiVersion'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunEnvelope'
+              examples:
+                succeeded:
+                  value:
+                    error: null
+                    data:
+                      run_id: 45c1f7e8-8844-4cc1-a508-74ac31ce132a
+                      service_type: submission_feedback
+                      status: succeeded
+                      cached: false
+                      result:
+                        verdict_summary: Wrong Answer
+                        likely_causes:
+                        - cause: visited 标记时机可能过晚
+                          confidence: 0.78
+                          check_first: 检查节点是否在入队时立即标记
+                        next_question: 同一个格子是否可能被重复加入队列？
+                        knowledge_refs:
+                        - 网格图 BFS
+                        - visited 数组
+                        contains_full_solution: false
+                      created_time: '2026-08-09T10:00:00Z'
+                      started_time: '2026-08-09T10:00:01Z'
+                      finished_time: '2026-08-09T10:00:04Z'
+                    request_id: req_01JEXAMPLE
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /runs/{run_id}/feedback:
+    post:
+      tags:
+      - Agent Feedback
+      summary: 评价一次 Agent 结果
+      operationId: createOrUpdateAgentFeedback
+      parameters:
+      - $ref: '#/components/parameters/RunId'
+      - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackRequest'
+            example:
+              rating: helpful
+              comment: 提示方向有效，但希望再简短一些。
+      responses:
+        '200':
+          description: 已创建或更新评价
+          headers:
+            X-API-Version:
+              $ref: '#/components/headers/ApiVersion'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /conversations:
+    post:
+      tags:
+      - Agent Runs
+      summary: 创建或获取苏格拉底式引导会话
+      operationId: createOrGetAgentConversation
+      description: 实现工作稿补充的必要入口；普通可见题目、本人活动会话唯一。默认思考180秒，提示最多三级；不返回标准解答。此补充已获实施授权，未宣告跨团队冻结。
+      parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConversationRequest'
+      responses:
+        '200':
+          description: 返回当前用户、当前题目的既有活动会话；不重置倒计时。
+          headers:
+            X-API-Version:
+              $ref: '#/components/headers/ApiVersion'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationEnvelope'
+        '201':
+          description: 创建活动会话并启动服务端思考倒计时。
+          headers:
+            X-API-Version:
+              $ref: '#/components/headers/ApiVersion'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: 题目不存在或无权访问
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+components:
+  headers:
+    ApiVersion:
+      description: 实际响应契约版本
+      schema:
+        type: string
+        enum:
+        - 1.0.0
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: sessionid
+      description: 第一期使用现有 Django Session。
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 预留给未来独立 Agent 服务；第一期不要求启用。
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: 同一用户范围内的请求幂等键，1～100 字符。
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 100
+    RunId:
+      name: run_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CsrfToken:
+      name: X-CSRFToken
+      in: header
+      required: true
+      description: Django Session 写请求的 CSRF token。
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 256
+  responses:
+    BadRequest:
+      description: 请求格式或字段错误
+      headers:
+        X-API-Version:
+          $ref: '#/components/headers/ApiVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error: AGENT_INPUT_INVALID
+            data:
+              message: 请求字段不合法
+              retryable: false
+              details: {}
+            request_id: req_01JEXAMPLE
+    Unauthorized:
+      description: 未认证
+      headers:
+        X-API-Version:
+          $ref: '#/components/headers/ApiVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error: AGENT_AUTH_REQUIRED
+            data:
+              message: 请先登录
+              retryable: false
+              details: {}
+            request_id: req_01JEXAMPLE
+    Forbidden:
+      description: 无权限或功能未开放
+      headers:
+        X-API-Version:
+          $ref: '#/components/headers/ApiVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: 对当前用户不存在
+      headers:
+        X-API-Version:
+          $ref: '#/components/headers/ApiVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error: AGENT_RUN_NOT_FOUND
+            data:
+              message: Agent 运行不存在
+              retryable: false
+              details: {}
+            request_id: req_01JEXAMPLE
+    Conflict:
+      description: 状态或幂等冲突
+      headers:
+        X-API-Version:
+          $ref: '#/components/headers/ApiVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    PayloadTooLarge:
+      description: 输入超过限制
+      headers:
+        X-API-Version:
+          $ref: '#/components/headers/ApiVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    RateLimited:
+      description: 速率、并发或预算超限
+      headers:
+        X-API-Version:
+          $ref: '#/components/headers/ApiVersion'
+        Retry-After:
+          schema:
+            type: integer
+          description: 建议等待秒数
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Unavailable:
+      description: 模型、RAG、Elo 等依赖不可用
+      headers:
+        X-API-Version:
+          $ref: '#/components/headers/ApiVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+  schemas:
+    CreateRunRequest:
+      oneOf:
+      - $ref: '#/components/schemas/SubmissionFeedbackRunRequest'
+      - $ref: '#/components/schemas/CodeExplanationRunRequest'
+      - $ref: '#/components/schemas/SocraticHintRunRequest'
+      - $ref: '#/components/schemas/LearningPathExplanationRunRequest'
+      discriminator:
+        propertyName: service_type
+        mapping:
+          submission_feedback: '#/components/schemas/SubmissionFeedbackRunRequest'
+          code_explanation: '#/components/schemas/CodeExplanationRunRequest'
+          socratic_hint: '#/components/schemas/SocraticHintRunRequest'
+          learning_path_explanation: '#/components/schemas/LearningPathExplanationRunRequest'
+    SubmissionFeedbackRunRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - service_type
+      - submission_id
+      - options
+      properties:
+        service_type:
+          type: string
+          enum:
+          - submission_feedback
+        submission_id:
+          type: string
+          minLength: 1
+          maxLength: 64
+        options:
+          $ref: '#/components/schemas/RunOptions'
+    CodeExplanationRunRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - service_type
+      - submission_id
+      - options
+      properties:
+        service_type:
+          type: string
+          enum:
+          - code_explanation
+        submission_id:
+          type: string
+          minLength: 1
+          maxLength: 64
+        options:
+          $ref: '#/components/schemas/RunOptions'
+    SocraticHintRunRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - service_type
+      - problem_id
+      - conversation_id
+      - student_explanation
+      - options
+      properties:
+        service_type:
+          type: string
+          enum:
+          - socratic_hint
+        problem_id:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: XMUOJ Problem._id 展示编号。
+        conversation_id:
+          type: string
+          format: uuid
+        student_explanation:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        options:
+          $ref: '#/components/schemas/RunOptions'
+    LearningPathExplanationRunRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - service_type
+      - options
+      properties:
+        service_type:
+          type: string
+          enum:
+          - learning_path_explanation
+        path_id:
+          type: string
+          format: uuid
+          description: 缺省时读取当前用户的活动路径。
+        options:
+          $ref: '#/components/schemas/RunOptions'
+    RunOptions:
+      type: object
+      additionalProperties: false
+      required:
+      - language
+      properties:
+        language:
+          type: string
+          enum:
+          - zh-CN
+          default: zh-CN
+        detail_level:
+          type: string
+          enum:
+          - brief
+          - normal
+          default: normal
+    RunEnvelope:
+      type: object
+      additionalProperties: false
+      required:
+      - error
+      - data
+      - request_id
+      properties:
+        error:
+          type: string
+          nullable: true
+          example: null
+        data:
+          $ref: '#/components/schemas/Run'
+        request_id:
+          type: string
+    Run:
+      type: object
+      additionalProperties: false
+      required:
+      - run_id
+      - service_type
+      - status
+      - cached
+      - result
+      - created_time
+      properties:
+        run_id:
+          type: string
+          format: uuid
+        service_type:
+          type: string
+          enum:
+          - submission_feedback
+          - code_explanation
+          - socratic_hint
+          - learning_path_explanation
+        status:
+          type: string
+          enum:
+          - queued
+          - running
+          - succeeded
+          - failed
+          - blocked
+          - cancelled
+        cached:
+          type: boolean
+        result:
+          description: 具体结构由 service_type 决定，完成前为 null。
+          oneOf:
+          - type: object
+            nullable: true
+            enum:
+            - null
+          - $ref: '#/components/schemas/SubmissionFeedbackResult'
+          - $ref: '#/components/schemas/CodeExplanationResult'
+          - $ref: '#/components/schemas/SocraticHintResult'
+          - $ref: '#/components/schemas/LearningPathExplanationResult'
+        error_detail:
+          oneOf:
+          - $ref: '#/components/schemas/RunErrorDetail'
+          - type: object
+            nullable: true
+            enum:
+            - null
+        created_time:
+          type: string
+          format: date-time
+        started_time:
+          type: string
+          format: date-time
+          nullable: true
+        finished_time:
+          type: string
+          format: date-time
+          nullable: true
+    RunErrorDetail:
+      type: object
+      additionalProperties: false
+      required:
+      - code
+      - message
+      - retryable
+      - details
+      properties:
+        code:
+          type: string
+          pattern: ^[A-Z][A-Z0-9_]+$
+        message:
+          type: string
+        retryable:
+          type: boolean
+        details:
+          type: object
+          additionalProperties: true
+    LikelyCause:
+      type: object
+      additionalProperties: false
+      required:
+      - cause
+      - confidence
+      - check_first
+      properties:
+        cause:
+          type: string
+          minLength: 1
+          maxLength: 500
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        check_first:
+          type: string
+          minLength: 1
+          maxLength: 500
+    SubmissionFeedbackResult:
+      description: 学生输出仅允许自然语言提示和自然语言伪代码；所有文本字段均禁止可执行代码、代码围栏和编码/JSON包装的代码。
+      type: object
+      additionalProperties: false
+      required:
+      - verdict_summary
+      - likely_causes
+      - next_question
+      - knowledge_refs
+      - contains_full_solution
+      properties:
+        verdict_summary:
+          type: string
+          minLength: 1
+          maxLength: 300
+        likely_causes:
+          type: array
+          minItems: 1
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/LikelyCause'
+        next_question:
+          type: string
+          minLength: 1
+          maxLength: 500
+        knowledge_refs:
+          type: array
+          uniqueItems: true
+          maxItems: 10
+          items:
+            type: string
+            minLength: 1
+            maxLength: 128
+        contains_full_solution:
+          description: 兼容字段，必须为false；不作为内容安全或审核通过的凭据，服务端逐字段独立检查。
+          type: boolean
+          enum:
+          - false
+    ExplanationSection:
+      type: object
+      additionalProperties: false
+      required:
+      - title
+      - explanation
+      - code_refs
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+        explanation:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        code_refs:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            pattern: ^(?:L[1-9][0-9]*)(?:-L[1-9][0-9]*)?$
+    Complexity:
+      type: object
+      additionalProperties: false
+      required:
+      - time
+      - space
+      - assumptions
+      properties:
+        time:
+          type: string
+          minLength: 1
+          maxLength: 100
+        space:
+          type: string
+          minLength: 1
+          maxLength: 100
+        assumptions:
+          type: array
+          maxItems: 10
+          items:
+            type: string
+            minLength: 1
+            maxLength: 300
+    CodeExplanationResult:
+      description: 仅解释本人代码，以code_refs引用行号；文本字段不得复制代码或输出可执行修复片段。允许变量名、数学式和复杂度。
+      type: object
+      additionalProperties: false
+      required:
+      - summary
+      - sections
+      - complexity
+      - improvement_directions
+      - contains_full_solution
+      properties:
+        summary:
+          type: string
+          minLength: 1
+          maxLength: 500
+        sections:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/ExplanationSection'
+        complexity:
+          $ref: '#/components/schemas/Complexity'
+        improvement_directions:
+          type: array
+          maxItems: 10
+          items:
+            type: string
+            minLength: 1
+            maxLength: 500
+        contains_full_solution:
+          description: 兼容字段，必须为false；不作为内容安全或审核通过的凭据，服务端逐字段独立检查。
+          type: boolean
+          enum:
+          - false
+    SocraticHintResult:
+      description: question和focus仅允许启发问题、自然语言提示或文字伪代码；不得输出可执行代码片段。
+      type: object
+      additionalProperties: false
+      required:
+      - hint_level
+      - question
+      - focus
+      - next_hint_available_at
+      - contains_full_solution
+      properties:
+        hint_level:
+          type: integer
+          minimum: 1
+          maximum: 3
+        question:
+          type: string
+          minLength: 1
+          maxLength: 500
+        focus:
+          type: string
+          minLength: 1
+          maxLength: 300
+        next_hint_available_at:
+          type: string
+          format: date-time
+          nullable: true
+        contains_full_solution:
+          description: 兼容字段，必须为false；不作为内容安全或审核通过的凭据，服务端逐字段独立检查。
+          type: boolean
+          enum:
+          - false
+    PathStepExplanation:
+      type: object
+      additionalProperties: false
+      required:
+      - order
+      - knowledge_code
+      - reason
+      properties:
+        order:
+          type: integer
+          minimum: 1
+        knowledge_code:
+          type: string
+          minLength: 1
+          maxLength: 64
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+    LearningPathExplanationResult:
+      description: overview、reason和next_action仅允许自然语言解释；path_id、order、knowledge_code须保持已有路径。禁止可执行代码。
+      type: object
+      additionalProperties: false
+      required:
+      - path_id
+      - overview
+      - steps
+      - next_action
+      - contains_full_solution
+      properties:
+        path_id:
+          type: string
+          format: uuid
+        overview:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        steps:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/PathStepExplanation'
+        next_action:
+          type: string
+          minLength: 1
+          maxLength: 500
+        contains_full_solution:
+          description: 兼容字段，必须为false；不作为内容安全或审核通过的凭据，服务端逐字段独立检查。
+          type: boolean
+          enum:
+          - false
+    FeedbackRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - rating
+      properties:
+        rating:
+          type: string
+          enum:
+          - helpful
+          - too_long
+          - too_hard
+          - need_simpler
+          - incorrect
+        comment:
+          type: string
+          maxLength: 2000
+          default: ''
+    FeedbackEnvelope:
+      type: object
+      additionalProperties: false
+      required:
+      - error
+      - data
+      - request_id
+      properties:
+        error:
+          type: string
+          nullable: true
+          example: null
+        data:
+          type: object
+          additionalProperties: false
+          required:
+          - run_id
+          - rating
+          - updated_time
+          properties:
+            run_id:
+              type: string
+              format: uuid
+            rating:
+              type: string
+              enum:
+              - helpful
+              - too_long
+              - too_hard
+              - need_simpler
+              - incorrect
+            updated_time:
+              type: string
+              format: date-time
+        request_id:
+          type: string
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required:
+      - error
+      - data
+      - request_id
+      properties:
+        error:
+          type: string
+          pattern: ^[A-Z][A-Z0-9_]+$
+        data:
+          $ref: '#/components/schemas/ErrorData'
+        request_id:
+          type: string
+    ErrorData:
+      type: object
+      additionalProperties: false
+      required:
+      - message
+      - retryable
+      - details
+      properties:
+        message:
+          type: string
+        retryable:
+          type: boolean
+        details:
+          type: object
+          additionalProperties: true
+    CreateConversationRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - problem_id
+      - service_type
+      properties:
+        problem_id:
+          type: string
+          minLength: 1
+          maxLength: 100
+        service_type:
+          type: string
+          enum:
+          - socratic_hint
+    Conversation:
+      type: object
+      additionalProperties: false
+      required:
+      - conversation_id
+      - problem_id
+      - service_type
+      - status
+      - hint_level
+      - max_hint_level
+      - hint_available_time
+      - first_opened_time
+      properties:
+        conversation_id:
+          type: string
+          format: uuid
+        problem_id:
+          type: string
+        service_type:
+          type: string
+          enum:
+          - socratic_hint
+        status:
+          type: string
+          enum:
+          - active
+          - closed
+          - expired
+        hint_level:
+          type: integer
+          minimum: 0
+          maximum: 3
+        max_hint_level:
+          type: integer
+          enum:
+          - 3
+        hint_available_time:
+          type: string
+          format: date-time
+        first_opened_time:
+          type: string
+          format: date-time
+    ConversationEnvelope:
+      type: object
+      additionalProperties: false
+      required:
+      - error
+      - data
+      - request_id
+      properties:
+        error:
+          type: string
+          nullable: true
+        data:
+          $ref: '#/components/schemas/Conversation'
+        request_id:
+          type: string

@@ -2,19 +2,19 @@
   <Row type="flex">
     <Col :span="24">
     <Panel id="contest-card" shadow>
-      <div slot="title">{{query.rule_type === '' ? this.$i18n.t('m.All') : query.rule_type}} {{$t('m.Contests')}}</div>
-      <div slot="extra">
+      <template #title><div>{{query.rule_type === '' ? this.$i18n.t('m.All') : query.rule_type}} {{$t('m.Contests')}}</div></template>
+      <template #extra><div>
         <ul class="filter">
           <li>
             <Dropdown @on-click="onRuleChange">
               <span>{{query.rule_type === '' ? this.$i18n.t('m.Rule') : this.$i18n.t('m.' + query.rule_type)}}
                 <Icon type="arrow-down-b"></Icon>
               </span>
-              <Dropdown-menu slot="list">
+              <template #list><Dropdown-menu>
                 <Dropdown-item name="">{{$t('m.All')}}</Dropdown-item>
                 <Dropdown-item name="OI">{{$t('m.OI')}}</Dropdown-item>
                 <Dropdown-item name="ACM">{{$t('m.ACM')}}</Dropdown-item>
-              </Dropdown-menu>
+              </Dropdown-menu></template>
             </Dropdown>
           </li>
           <li>
@@ -22,20 +22,19 @@
               <span>{{query.status === '' ? this.$i18n.t('m.Status') : this.$i18n.t('m.' + CONTEST_STATUS_REVERSE[query.status].name.replace(/ /g,"_"))}}
                 <Icon type="arrow-down-b"></Icon>
               </span>
-              <Dropdown-menu slot="list">
+              <template #list><Dropdown-menu>
                 <Dropdown-item name="">{{$t('m.All')}}</Dropdown-item>
                 <Dropdown-item name="0">{{$t('m.Underway')}}</Dropdown-item>
                 <Dropdown-item name="1">{{$t('m.Not_Started')}}</Dropdown-item>
                 <Dropdown-item name="-1">{{$t('m.Ended')}}</Dropdown-item>
-              </Dropdown-menu>
+              </Dropdown-menu></template>
             </Dropdown>
           </li>
           <li>
-            <Input id="keyword" @on-enter="changeRoute" @on-click="changeRoute" v-model="query.keyword"
-                   icon="ios-search-strong" :placeholder="$t('m.Keyword')" />
+            <Input id="keyword" @on-enter="changeRoute" v-model="query.keyword" :placeholder="$t('m.Keyword')"><template #suffix><Icon type="ios-search-strong" @click="changeRoute" /></template></Input>
           </li>
         </ul>
-      </div>
+      </div></template>
       <p id="no-contest" v-if="contests.length == 0">{{$t('m.No_contest')}}</p>
       <ol id="contest-list">
         <li v-for="contest in contests" :key="contest.title">
@@ -53,7 +52,7 @@
             <ul class="detail">
               <li>
                 <Icon type="calendar" color="#3091f2"></Icon>
-                {{contest.start_time | localtime('YYYY-M-D HH:mm') }}
+                {{ $filters.localtime(contest.start_time, 'YYYY-M-D HH:mm') }}
               </li>
               <li>
                 <Icon type="android-time" color="#3091f2"></Icon>
@@ -73,7 +72,7 @@
         </li>
       </ol>
     </Panel>
-    <Pagination :total="total" :page-size.sync="limit" @on-change="changeRoute" :current.sync="page" :show-sizer="true" @on-page-size-change="changeRoute"></Pagination>
+    <Pagination :total="total" v-model:page-size="limit" @on-change="changeRoute" v-model:current="page" :show-sizer="true" @on-page-size-change="changeRoute"></Pagination>
     </Col>
   </Row>
 
@@ -107,7 +106,7 @@
         rows: '',
         contests: [],
         CONTEST_STATUS_REVERSE: CONTEST_STATUS_REVERSE,
-//      for password modal use
+        //      for password modal use
         cur_contest_id: ''
       }
     },

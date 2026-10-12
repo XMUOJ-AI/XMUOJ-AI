@@ -1,15 +1,14 @@
 <template>
   <div class="view">
     <Panel :title="$t('m.Problem_Tag_Governance')">
-      <div slot="header" class="toolbar">
+      <template #header><div class="toolbar">
         <el-input
           v-model="filters.keyword"
           clearable
-          prefix-icon="el-icon-search"
           :placeholder="$t('m.Problem_Tag_Search_Placeholder')"
-          @keyup.enter.native="fetchTags">
+          @keyup.enter="fetchTags"><template #prefix><i class="el-icon-search" aria-hidden="true"></i></template>
         </el-input>
-      </div>
+      </div></template>
 
       <div class="filter-row">
         <el-switch
@@ -22,8 +21,8 @@
           :active-text="$t('m.Problem_Tag_Only_Used')"
           @change="fetchTags">
         </el-switch>
-        <el-button type="primary" icon="el-icon-search" @click="fetchTags">{{$t('m.Problem_Tag_Refresh')}}</el-button>
-        <el-button type="success" icon="el-icon-plus" @click="openCreateDialog">{{$t('m.Problem_Tag_Create')}}</el-button>
+        <el-button type="primary" @click="fetchTags"><template #icon><i class="el-icon-search" aria-hidden="true"></i></template>{{$t('m.Problem_Tag_Refresh')}}</el-button>
+        <el-button type="success" @click="openCreateDialog"><template #icon><i class="el-icon-plus" aria-hidden="true"></i></template>{{$t('m.Problem_Tag_Create')}}</el-button>
         <el-button v-if="isSuperAdmin" type="danger" plain :disabled="selectedTags.length === 0" @click="confirmBatchDelete">Batch Delete</el-button>
         <el-button v-if="isSuperAdmin" type="warning" plain :disabled="selectedTags.length === 0" @click="batchDialogVisible = true">Batch Update</el-button>
       </div>
@@ -38,40 +37,40 @@
         <el-table-column min-width="160" :label="$t('m.Name')" prop="name"></el-table-column>
         <el-table-column min-width="160" :label="$t('m.Problem_Tag_Normalized_Name')" prop="normalized_name"></el-table-column>
         <el-table-column min-width="220" :label="$t('m.Problem_Tag_Aliases')">
-          <template slot-scope="{row}">
+          <template #default="{row}">
             <span v-if="!row.aliases || row.aliases.length === 0">-</span>
             <div v-else class="tag-chip-list">
-              <el-tag v-for="alias in row.aliases" :key="row.id + '-' + alias" size="mini">{{ alias }}</el-tag>
+              <el-tag v-for="alias in row.aliases" :key="row.id + '-' + alias" size="small" class="legacy-mini">{{ alias }}</el-tag>
             </div>
           </template>
         </el-table-column>
         <el-table-column width="110" :label="$t('m.Problem_Tag_Problem_Count')" prop="problem_count"></el-table-column>
         <el-table-column width="100" :label="$t('m.Problem_Tag_Rank')" prop="rank"></el-table-column>
         <el-table-column width="120" :label="$t('m.Visible')">
-          <template slot-scope="{row}">
-            <el-switch :value="row.is_active" @change="toggleActive(row, $event)"></el-switch>
+          <template #default="{row}">
+            <el-switch :model-value="row.is_active" @change="toggleActive(row, $event)"></el-switch>
           </template>
         </el-table-column>
         <el-table-column min-width="200" :label="$t('m.Description')" prop="description">
-          <template slot-scope="{row}">
+          <template #default="{row}">
             <span>{{ row.description || '-' }}</span>
           </template>
         </el-table-column>
         <el-table-column width="120" :label="$t('m.Problem_Tag_Action')" fixed="right">
-          <template slot-scope="{row}">
-            <el-button type="text" @click="openEditDialog(row)">{{$t('m.Problem_Tag_Edit')}}</el-button>
-            <el-button type="text" class="danger-text" @click="confirmDelete(row)">{{$t('m.Problem_Tag_Delete')}}</el-button>
+          <template #default="{row}">
+            <el-button link type="primary" class="legacy-text-button" @click="openEditDialog(row)">{{$t('m.Problem_Tag_Edit')}}</el-button>
+            <el-button link type="primary" class="legacy-text-button danger-text"  @click="confirmDelete(row)">{{$t('m.Problem_Tag_Delete')}}</el-button>
           </template>
         </el-table-column>
       </el-table>
     </Panel>
 
     <Panel :title="$t('m.Problem_Tag_Audit_Title')">
-      <div slot="header" class="toolbar audit-toolbar">
+      <template #header><div class="toolbar audit-toolbar">
         <span class="threshold-label">{{$t('m.Problem_Tag_Low_Frequency_Threshold')}}</span>
         <el-input-number v-model="auditThreshold" :min="1" :max="20"></el-input-number>
-        <el-button type="primary" icon="el-icon-refresh" @click="fetchAudit">{{$t('m.Problem_Tag_Refresh_Audit')}}</el-button>
-      </div>
+        <el-button type="primary" @click="fetchAudit"><template #icon><i class="el-icon-refresh" aria-hidden="true"></i></template>{{$t('m.Problem_Tag_Refresh_Audit')}}</el-button>
+      </div></template>
 
       <el-row :gutter="16" class="summary-row">
         <el-col :span="6" v-for="item in summaryCards" :key="item.key">
@@ -87,20 +86,20 @@
           <el-table :data="audit.duplicates" size="small" v-loading="loading.audit" empty-text="No data">
             <el-table-column min-width="180" :label="$t('m.Problem_Tag_Normalized_Name')" prop="normalized_name"></el-table-column>
             <el-table-column min-width="420" :label="$t('m.Problem_Tag_Duplicate_Items')">
-              <template slot-scope="{row}">
+              <template #default="{row}">
                 <div class="audit-tag-group">
                   <div v-for="tag in row.tags" :key="tag.id" class="audit-tag-item">
-                    <el-tag :type="tag.is_active ? 'success' : 'info'" size="mini">{{ tag.name }}</el-tag>
+                    <el-tag :type="tag.is_active ? 'success' : 'info'" size="small" class="legacy-mini">{{ tag.name }}</el-tag>
                     <span class="audit-meta">#{{ tag.id }} / {{ tag.problem_count }}</span>
-                    <el-button type="text" @click="openEditById(tag.id)">{{$t('m.Problem_Tag_Edit')}}</el-button>
-                    <el-button type="text" class="danger-text" @click="confirmDeleteById(tag.id)">{{$t('m.Problem_Tag_Delete')}}</el-button>
+                    <el-button link type="primary" class="legacy-text-button" @click="openEditById(tag.id)">{{$t('m.Problem_Tag_Edit')}}</el-button>
+                    <el-button link type="primary" class="legacy-text-button danger-text"  @click="confirmDeleteById(tag.id)">{{$t('m.Problem_Tag_Delete')}}</el-button>
                   </div>
                 </div>
               </template>
             </el-table-column>
             <el-table-column width="120" :label="$t('m.Problem_Tag_Action')">
-              <template slot-scope="{row}">
-                <el-button type="text" @click="openMergeDialog(row)">{{$t('m.Problem_Tag_Merge')}}</el-button>
+              <template #default="{row}">
+                <el-button link type="primary" class="legacy-text-button" @click="openMergeDialog(row)">{{$t('m.Problem_Tag_Merge')}}</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -111,9 +110,9 @@
             <el-table-column width="90" prop="id" label="ID"></el-table-column>
             <el-table-column min-width="240" :label="$t('m.Name')" prop="name"></el-table-column>
             <el-table-column width="120" :label="$t('m.Problem_Tag_Action')">
-              <template slot-scope="{row}">
-                <el-button type="text" @click="openEditById(row.id)">{{$t('m.Problem_Tag_Edit')}}</el-button>
-                <el-button type="text" class="danger-text" @click="confirmDeleteById(row.id)">{{$t('m.Problem_Tag_Delete')}}</el-button>
+              <template #default="{row}">
+                <el-button link type="primary" class="legacy-text-button" @click="openEditById(row.id)">{{$t('m.Problem_Tag_Edit')}}</el-button>
+                <el-button link type="primary" class="legacy-text-button danger-text"  @click="confirmDeleteById(row.id)">{{$t('m.Problem_Tag_Delete')}}</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -125,9 +124,9 @@
             <el-table-column min-width="220" :label="$t('m.Name')" prop="name"></el-table-column>
             <el-table-column width="120" :label="$t('m.Problem_Tag_Problem_Count')" prop="problem_count"></el-table-column>
             <el-table-column width="120" :label="$t('m.Problem_Tag_Action')">
-              <template slot-scope="{row}">
-                <el-button type="text" @click="openEditById(row.id)">{{$t('m.Problem_Tag_Edit')}}</el-button>
-                <el-button type="text" class="danger-text" @click="confirmDeleteById(row.id)">{{$t('m.Problem_Tag_Delete')}}</el-button>
+              <template #default="{row}">
+                <el-button link type="primary" class="legacy-text-button" @click="openEditById(row.id)">{{$t('m.Problem_Tag_Edit')}}</el-button>
+                <el-button link type="primary" class="legacy-text-button danger-text"  @click="confirmDeleteById(row.id)">{{$t('m.Problem_Tag_Delete')}}</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -137,9 +136,9 @@
           <el-table :data="audit.alias_conflicts" size="small" v-loading="loading.audit" empty-text="No data">
             <el-table-column min-width="200" :label="$t('m.Problem_Tag_Normalized_Name')" prop="normalized_name"></el-table-column>
             <el-table-column min-width="300" :label="$t('m.Problem_Tag_Conflict_Tags')">
-              <template slot-scope="{row}">
+              <template #default="{row}">
                 <div class="tag-chip-list">
-                  <el-tag v-for="tagId in row.tag_ids" :key="row.normalized_name + '-' + tagId" size="mini">#{{ tagId }}</el-tag>
+                  <el-tag v-for="tagId in row.tag_ids" :key="row.normalized_name + '-' + tagId" size="small" class="legacy-mini">#{{ tagId }}</el-tag>
                 </div>
               </template>
             </el-table-column>
@@ -151,7 +150,7 @@
     <el-dialog
       :title="editingTag.id ? $t('m.Problem_Tag_Edit_Title') : $t('m.Problem_Tag_Create_Title')"
       width="680px"
-      :visible.sync="dialogVisible"
+      v-model="dialogVisible"
       @close="resetEditingTag">
       <el-form label-position="left" label-width="110px" :model="editingTag">
         <el-form-item :label="$t('m.Name')" required>
@@ -175,57 +174,57 @@
           <el-input type="textarea" :rows="4" v-model="editingTag.description"></el-input>
         </el-form-item>
       </el-form>
-      <span slot="footer">
+      <template #footer><span>
         <el-button
           v-if="editingTag.id"
           type="danger"
           plain
           :loading="loading.save"
           @click="confirmDelete(editingTag)">{{$t('m.Problem_Tag_Delete')}}</el-button>
-        <cancel @click.native="dialogVisible = false"></cancel>
-        <save @click.native="saveTag"></save>
-      </span>
+        <cancel @click="dialogVisible = false"></cancel>
+        <save @click="saveTag"></save>
+      </span></template>
     </el-dialog>
 
     <el-dialog
       :title="$t('m.Problem_Tag_Merge_Title')"
       width="720px"
-      :visible.sync="mergeDialogVisible"
+      v-model="mergeDialogVisible"
       @close="resetMergeState">
       <div v-if="mergeGroup.tags.length">
         <el-alert :title="$t('m.Problem_Tag_Merge_Help')" type="warning" :closable="false"></el-alert>
         <el-form label-position="top" class="merge-form">
           <el-form-item :label="$t('m.Problem_Tag_Merge_Target')">
             <el-radio-group v-model="mergeTargetId">
-              <el-radio v-for="tag in mergeGroup.tags" :key="'merge-target-' + tag.id" :label="tag.id">
+              <el-radio v-for="tag in mergeGroup.tags" :key="'merge-target-' + tag.id" :value="tag.id">
                 {{ tag.name }} (#{{ tag.id }}) / {{ tag.problem_count }}
               </el-radio>
             </el-radio-group>
           </el-form-item>
           <el-form-item :label="$t('m.Problem_Tag_Merge_Sources')">
             <el-checkbox-group v-model="mergeSourceIds">
-              <el-checkbox v-for="tag in mergeCandidates" :key="'merge-source-' + tag.id" :label="tag.id">
+              <el-checkbox v-for="tag in mergeCandidates" :key="'merge-source-' + tag.id" :label="tag.id" :value="tag.id">
                 {{ tag.name }} (#{{ tag.id }}) / {{ tag.problem_count }}
               </el-checkbox>
             </el-checkbox-group>
           </el-form-item>
         </el-form>
       </div>
-      <span slot="footer">
-        <cancel @click.native="mergeDialogVisible = false"></cancel>
-        <save @click.native="submitMerge"></save>
-      </span>
+      <template #footer><span>
+        <cancel @click="mergeDialogVisible = false"></cancel>
+        <save @click="submitMerge"></save>
+      </span></template>
     </el-dialog>
 
     <el-dialog
       title="Batch Update Tags"
       width="520px"
-      :visible.sync="batchDialogVisible"
+      v-model="batchDialogVisible"
       @close="resetBatchState">
       <el-form label-position="top">
         <el-form-item label="Selected Tags">
           <div class="tag-chip-list">
-            <el-tag v-for="tag in selectedTags" :key="'selected-tag-' + tag.id" size="mini">{{ tag.name }} (#{{ tag.id }})</el-tag>
+            <el-tag v-for="tag in selectedTags" :key="'selected-tag-' + tag.id" size="small" class="legacy-mini">{{ tag.name }} (#{{ tag.id }})</el-tag>
           </div>
         </el-form-item>
         <el-form-item label="Rank">
@@ -235,8 +234,8 @@
         <el-form-item label="Visible">
           <el-switch v-model="batchUpdate.includeIsActive"></el-switch>
           <el-radio-group v-if="batchUpdate.includeIsActive" v-model="batchUpdate.is_active" style="margin-left: 12px;">
-            <el-radio :label="true">Active</el-radio>
-            <el-radio :label="false">Inactive</el-radio>
+            <el-radio :value="true">Active</el-radio>
+            <el-radio :value="false">Inactive</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="Description">
@@ -244,10 +243,10 @@
           <el-input v-if="batchUpdate.includeDescription" type="textarea" :rows="3" v-model="batchUpdate.description" placeholder="Leave empty to clear description" style="margin-top: 12px;"></el-input>
         </el-form-item>
       </el-form>
-      <span slot="footer">
-        <cancel @click.native="batchDialogVisible = false"></cancel>
-        <save @click.native="submitBatchUpdate"></save>
-      </span>
+      <template #footer><span>
+        <cancel @click="batchDialogVisible = false"></cancel>
+        <save @click="submitBatchUpdate"></save>
+      </span></template>
     </el-dialog>
   </div>
 </template>

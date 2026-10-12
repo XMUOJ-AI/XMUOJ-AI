@@ -1,0 +1,3 @@
+{"name":"default","status":"Stopped","arch":"aarch64","cpus":3,"memory":4294967296,"disk":32212254720,"runtime":"docker"}
+{"name":"xmuoj","status":"Stopped","arch":"x86_64","cpus":3,"memory":4294967296,"disk":32212254720,"runtime":"docker"}
+{"name":"xmuoj-merge-20261011","status":"Stopped","arch":"aarch64","cpus":2,"memory":3221225472,"disk":12884901888,"runtime":"docker"}

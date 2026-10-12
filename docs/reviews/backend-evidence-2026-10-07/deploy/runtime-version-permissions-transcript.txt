@@ -1,0 +1,12 @@
+来源：本次既有工具执行记录的标准输出节选；归档时未重跑命令。
+
+同一旧 x86 镜像的新建隔离容器版本探测：
+Python 3.12.13
+3.2.25
+/usr/local/bin/python
+
+实际 entrypoint 完成后的目录/密钥权限探测：
+900:903 710 /data/test_case
+900:903 600 /data/config/secret.key
+
+以上仅含版本、UID/GID、权限和路径，不含密钥内容。

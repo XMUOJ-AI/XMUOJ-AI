@@ -9,6 +9,7 @@
 **/*.log
 **/.env
 backend/data/config/*
+backend/data/user_credentials/
 !backend/data/config/.gitkeep
 backend/data/ssl/*
 !backend/data/ssl/.gitkeep

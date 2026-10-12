@@ -1,0 +1,22 @@
+[
+  {
+    "check": "contracts",
+    "exit_code": 0,
+    "elapsed_seconds": 2.353
+  },
+  {
+    "check": "problem-batch-tools",
+    "exit_code": 0,
+    "elapsed_seconds": 0.038
+  },
+  {
+    "check": "deploy-tests",
+    "exit_code": 0,
+    "elapsed_seconds": 0.052
+  },
+  {
+    "check": "pip-check",
+    "exit_code": 0,
+    "elapsed_seconds": 0.15
+  }
+]

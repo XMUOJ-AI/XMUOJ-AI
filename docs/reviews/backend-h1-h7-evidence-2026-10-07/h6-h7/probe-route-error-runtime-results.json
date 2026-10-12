@@ -1,0 +1,92 @@
+{
+  "direct_http_spoof_redirect": {
+    "passed": true,
+    "detail": null
+  },
+  "https_hsts": {
+    "passed": true,
+    "detail": null
+  },
+  "frontend_html": {
+    "passed": true,
+    "detail": null
+  },
+  "frontend_scripts": {
+    "passed": true,
+    "detail": [
+      {
+        "url": "/static/js/vendor.dll.794a942.js",
+        "status": 200,
+        "hsts": "max-age=3600"
+      },
+      {
+        "url": "/static/js/manifest.e98795589107ab420940.js",
+        "status": 200,
+        "hsts": "max-age=3600"
+      },
+      {
+        "url": "/static/js/vendor.24bfea10b5ce8a236a50.js",
+        "status": 200,
+        "hsts": "max-age=3600"
+      },
+      {
+        "url": "/static/js/oj.ad9dd57d2d2296ec8b5b.js",
+        "status": 200,
+        "hsts": "max-age=3600"
+      }
+    ]
+  },
+  "secure_cookies": {
+    "passed": true,
+    "detail": null
+  },
+  "csrf_rejection": {
+    "passed": true,
+    "detail": null
+  },
+  "import_retry_same_export": {
+    "passed": true,
+    "detail": null
+  },
+  "private_retryable_export": {
+    "passed": true,
+    "detail": null
+  },
+  "random_password_login": {
+    "passed": true,
+    "detail": null
+  },
+  "student_cannot_export": {
+    "passed": true,
+    "detail": null
+  },
+  "real_judgeserver_accepted": {
+    "passed": true,
+    "detail": {
+      "submission_id": "515bc65a520a26381c4163f52c095c46",
+      "result": 0,
+      "elapsed_seconds": 6.452
+    }
+  },
+  "real_queue_profile": {
+    "passed": true,
+    "detail": {
+      "student_id": 3,
+      "algorithm_version": "elo-v1",
+      "updated_time": "2026-10-07T09:44:59.306644Z",
+      "knowledge_states": [
+        {
+          "knowledge_code": "h7_addition",
+          "name": "H7 加法联调",
+          "rating": 1207.6881,
+          "mastery_level": "stable",
+          "attempt_count": 1,
+          "accepted_count": 1,
+          "recent_fail_count": 0,
+          "confidence": 0.091,
+          "last_submission_time": "2026-10-07T09:44:52.187558Z"
+        }
+      ]
+    }
+  }
+}

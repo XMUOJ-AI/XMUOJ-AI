@@ -1,0 +1,42 @@
+[2026-10-07 06:13:07 +0000] [693] [INFO] Starting gunicorn 21.2.0
+[2026-10-07 06:13:07 +0000] [693] [INFO] Listening at: http://127.0.0.1:8080 (693)
+[2026-10-07 06:13:07 +0000] [693] [INFO] Using worker: gthread
+[2026-10-07 06:13:07 +0000] [754] [INFO] Booting worker with pid: 754
+[2026-10-07 06:13:38 +0000] [693] [CRITICAL] WORKER TIMEOUT (pid:754)
+[2026-10-07 06:13:38 +0000] [754] [INFO] Worker exiting (pid: 754)
+[2026-10-07 06:13:39 +0000] [693] [ERROR] Worker (pid:754) was sent SIGKILL! Perhaps out of memory?
+[2026-10-07 06:13:39 +0000] [767] [INFO] Booting worker with pid: 767
+[2026-10-07 06:14:10 +0000] [693] [CRITICAL] WORKER TIMEOUT (pid:767)
+[2026-10-07 06:14:10 +0000] [767] [INFO] Worker exiting (pid: 767)
+[2026-10-07 06:14:11 +0000] [693] [ERROR] Worker (pid:767) was sent SIGKILL! Perhaps out of memory?
+[2026-10-07 06:14:11 +0000] [780] [INFO] Booting worker with pid: 780
+[2026-10-07 06:14:42 +0000] [693] [CRITICAL] WORKER TIMEOUT (pid:780)
+[2026-10-07 06:14:42 +0000] [780] [INFO] Worker exiting (pid: 780)
+[2026-10-07 06:14:43 +0000] [693] [ERROR] Worker (pid:780) was sent SIGKILL! Perhaps out of memory?
+[2026-10-07 06:14:43 +0000] [802] [INFO] Booting worker with pid: 802
+[2026-10-07 06:15:13 +0000] [693] [CRITICAL] WORKER TIMEOUT (pid:802)
+[2026-10-07 06:15:13 +0000] [802] [INFO] Worker exiting (pid: 802)
+[2026-10-07 06:15:14 +0000] [693] [ERROR] Worker (pid:802) was sent SIGKILL! Perhaps out of memory?
+[2026-10-07 06:15:15 +0000] [816] [INFO] Booting worker with pid: 816
+[2026-10-07 06:15:45 +0000] [693] [CRITICAL] WORKER TIMEOUT (pid:816)
+[2026-10-07 06:15:45 +0000] [816] [INFO] Worker exiting (pid: 816)
+[2026-10-07 06:15:46 +0000] [693] [ERROR] Worker (pid:816) was sent SIGKILL! Perhaps out of memory?
+[2026-10-07 06:15:46 +0000] [829] [INFO] Booting worker with pid: 829
+[2026-10-07 06:16:16 +0000] [693] [CRITICAL] WORKER TIMEOUT (pid:829)
+[2026-10-07 06:16:16 +0000] [829] [INFO] Worker exiting (pid: 829)
+[2026-10-07 06:16:17 +0000] [693] [ERROR] Worker (pid:829) was sent SIGKILL! Perhaps out of memory?
+[2026-10-07 06:16:18 +0000] [853] [INFO] Booting worker with pid: 853
+[2026-10-07 06:16:48 +0000] [693] [CRITICAL] WORKER TIMEOUT (pid:853)
+[2026-10-07 06:16:48 +0000] [853] [INFO] Worker exiting (pid: 853)
+[2026-10-07 06:16:49 +0000] [693] [ERROR] Worker (pid:853) was sent SIGKILL! Perhaps out of memory?
+[2026-10-07 06:16:49 +0000] [880] [INFO] Booting worker with pid: 880
+[2026-10-07 06:18:52 +0000] [693] [INFO] Handling signal: term
+[2026-10-07 06:18:53 +0000] [880] [INFO] Worker exiting (pid: 880)
+[2026-10-07 06:18:54 +0000] [693] [INFO] Shutting down: Master
+[2026-10-07 06:19:07 +0000] [941] [INFO] Starting gunicorn 21.2.0
+[2026-10-07 06:19:07 +0000] [941] [INFO] Listening at: http://127.0.0.1:8080 (941)
+[2026-10-07 06:19:07 +0000] [941] [INFO] Using worker: gthread
+[2026-10-07 06:19:07 +0000] [948] [INFO] Booting worker with pid: 948
+[2026-10-07 06:23:42 +0000] [941] [INFO] Handling signal: term
+[2026-10-07 06:23:43 +0000] [948] [INFO] Worker exiting (pid: 948)
+[2026-10-07 06:23:44 +0000] [941] [INFO] Shutting down: Master

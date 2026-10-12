@@ -1,0 +1,32 @@
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 82, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.QueryCanceled: canceling statement due to statement timeout
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/docs/reviews/backend-h1-h7-evidence-2026-10-07/h5/rag/benchmark.py", line 192, in <module>
+    measure(args.stage, variants, args.samples, args.cases)
+  File "/Users/jingweihao/大创/XMUOJ-AI/docs/reviews/backend-h1-h7-evidence-2026-10-07/h5/rag/benchmark.py", line 124, in measure
+    cursor.execute("ANALYZE rag_chunk")
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 98, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 66, in execute
+    return self._execute_with_wrappers(sql, params, many=False, executor=self._execute)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 75, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 79, in _execute
+    with self.db.wrap_database_errors:
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/utils.py", line 90, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 82, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: canceling statement due to statement timeout
+

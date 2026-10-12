@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "rule_type": "ACM",
+  "spj": false,
+  "total_score": null,
+  "cases": [
+    {
+      "id": "1",
+      "input_path": "testcases/luogu_P1001/1.in",
+      "output_path": "testcases/luogu_P1001/1.out",
+      "score": null,
+      "input_sha256": "f251ddc12234e0da8d3b778bd0f7463fb477f16f47757f5617dc8b4ff4d4f14a",
+      "output_sha256": "1121cfccd5913f0a63fec40a6ffd44ea64f9dc135c66634ba001d10bcf4302a2"
+    }
+  ]
+}

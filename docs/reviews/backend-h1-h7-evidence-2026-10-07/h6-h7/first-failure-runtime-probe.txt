@@ -1,0 +1,11 @@
+direct_http_spoof_redirect PASS
+https_hsts PASS
+frontend_html PASS
+frontend_scripts PASS
+secure_cookies PASS
+csrf_rejection PASS
+import_retry_same_export PASS
+private_retryable_export PASS
+random_password_login PASS
+student_cannot_export PASS
+real_judgeserver_accepted FAIL

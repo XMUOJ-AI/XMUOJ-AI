@@ -1,0 +1,6 @@
+PostgreSQL 14.24 (Debian 14.24-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+postgres|en_US.utf8|en_US.utf8
+template0|en_US.utf8|en_US.utf8
+template1|en_US.utf8|en_US.utf8
+xmuoj_merge_20261011|en_US.utf8|en_US.utf8
+other,P001|P001,other

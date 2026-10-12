@@ -1,0 +1,44 @@
+{
+  "allow_public_test_case_download": false,
+  "answers": [],
+  "description": {
+    "format": "html",
+    "value": "<p>输入两个整数 a、b，输出它们的和。</p>"
+  },
+  "display_id": "LUOGU-P1001",
+  "hint": {
+    "format": "html",
+    "value": ""
+  },
+  "input_description": {
+    "format": "html",
+    "value": "<p>两个整数，以空格分隔。</p>"
+  },
+  "memory_limit": 128,
+  "output_description": {
+    "format": "html",
+    "value": "<p>输出一个整数。</p>"
+  },
+  "rule_type": "ACM",
+  "samples": [
+    {
+      "input": "1 2\n",
+      "output": "3\n"
+    }
+  ],
+  "source": "https://www.luogu.com.cn/problem/P1001",
+  "spj": null,
+  "tags": [
+    "基本输入输出"
+  ],
+  "template": {},
+  "test_case_score": [
+    {
+      "input_name": "1.in",
+      "output_name": "1.out",
+      "score": 100
+    }
+  ],
+  "time_limit": 1000,
+  "title": "A+B 问题"
+}

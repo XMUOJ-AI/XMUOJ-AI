@@ -1,6 +1,10 @@
-from django.conf.urls import include, url
+from django.urls import include, re_path as url
 
 urlpatterns = [
+    url(r"^api/agent/v1/", include("agent_service.urls")),
+    url(r"^api/", include("learning.urls")),
+    url(r"^api/", include("problem_import.urls")),
+    url(r"^api/", include("knowledge.urls")),
     url(r"^api/plugin/", include("plugin.urls")),
     url(r"^api/", include("account.urls.oj")),
     url(r"^api/admin/", include("account.urls.admin")),

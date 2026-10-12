@@ -5,8 +5,7 @@
         <Input v-model="query.keyword"
                size="large"
                @on-enter="filterByKeyword"
-               :placeholder="$t('m.Problem_Search_Placeholder')"
-               icon="ios-search-strong"/>
+               :placeholder="$t('m.Problem_Search_Placeholder')"><template #suffix><Icon type="ios-search-strong" /></template></Input>
         <Button type="primary" size="large" @click="filterByKeyword">
           {{$t('m.Search')}}
         </Button>
@@ -17,12 +16,12 @@
             {{currentDifficultyLabel}}
             <Icon type="arrow-down-b"></Icon>
           </Button>
-          <Dropdown-menu slot="list">
+          <template #list><Dropdown-menu>
             <Dropdown-item name="">{{$t('m.All')}}</Dropdown-item>
             <Dropdown-item name="Low">{{$t('m.Low')}}</Dropdown-item>
             <Dropdown-item name="Mid">{{$t('m.Mid')}}</Dropdown-item>
             <Dropdown-item name="High">{{$t('m.High')}}</Dropdown-item>
-          </Dropdown-menu>
+          </Dropdown-menu></template>
         </Dropdown>
         <div class="view-switch-group">
           <div class="view-mode-switch">
@@ -30,9 +29,9 @@
               <span>{{$t('m.Show_Source')}}</span>
               <small>{{$t('m.Show_Source_Help')}}</small>
             </div>
-            <i-switch :value="showSourceColumn" @on-change="handleSourceModeChange">
-              <span slot="open">{{$t('m.On')}}</span>
-              <span slot="close">{{$t('m.Off')}}</span>
+            <i-switch :model-value="showSourceColumn" @on-change="handleSourceModeChange">
+              <template #open><span>{{$t('m.On')}}</span></template>
+              <template #close><span>{{$t('m.Off')}}</span></template>
             </i-switch>
           </div>
           <div class="view-mode-switch">
@@ -40,9 +39,9 @@
               <span>{{$t('m.Study_View')}}</span>
               <small>{{$t('m.Study_View_Help')}}</small>
             </div>
-            <i-switch :value="showTagColumn" @on-change="handleViewModeChange">
-              <span slot="open">{{$t('m.On')}}</span>
-              <span slot="close">{{$t('m.Off')}}</span>
+            <i-switch :model-value="showTagColumn" @on-change="handleViewModeChange">
+              <template #open><span>{{$t('m.On')}}</span></template>
+              <template #close><span>{{$t('m.Off')}}</span></template>
             </i-switch>
           </div>
         </div>
@@ -69,11 +68,11 @@
     <Row type="flex" :gutter="18">
       <Col :span="19">
         <Panel shadow>
-          <div slot="title">{{$t('m.Problem_List')}}</div>
-          <div slot="extra" class="list-summary">
+          <template #title><div>{{$t('m.Problem_List')}}</div></template>
+          <template #extra><div class="list-summary">
             <span>{{total}}</span>
             <span>{{$t('m.Problem_Search_Summary')}}</span>
-          </div>
+          </div></template>
           <Table style="width: 100%; font-size: 15px;"
                  :columns="tableColumns"
                  :data="problemList"
@@ -82,8 +81,8 @@
         </Panel>
         <Pagination
           :total="total"
-          :page-size.sync="query.limit"
-          :current.sync="query.page"
+          v-model:page-size="query.limit"
+          v-model:current="query.page"
           :show-sizer="true"
           @on-change="handlePageChange"
           @on-page-size-change="handlePageSizeChange"></Pagination>
@@ -92,12 +91,11 @@
       <Col :span="5">
         <div class="tag-sidebar-wrapper">
           <Panel :padding="12">
-            <div slot="title" class="taglist-title">{{$t('m.Tags')}}</div>
+            <template #title><div class="taglist-title">{{$t('m.Tags')}}</div></template>
 
             <div class="tag-search-box">
               <Input v-model="tagKeyword"
-                     :placeholder="$t('m.Tag_Search_Placeholder')"
-                     icon="ios-pricetags"/>
+                     :placeholder="$t('m.Tag_Search_Placeholder')"><template #suffix><Icon type="ios-pricetags" /></template></Input>
             </div>
 
             <div v-if="query.tag" class="tag-panel-section current-tag-section">
@@ -153,6 +151,8 @@
 </template>
 
 <script>
+  import { resolveComponent } from 'vue'
+
   import { mapGetters } from 'vuex'
   import api from '@oj/api'
   import utils from '@/utils/utils'
@@ -194,7 +194,7 @@
     mounted () {
       this.init()
     },
-    beforeDestroy () {
+    beforeUnmount () {
       if (this.tagSearchTimer) {
         clearTimeout(this.tagSearchTimer)
       }
@@ -320,31 +320,27 @@
         })
       },
       renderProblemLink (h, params) {
-        return h('Button', {
-          props: {
-            type: 'text',
-            size: 'large'
-          },
-          on: {
-            click: () => {
-              this.$router.push({name: 'problem-details', params: {problemID: params.row._id}})
-            }
+        return h(resolveComponent('Button'), {
+
+          type: 'text',
+          size: 'large',
+
+          onClick: () => {
+            this.$router.push({name: 'problem-details', params: {problemID: params.row._id}})
           },
           style: {
             padding: '2px 0'
           }
-        }, params.row._id)
+        }, () => (params.row._id))
       },
       renderTitleLink (h, params) {
-        return h('Button', {
-          props: {
-            type: 'text',
-            size: 'large'
-          },
-          on: {
-            click: () => {
-              this.$router.push({name: 'problem-details', params: {problemID: params.row._id}})
-            }
+        return h(resolveComponent('Button'), {
+
+          type: 'text',
+          size: 'large',
+
+          onClick: () => {
+            this.$router.push({name: 'problem-details', params: {problemID: params.row._id}})
           },
           style: {
             padding: '2px 0',
@@ -354,28 +350,28 @@
             textAlign: 'left',
             width: '100%'
           },
-          attrs: {
-            title: params.row.title
-          }
-        }, params.row.title)
+
+          title: params.row.title
+
+        }, () => (params.row.title))
       },
       renderDifficulty (h, params) {
         let color = 'blue'
         if (params.row.difficulty === 'Low') color = 'green'
         else if (params.row.difficulty === 'High') color = 'yellow'
-        return h('Tag', {
-          props: {
-            color: color
-          }
-        }, this.$i18n.t('m.' + params.row.difficulty))
+        return h(resolveComponent('Tag'), {
+
+          color: color
+
+        }, () => (this.$i18n.t('m.' + params.row.difficulty)))
       },
       renderSource (h, params) {
         const source = params.row.source || '-'
         return h('span', {
           class: 'table-source-pill',
-          attrs: {
-            title: source
-          }
+
+          title: source
+
         }, source)
       },
       renderTagSummary (h, params) {
@@ -388,28 +384,27 @@
         const primaryTag = tags[0]
         const children = [h('span', {
           class: 'table-tag-chip table-tag-chip-primary',
-          attrs: {
-            title: primaryTag
-          },
-          on: {
-            click: () => {
-              this.filterByTag(primaryTag)
-            }
+
+          title: primaryTag,
+
+          onClick: () => {
+            this.filterByTag(primaryTag)
           }
+
         }, primaryTag)]
         if (tags.length > 1) {
           children.push(h('span', {
             class: 'table-tag-chip table-tag-chip-more',
-            attrs: {
-              title: tags.slice(1).join(' / ')
-            }
+
+            title: tags.slice(1).join(' / ')
+
           }, '+' + (tags.length - 1)))
         }
         return h('div', {
           class: 'table-tag-list',
-          attrs: {
-            title: tags.join(' / ')
-          }
+
+          title: tags.join(' / ')
+
         }, children)
       }
     },
@@ -464,11 +459,10 @@
               if (status === null || status === undefined) {
                 return undefined
               }
-              return h('Icon', {
-                props: {
-                  type: status === 0 ? 'checkmark-round' : 'minus-round',
-                  size: '16'
-                },
+              return h(resolveComponent('Icon'), {
+
+                type: status === 0 ? 'checkmark-round' : 'minus-round',
+                size: '16',
                 style: {
                   color: status === 0 ? '#19be6b' : '#ed3f14'
                 }
@@ -746,11 +740,11 @@
     color: #9ea7b4;
   }
 
-  /deep/ .ivu-table td {
+  :deep(.ivu-table td) {
     height: 52px;
   }
 
-  /deep/ .ivu-table-cell {
+  :deep(.ivu-table-cell) {
     overflow: hidden;
   }
 

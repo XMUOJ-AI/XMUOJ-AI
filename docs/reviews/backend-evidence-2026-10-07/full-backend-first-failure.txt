@@ -1,0 +1,258 @@
+Creating test database for alias 'default'...
+Django VERSION (3, 2, 25, 'final', 0)
+System check identified no issues (0 silenced).
+..[2026-10-07 05:42:41] - [ERROR] - [django.request:224]  - Service Unavailable: /api/agent/v1/runs
+[2026-10-07 05:42:41] - [ERROR] - [django.request:224]  - Service Unavailable: /api/agent/v1/runs
+.....1 reviewed error patterns imported
+...................................................................................Recovered 1 learning events
+..Updated class test-class (769df002-ae1f-4893-83ab-28c3f987e290); merged 1 teachers and 1 students
+...FF.FFF............FFFFFFFProblem Tag Audit
+- total tags: 2
+- active tags: 2
+- duplicate groups: 1
+- zero problem tags: 2
+- low frequency tags: 0
+
+Duplicate groups:
+- greedy => Greedy, greedy
+
+Zero problem tags:
+- Greedy (25)
+- greedy (26)
+..F.............................[2026-10-07 05:44:02] - [ERROR] - [django.request:224]  - Internal Server Error: /api/test-failure
+[2026-10-07 05:44:02] - [ERROR] - [django.request:224]  - Internal Server Error: /api/test-failure
+..[2026-10-07 05:44:09] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'agent_fixture'.
+[2026-10-07 05:44:09] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):248]  - Running consumer thread...
+[2026-10-07 05:44:09] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'agent_fixture.DQ'.
+[2026-10-07 05:44:09] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):248]  - Running consumer thread...
+[2026-10-07 05:44:09] - [DEBUG] - [dramatiq.worker.WorkerThread:449]  - Running worker thread...
+[2026-10-07 05:44:10] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message '3c1e6f66-2f2f-4697-9daf-a2f0fc948ebb' on queue 'agent_fixture'.
+[2026-10-07 05:44:10] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):326]  - Pushing message '3c1e6f66-2f2f-4697-9daf-a2f0fc948ebb' onto work queue.
+[2026-10-07 05:44:10] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message fixture_agent_execute('18c93ce8-0939-49fe-a919-d353989267fe') with id '3c1e6f66-2f2f-4697-9daf-a2f0fc948ebb'.
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):350]  - Acknowledging message '3c1e6f66-2f2f-4697-9daf-a2f0fc948ebb'.
+[2026-10-07 05:44:11] - [INFO] - [dramatiq.worker.Worker:128]  - Shutting down...
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.Worker:133]  - Stopping workers...
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.WorkerThread:548]  - Stopping worker thread...
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.WorkerThread:465]  - Worker thread stopped.
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.Worker:138]  - Workers stopped.
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.Worker:139]  - Stopping consumers...
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):411]  - Stopping consumer thread...
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):411]  - Stopping consumer thread...
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):294]  - Consumer thread stopped.
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):294]  - Consumer thread stopped.
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.Worker:144]  - Consumers stopped.
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.Worker:146]  - Requeueing in-memory messages...
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.Worker:156]  - Done requeueing in-progress messages.
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.Worker:158]  - Closing consumers...
+[2026-10-07 05:44:11] - [DEBUG] - [dramatiq.worker.Worker:162]  - Consumers closed.
+[2026-10-07 05:44:11] - [INFO] - [dramatiq.worker.Worker:164]  - Worker has been shut down.
+.......[2026-10-07 05:45:16] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF cookie not set.): /api/admin/submission/rejudge
+..................[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'agent'.
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'agent': not whitelisted.
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'problem_import'.
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):248]  - Running consumer thread...
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'default'.
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'default': not whitelisted.
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'agent.DQ'.
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'agent.DQ': not whitelisted.
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'default.DQ'.
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'default.DQ': not whitelisted.
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'problem_import.DQ'.
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):248]  - Running consumer thread...
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker.WorkerThread:449]  - Running worker thread...
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message 'e4a837a8-f640-404a-8103-0f3c1d0d5191' on queue 'problem_import'.
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):326]  - Pushing message 'e4a837a8-f640-404a-8103-0f3c1d0d5191' onto work queue.
+[2026-10-07 05:47:47] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message validate_import_batch('76979afb-21ff-4e5f-80a6-43b184ce7d88') with id 'e4a837a8-f640-404a-8103-0f3c1d0d5191'.
+[2026-10-07 05:47:48] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):350]  - Acknowledging message 'e4a837a8-f640-404a-8103-0f3c1d0d5191'.
+[2026-10-07 05:47:49] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message 'bfc4b497-9483-4553-af43-2fdde72d2ce5' on queue 'problem_import'.
+[2026-10-07 05:47:49] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):326]  - Pushing message 'bfc4b497-9483-4553-af43-2fdde72d2ce5' onto work queue.
+[2026-10-07 05:47:49] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message commit_import_batch('76979afb-21ff-4e5f-80a6-43b184ce7d88') with id 'bfc4b497-9483-4553-af43-2fdde72d2ce5'.
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):350]  - Acknowledging message 'bfc4b497-9483-4553-af43-2fdde72d2ce5'.
+[2026-10-07 05:47:51] - [INFO] - [dramatiq.worker.Worker:128]  - Shutting down...
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.Worker:133]  - Stopping workers...
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.WorkerThread:548]  - Stopping worker thread...
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.WorkerThread:465]  - Worker thread stopped.
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.Worker:138]  - Workers stopped.
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.Worker:139]  - Stopping consumers...
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):411]  - Stopping consumer thread...
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):411]  - Stopping consumer thread...
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):294]  - Consumer thread stopped.
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):294]  - Consumer thread stopped.
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.Worker:144]  - Consumers stopped.
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.Worker:146]  - Requeueing in-memory messages...
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.Worker:156]  - Done requeueing in-progress messages.
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.Worker:158]  - Closing consumers...
+[2026-10-07 05:47:51] - [DEBUG] - [dramatiq.worker.Worker:162]  - Consumers closed.
+[2026-10-07 05:47:51] - [INFO] - [dramatiq.worker.Worker:164]  - Worker has been shut down.
+......[2026-10-07 05:48:54] - [ERROR] - [django.request:224]  - Service Unavailable: /api/admin/problem-import/batches
+[2026-10-07 05:48:54] - [ERROR] - [django.request:224]  - Service Unavailable: /api/admin/problem-import/batches
+.........E
+======================================================================
+ERROR: account.tests (unittest.loader._FailedTest.account.tests)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: account.tests
+Traceback (most recent call last):
+  File "/Users/jingweihao/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/unittest/loader.py", line 419, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/unittest/loader.py", line 362, in _get_module_from_name
+    __import__(name)
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/account/tests.py", line 15, in <module>
+    from utils.constants import Difficulty, JudgeStatus
+ImportError: cannot import name 'JudgeStatus' from 'utils.constants' (/Users/jingweihao/大创/XMUOJ-AI/backend/utils/constants.py)
+
+
+======================================================================
+FAIL: test_add_contest_problem_copies_test_case_independently (problem.tests.AddProblemFromPublicProblemAPITest.test_add_contest_problem_copies_test_case_independently)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 502, in test_add_contest_problem_copies_test_case_independently
+    self.assertSuccess(edit_resp)
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/utils/api/tests.py", line 35, in assertSuccess
+    raise AssertionError("response with errors, response: " + str(response.data))
+AssertionError: response with errors, response: {'error': 'invalid-languages', 'data': 'languages: Python2 is not a valid language'}
+
+======================================================================
+FAIL: test_batch_update_contest_problem_languages (problem.tests.ContestProblemAdminTest.test_batch_update_contest_problem_languages)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 398, in test_batch_update_contest_problem_languages
+    self.assertEqual(resp.data["data"]["updated_count"], 2)
+AssertionError: 0 != 2
+
+======================================================================
+FAIL: test_create_contest_problem (problem.tests.ContestProblemAdminTest.test_create_contest_problem)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 366, in test_create_contest_problem
+    self.assertSuccess(resp)
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/utils/api/tests.py", line 35, in assertSuccess
+    raise AssertionError("response with errors, response: " + str(response.data))
+AssertionError: response with errors, response: {'error': 'invalid-languages', 'data': 'languages: Python2 is not a valid language'}
+
+======================================================================
+FAIL: test_get_contest_problem (problem.tests.ContestProblemAdminTest.test_get_contest_problem)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 370, in test_get_contest_problem
+    self.test_create_contest_problem()
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 366, in test_create_contest_problem
+    self.assertSuccess(resp)
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/utils/api/tests.py", line 35, in assertSuccess
+    raise AssertionError("response with errors, response: " + str(response.data))
+AssertionError: response with errors, response: {'error': 'invalid-languages', 'data': 'languages: Python2 is not a valid language'}
+
+======================================================================
+FAIL: test_get_one_contest_problem (problem.tests.ContestProblemAdminTest.test_get_one_contest_problem)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 377, in test_get_one_contest_problem
+    contest_problem = self.test_create_contest_problem()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 366, in test_create_contest_problem
+    self.assertSuccess(resp)
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/utils/api/tests.py", line 35, in assertSuccess
+    raise AssertionError("response with errors, response: " + str(response.data))
+AssertionError: response with errors, response: {'error': 'invalid-languages', 'data': 'languages: Python2 is not a valid language'}
+
+======================================================================
+FAIL: test_create_problem (problem.tests.ProblemAdminAPITest.test_create_problem)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 232, in test_create_problem
+    self.assertSuccess(resp)
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/utils/api/tests.py", line 35, in assertSuccess
+    raise AssertionError("response with errors, response: " + str(response.data))
+AssertionError: response with errors, response: {'error': 'invalid-languages', 'data': 'languages: Python2 is not a valid language'}
+
+======================================================================
+FAIL: test_duplicate_display_id (problem.tests.ProblemAdminAPITest.test_duplicate_display_id)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 236, in test_duplicate_display_id
+    self.test_create_problem()
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 232, in test_create_problem
+    self.assertSuccess(resp)
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/utils/api/tests.py", line 35, in assertSuccess
+    raise AssertionError("response with errors, response: " + str(response.data))
+AssertionError: response with errors, response: {'error': 'invalid-languages', 'data': 'languages: Python2 is not a valid language'}
+
+======================================================================
+FAIL: test_edit_problem (problem.tests.ProblemAdminAPITest.test_edit_problem)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 263, in test_edit_problem
+    problem_id = self.test_create_problem().data["data"]["id"]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 232, in test_create_problem
+    self.assertSuccess(resp)
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/utils/api/tests.py", line 35, in assertSuccess
+    raise AssertionError("response with errors, response: " + str(response.data))
+AssertionError: response with errors, response: {'error': 'invalid-languages', 'data': 'languages: Python2 is not a valid language'}
+
+======================================================================
+FAIL: test_get_one_problem (problem.tests.ProblemAdminAPITest.test_get_one_problem)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 258, in test_get_one_problem
+    problem_id = self.test_create_problem().data["data"]["id"]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 232, in test_create_problem
+    self.assertSuccess(resp)
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/utils/api/tests.py", line 35, in assertSuccess
+    raise AssertionError("response with errors, response: " + str(response.data))
+AssertionError: response with errors, response: {'error': 'invalid-languages', 'data': 'languages: Python2 is not a valid language'}
+
+======================================================================
+FAIL: test_get_problem (problem.tests.ProblemAdminAPITest.test_get_problem)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 253, in test_get_problem
+    self.test_create_problem()
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 232, in test_create_problem
+    self.assertSuccess(resp)
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/utils/api/tests.py", line 35, in assertSuccess
+    raise AssertionError("response with errors, response: " + str(response.data))
+AssertionError: response with errors, response: {'error': 'invalid-languages', 'data': 'languages: Python2 is not a valid language'}
+
+======================================================================
+FAIL: test_problem_download_flag_round_trip (problem.tests.ProblemAdminAPITest.test_problem_download_flag_round_trip)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 270, in test_problem_download_flag_round_trip
+    problem_id = self.test_create_problem().data["data"]["id"]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 232, in test_create_problem
+    self.assertSuccess(resp)
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/utils/api/tests.py", line 35, in assertSuccess
+    raise AssertionError("response with errors, response: " + str(response.data))
+AssertionError: response with errors, response: {'error': 'invalid-languages', 'data': 'languages: Python2 is not a valid language'}
+
+======================================================================
+FAIL: test_spj (problem.tests.ProblemAdminAPITest.test_spj)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 246, in test_spj
+    self.assertFailed(resp, "Invalid spj")
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/utils/api/tests.py", line 40, in assertFailed
+    self.assertEqual(response.data["data"], msg)
+AssertionError: 'languages: Python2 is not a valid language' != 'Invalid spj'
+- languages: Python2 is not a valid language
++ Invalid spj
+
+
+======================================================================
+FAIL: test_delete_problem_tag (problem.tests.ProblemTagAdminAPITest.test_delete_problem_tag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 140, in test_delete_problem_tag
+    self.assertSuccess(resp)
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/utils/api/tests.py", line 35, in assertSuccess
+    raise AssertionError("response with errors, response: " + str(response.data))
+AssertionError: response with errors, response: {'error': 'error', 'data': 'Tag id is required'}
+
+----------------------------------------------------------------------
+Ran 195 tests in 418.843s
+
+FAILED (failures=13, errors=1)
+Destroying test database for alias 'default'...

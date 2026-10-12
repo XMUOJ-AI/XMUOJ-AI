@@ -1,0 +1,39 @@
+indexed english_multiword original_or median_ms 1271.159 min/max_ms 1271.159 1271.159
+indexed english_multiword global_union median_ms 418.205 min/max_ms 418.205 418.205
+indexed english_multiword scoped_union median_ms 378.837 min/max_ms 378.837 378.837
+indexed chinese_three original_or median_ms 1747.816 min/max_ms 1747.816 1747.816
+indexed chinese_three global_union median_ms 578.701 min/max_ms 578.701 578.701
+indexed chinese_three scoped_union median_ms 291.005 min/max_ms 291.005 291.005
+indexed chinese_two original_or median_ms 8920.039 min/max_ms 8920.039 8920.039
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 84, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.QueryCanceled: canceling statement due to statement timeout
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/docs/reviews/backend-h1-h7-evidence-2026-10-07/h5/rag/benchmark.py", line 193, in <module>
+    measure(args.stage, variants, args.samples, args.cases)
+  File "/Users/jingweihao/大创/XMUOJ-AI/docs/reviews/backend-h1-h7-evidence-2026-10-07/h5/rag/benchmark.py", line 145, in measure
+    cursor.execute(sql, params)
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 98, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 66, in execute
+    return self._execute_with_wrappers(sql, params, many=False, executor=self._execute)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 75, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 79, in _execute
+    with self.db.wrap_database_errors:
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/utils.py", line 90, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 84, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: canceling statement due to statement timeout
+

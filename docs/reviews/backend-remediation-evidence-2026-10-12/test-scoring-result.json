@@ -1,0 +1,16 @@
+{
+  "check": "test-scoring",
+  "command": [
+    "/tmp/xmuoj-remediation-20261012/venv/bin/python",
+    "manage.py",
+    "test",
+    "contest.test_scoring",
+    "judge.tests.RejudgeIntegrationTests",
+    "contest.tests",
+    "account.test_security",
+    "--settings=oj.settings",
+    "--noinput"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 22.075
+}

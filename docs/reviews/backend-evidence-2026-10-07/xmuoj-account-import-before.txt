@@ -1,0 +1,46 @@
+Using existing test database for alias 'default'...
+Django VERSION (3, 2, 25, 'final', 0)
+System check identified no issues (0 silenced).
+FFF
+======================================================================
+FAIL: test_mixed_import_only_updates_existing_classroom (account.tests.AdminUserTest.test_mixed_import_only_updates_existing_classroom)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/account/tests.py", line 676, in test_mixed_import_only_updates_existing_classroom
+    self.assertEqual((profile.real_name, profile.school, profile.language), ("Original Name", "New Class", "en-US"))
+AssertionError: Tuples differ: ('Do Not Replace', 'New Class', 'zh-CN') != ('Original Name', 'New Class', 'en-US')
+
+First differing element 0:
+'Do Not Replace'
+'Original Name'
+
+- ('Do Not Replace', 'New Class', 'zh-CN')
++ ('Original Name', 'New Class', 'en-US')
+
+======================================================================
+FAIL: test_import_late_invalid_row_keeps_existing_profile (account.tests.AdminUserTest.test_import_late_invalid_row_keeps_existing_profile)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/account/tests.py", line 690, in test_import_late_invalid_row_keeps_existing_profile
+    self.assertEqual(profile.school, "Old Class")
+AssertionError: 'New Class' != 'Old Class'
+- New Class
++ Old Class
+
+
+======================================================================
+FAIL: test_import_duplicate_new_user_rolls_back_existing_update (account.tests.AdminUserTest.test_import_duplicate_new_user_rolls_back_existing_update)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/account/tests.py", line 701, in test_import_duplicate_new_user_rolls_back_existing_update
+    self.assertEqual(profile.school, "Old Class")
+AssertionError: 'New Class' != 'Old Class'
+- New Class
++ Old Class
+
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.660s
+
+FAILED (failures=3)
+Preserving test database for alias 'default'...

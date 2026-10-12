@@ -1,0 +1,15 @@
+Creating test database for alias 'default'...
+...[2026-10-12 03:04:13] - [WARNING] - [django.security.csrf:253]  - Forbidden (CSRF token missing.): /api/plugin/login
+[2026-10-12 03:04:13] - [WARNING] - [django.security.csrf:253]  - Forbidden (CSRF token missing.): /api/plugin/login
+[2026-10-12 03:04:13] - [WARNING] - [django.security.csrf:253]  - Forbidden (CSRF token missing.): /api/plugin/submission
+[2026-10-12 03:04:13] - [WARNING] - [django.security.csrf:253]  - Forbidden (CSRF token missing.): /api/plugin/logout
+[2026-10-12 03:04:13] - [WARNING] - [django.security.csrf:253]  - Forbidden (CSRF token from the 'X-Csrftoken' HTTP header incorrect.): /api/plugin/logout
+.....
+----------------------------------------------------------------------
+Ran 8 tests in 1.638s
+
+OK
+Destroying test database for alias 'default'...
+Django VERSION (5, 2, 18, 'final', 0)
+Found 8 test(s).
+System check identified no issues (0 silenced).

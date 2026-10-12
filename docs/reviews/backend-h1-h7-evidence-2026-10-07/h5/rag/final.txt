@@ -1,0 +1,4 @@
+final english_multiword scoped_union median_ms 329.206 min/max_ms 295.943 1077.849
+final chinese_three scoped_union median_ms 310.211 min/max_ms 267.902 426.177
+final chinese_two scoped_union median_ms 1250.447 min/max_ms 806.191 2299.145
+final chinese_one scoped_union median_ms 1057.938 min/max_ms 735.028 3291.347

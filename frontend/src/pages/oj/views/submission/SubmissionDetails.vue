@@ -2,9 +2,9 @@
   <Row type="flex" justify="space-around">
     <Col :span="20" id="status">
       <Alert :type="status.type" showIcon>
-        <span class="title">{{$t('m.' + status.statusName.replace(/ /g, "_"))}}</span>
+        <span class="title">{{status.unknown ? '判题状态暂不可识别' : $t('m.' + status.statusName.replace(/ /g, "_"))}}</span>
         <span class="title" v-if="isCE">[main.c:后面的两个数字分别表示错误代码所在的“行号”和“列号”]</span>
-        <div slot="desc" class="content">
+        <template #desc><div class="content">
           <template v-if="isCE">
             <!--
             请选择出错信息的语言：
@@ -18,18 +18,22 @@
             <pre>{{submission.statistic_info.err_info}}</pre>
           </template>
           <template v-else>
-            <span>{{$t('m.Time')}}: {{submission.statistic_info.time_cost | submissionTime}}</span>
-            <span>{{$t('m.Memory')}}: {{submission.statistic_info.memory_cost | submissionMemory}}</span>
+            <span>{{$t('m.Time')}}: {{ $filters.submissionTime(submission.statistic_info.time_cost) }}</span>
+            <span>{{$t('m.Memory')}}: {{ $filters.submissionMemory(submission.statistic_info.memory_cost) }}</span>
             <span>{{$t('m.Lang')}}: {{submission.language}}</span>
             <span>{{$t('m.Author')}}: {{submission.username}}</span>
           </template>
-        </div>
+        </div></template>
       </Alert>
     </Col>
 
     <!--后台返info就显示出来， 权限控制放后台 -->
     <Col v-if="submission.info && !isCE" :span="20">
       <Table stripe :loading="loading" :disabled-hover="true" :columns="columns" :data="submission.info.data"></Table>
+    </Col>
+
+    <Col v-if="submission.id && !loading" :span="20">
+      <SubmissionAnalysis :submission="submission"></SubmissionAnalysis>
     </Col>
 
     <Col :span="20">
@@ -52,15 +56,20 @@
 </template>
 
 <script>
+  import { resolveComponent } from 'vue'
+
   import api from '@oj/api'
   import {JUDGE_STATUS} from '@/utils/constants'
   import utils from '@/utils/utils'
   import Highlight from '@/pages/oj/components/Highlight'
+  import SubmissionAnalysis from './SubmissionAnalysis'
+  import {isObject, sameId} from './submissionAnalysisData'
 
   export default {
     name: 'submissionDetails',
     components: {
-      Highlight
+      Highlight,
+      SubmissionAnalysis
     },
     data () {
       return {
@@ -75,11 +84,12 @@
             title: this.$i18n.t('m.Status'),
             align: 'center',
             render: (h, params) => {
-              return h('Tag', {
-                props: {
-                  color: JUDGE_STATUS[params.row.result].color
-                }
-              }, this.$i18n.t('m.' + JUDGE_STATUS[params.row.result].name.replace(/ /g, '_')))
+              const status = Object.prototype.hasOwnProperty.call(JUDGE_STATUS, params.row.result) ? JUDGE_STATUS[params.row.result] : null
+              return h(resolveComponent('Tag'), {
+
+                color: status ? status.color : 'blue'
+
+              }, () => (status ? this.$i18n.t('m.' + status.name.replace(/ /g, '_')) : '状态未知'))
             }
           },
           {
@@ -109,19 +119,40 @@
           }
         },
         isConcat: false,
-        loading: false
+        loading: false,
+        requestSequence: 0
       }
     },
     mounted () {
       this.getSubmission()
     },
+    beforeUnmount () {
+      this.requestSequence++
+    },
+    watch: {
+      '$route.params.id' () { this.getSubmission() },
+      '$store.getters.user.id' () { this.getSubmission() }
+    },
     methods: {
       getSubmission () {
+        const sequence = ++this.requestSequence
+        const id = this.$route.params.id
+        const userId = this.$store.getters.user.id
         this.loading = true
-        api.getSubmission(this.$route.params.id).then(res => {
+        this.submission = {result: null, code: '', statistic_info: {}, info: null}
+        this.columns = this.columns.slice(0, 4)
+        this.isConcat = false
+        api.getSubmission(id).then(res => {
+          if (sequence !== this.requestSequence || id !== this.$route.params.id || userId !== this.$store.getters.user.id) return
           this.loading = false
           let data = res.data.data
-          if (data.info && data.info.data && !this.isConcat) {
+          if (!isObject(data) || !sameId(data.id, id)) return
+          data = Object.assign({}, data, {
+            code: typeof data.code === 'string' ? data.code : '',
+            statistic_info: isObject(data.statistic_info) ? data.statistic_info : {},
+            info: isObject(data.info) && Array.isArray(data.info.data) && data.info.data.every(isObject) ? data.info : null
+          })
+          if (data.info && data.info.data.length && !this.isConcat) {
             // score exist means the submission is OI problem submission
             if (data.info.data[0].score !== undefined) {
               this.isConcat = true
@@ -154,7 +185,7 @@
           }
           this.submission = data
         }, () => {
-          this.loading = false
+          if (sequence === this.requestSequence) this.loading = false
         })
       },
       shareSubmission (shared) {
@@ -168,10 +199,12 @@
     },
     computed: {
       status () {
+        const status = Object.prototype.hasOwnProperty.call(JUDGE_STATUS, this.submission.result) ? JUDGE_STATUS[this.submission.result] : null
+        if (!status) return {type: 'info', statusName: '', color: 'blue', unknown: true}
         return {
-          type: JUDGE_STATUS[this.submission.result].type,
-          statusName: JUDGE_STATUS[this.submission.result].name,
-          color: JUDGE_STATUS[this.submission.result].color
+          type: status.type,
+          statusName: status.name,
+          color: status.color
         }
       },
       isCE () {

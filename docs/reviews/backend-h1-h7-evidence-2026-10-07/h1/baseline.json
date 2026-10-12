@@ -1,0 +1,143 @@
+{
+  "database": "xmuoj_h1",
+  "scope": "PostgreSQL real terminal transaction + outbox + profile replay; local bounded queues; excludes HTTP, sandbox, network and actual Dramatiq/Redis transport",
+  "started_at": "2026-10-07T08:36:51.121512+00:00",
+  "python": "3.11.15",
+  "postgres": "PostgreSQL 14.23 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+  "source_sha256": {
+    "backend/learning/ratings.py": "ac83072e78aa4a78a99f54e993468cd4b48ffd3aab81dbc9c78d2fac52a9754f",
+    "backend/learning/signals.py": "046bf825d5a8dfa01070b27bf53c1291652d83cd934ab12e9ea4ad44387e1228",
+    "backend/judge/dispatcher.py": "f28af69dc80ff3d4909db5d1fbb7a3a5f37b0bf7f297ad28c8e59c9e47bc951b",
+    "tools/benchmark_learning.py": "164c63a9a7e124b903cf9872e31284ae8bfae3254f087c2f4b91605ff93e00e4"
+  },
+  "slo_note": "Suggested local pilot SLO, not a production commitment; queue time is included",
+  "scenarios": [
+    {
+      "students": 60,
+      "history_before_burst": {
+        "min": 20,
+        "max": 20
+      },
+      "judge_threads": 4,
+      "learning_threads": 4,
+      "elapsed_s": 95.572,
+      "terminal_execution": {
+        "samples": 60,
+        "p50_ms": 4006.142,
+        "p95_ms": 5475.81,
+        "p99_ms": 5786.546,
+        "max_ms": 5786.546
+      },
+      "terminal_queue": {
+        "samples": 60,
+        "p50_ms": 27751.29,
+        "p95_ms": 57073.134,
+        "p99_ms": 58115.081,
+        "max_ms": 58115.081
+      },
+      "terminal_from_burst": {
+        "samples": 60,
+        "p50_ms": 33537.836,
+        "p95_ms": 61868.3,
+        "p99_ms": 63168.671,
+        "max_ms": 63168.671
+      },
+      "profile_from_commit": {
+        "samples": 58,
+        "p50_ms": 44905.089,
+        "p95_ms": 59766.663,
+        "p99_ms": 60209.633,
+        "max_ms": 60209.633
+      },
+      "profile_from_burst": {
+        "samples": 58,
+        "p50_ms": 78972.535,
+        "p95_ms": 94355.916,
+        "p99_ms": 95571.089,
+        "max_ms": 95571.089
+      },
+      "learning_job": {
+        "samples": 117,
+        "p50_ms": 3206.906,
+        "p95_ms": 5044.824,
+        "p99_ms": 5896.034,
+        "max_ms": 6148.55
+      },
+      "advisory_lock_query": {
+        "samples": 470,
+        "p50_ms": 10.325,
+        "p95_ms": 3868.118,
+        "p99_ms": 4910.729,
+        "max_ms": 5024.85
+      },
+      "row_lock_query": {
+        "samples": 412,
+        "p50_ms": 9.443,
+        "p95_ms": 25.563,
+        "p99_ms": 39.15,
+        "max_ms": 65.872
+      },
+      "knowledge_graph_lock_query": {
+        "samples": 178,
+        "p50_ms": 2899.597,
+        "p95_ms": 4622.124,
+        "p99_ms": 5018.286,
+        "max_ms": 5024.85
+      },
+      "learning_global_lock_query": {
+        "samples": 175,
+        "p50_ms": 7.294,
+        "p95_ms": 17.115,
+        "p99_ms": 24.646,
+        "max_ms": 26.514
+      },
+      "learning_path_lock_query": {
+        "samples": 117,
+        "p50_ms": 5.754,
+        "p95_ms": 10.413,
+        "p99_ms": 10.924,
+        "max_ms": 12.392
+      },
+      "postgres_lock_sampling": {
+        "interval_ms": 20,
+        "samples": 1658,
+        "max_waiters": 7,
+        "approx_session_wait_ms": 500850.879,
+        "events_seen": {
+          "advisory": 1646,
+          "transactionid": 4
+        }
+      },
+      "sql_statement_count": 6461,
+      "errors": [
+        {
+          "role": "learning",
+          "type": "ContractError"
+        }
+      ],
+      "sql_error_codes": {
+        "55P03": 3
+      },
+      "consistency": {
+        "committed_burst": true,
+        "observed_processed_burst": false,
+        "all_terminal_events_exist": false,
+        "all_revisions_processed": true,
+        "history_count": false,
+        "student_counts": false,
+        "legacy_user_counts": false,
+        "legacy_problem_counts": true,
+        "problem_rating_counts": true,
+        "deterministic_replay": true
+      },
+      "suggested_local_slo": {
+        "terminal_from_burst_p95_le_1000ms": false,
+        "profile_from_burst_p95_le_30000ms": false
+      }
+    }
+  ],
+  "limitations": [
+    "Stopped during 120-student scenario after the completed 60-student scenario showed lost outbox events; 120/240 baseline not completed.",
+    "legacy_user_counts baseline failure includes a fixture defect: historical legacy acm profile JSON was not initialized. It is not evidence of a production concurrency defect; corrected for after run."
+  ]
+}

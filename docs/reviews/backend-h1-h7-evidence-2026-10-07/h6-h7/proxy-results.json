@@ -1,0 +1,50 @@
+{
+  "untrusted_cannot_forge_proxy": {
+    "passed": true,
+    "detail": 308
+  },
+  "trusted_protocol_https": {
+    "passed": true,
+    "detail": {
+      "status": 200,
+      "headers": "HTTP/1.1 200 OK\nServer: nginx\nDate: Wed, 07 Oct 2026 09:50:05 GMT\nContent-Type: application/json;charset=UTF-8\nContent-Length: 291\nConnection: keep-alive\nX-Content-Type-Options: nosniff\nReferrer-Policy: same-origin\nX-Frame-Options: DENY\nVary: Cookie\nX-XSS-Protection: 1; mode=block\nX-Frame-Options: SAMEORIGIN\nX-Content-Type-Options: nosniff\nStrict-Transport-Security: max-age=3600"
+    }
+  },
+  "trusted_protocol_uppercase": {
+    "passed": true,
+    "detail": {
+      "status": 308,
+      "headers": "HTTP/1.1 308 Permanent Redirect\nServer: nginx\nDate: Wed, 07 Oct 2026 09:50:06 GMT\nContent-Type: text/html\nContent-Length: 164\nConnection: keep-alive\nLocation: https://127.0.0.1/api/website?probe=uppercase\nX-XSS-Protection: 1; mode=block\nX-Frame-Options: SAMEORIGIN\nX-Content-Type-Options: nosniff"
+    }
+  },
+  "trusted_protocol_comma": {
+    "passed": true,
+    "detail": {
+      "status": 308,
+      "headers": "HTTP/1.1 308 Permanent Redirect\nServer: nginx\nDate: Wed, 07 Oct 2026 09:50:07 GMT\nContent-Type: text/html\nContent-Length: 164\nConnection: keep-alive\nLocation: https://127.0.0.1/api/website?probe=comma\nX-XSS-Protection: 1; mode=block\nX-Frame-Options: SAMEORIGIN\nX-Content-Type-Options: nosniff"
+    }
+  },
+  "trusted_protocol_http": {
+    "passed": true,
+    "detail": {
+      "status": 308,
+      "headers": "HTTP/1.1 308 Permanent Redirect\nServer: nginx\nDate: Wed, 07 Oct 2026 09:50:08 GMT\nContent-Type: text/html\nContent-Length: 164\nConnection: keep-alive\nLocation: https://127.0.0.1/api/website?probe=http\nX-XSS-Protection: 1; mode=block\nX-Frame-Options: SAMEORIGIN\nX-Content-Type-Options: nosniff"
+    }
+  },
+  "trusted_client_ip_restored": {
+    "passed": true,
+    "detail": [
+      "203.0.113.9 - - [07/Oct/2026:09:50:05 +0000] \"GET /api/website?probe=https HTTP/1.1\" 200 291 \"-\" \"curl/8.22.0\" \"203.0.113.9\""
+    ]
+  },
+  "heartbeat_requires_token": {
+    "passed": true,
+    "detail": {
+      "status": 200,
+      "body": {
+        "error": "error",
+        "data": "Invalid token"
+      }
+    }
+  }
+}

@@ -7,8 +7,6 @@ COMPOSE_FILE="${COMPOSE_FILE:-$SCRIPT_DIR/../OnlineJudgeDeploy/docker-compose.ym
 SERVICE_NAME="${SERVICE_NAME:-oj-backend}"
 CHECK_URL="${CHECK_URL:-http://127.0.0.1/}"
 
-export NODE_OPTIONS="${NODE_OPTIONS:---openssl-legacy-provider}"
-
 if ! command -v docker >/dev/null 2>&1; then
   echo "docker is required" >&2
   exit 1
@@ -21,13 +19,8 @@ fi
 
 cd "$SCRIPT_DIR"
 
-if [[ ! -d node_modules ]]; then
-  echo "node_modules not found, installing dependencies..."
-  npm install --legacy-peer-deps
-fi
-
-echo "building frontend dll..."
-npm run build:dll
+echo "installing locked frontend dependencies (Node 24 required)..."
+npm ci --include=dev
 
 echo "building frontend dist..."
 npm run build

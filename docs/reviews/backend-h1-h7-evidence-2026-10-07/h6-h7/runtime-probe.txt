@@ -1,0 +1,21 @@
+direct_http_spoof_redirect PASS
+https_hsts PASS
+frontend_html PASS
+frontend_scripts PASS
+secure_cookies PASS
+csrf_rejection PASS
+import_retry_same_export PASS
+private_retryable_export PASS
+random_password_login PASS
+student_cannot_export PASS
+real_judgeserver_accepted PASS
+real_queue_profile PASS
+real_rejudge_idempotent PASS
+real_judge_offline_queued PASS
+real_judge_restart_recovers_queue PASS
+recovered_judge_updates_profile PASS
+real_path_generation PASS
+missing_model_explicit_503 PASS
+credential_disk_permissions PASS
+background_credentials_cleanup PASS
+All runtime checks passed; model/Embedding/Milvus real integration remains unverified.

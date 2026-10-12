@@ -1,0 +1,24 @@
+$ docker exec xmuoj-ai-test-postgres-20261007 pg_dump -U onlinejudge -d onlinejudge --format=custom --no-owner --no-acl
+$ docker exec xmuoj-ai-test-postgres-20261007 createdb -U onlinejudge --template=template0 xmuoj_rollback
+$ docker exec -i xmuoj-ai-test-postgres-20261007 pg_restore -U onlinejudge -d xmuoj_rollback --no-owner --no-acl --exit-on-error
+GUARD: migration executor connected exclusively to xmuoj_rollback PostgreSQL 14.23
+{
+  "clone": "xmuoj_rollback",
+  "reverse_migrations": [
+    "problem_import.0001_initial",
+    "learning.0002_align_learning_contract",
+    "learning.0001_initial",
+    "agent_service.0001_initial",
+    "knowledge.0002_immutable_history",
+    "knowledge.0001_initial",
+    "rag.0001_initial",
+    "account.0013_reconcile_existing_models",
+    "problem.0017_public_display_id_unique",
+    "problem.0016_reconcile_existing_models",
+    "submission.0013_reconcile_existing_models",
+    "contest.0013_reconcile_existing_models",
+    "options.0004_reconcile_existing_models"
+  ],
+  "new_table_count": 30,
+  "status": "clone_restored_plan_ready"
+}

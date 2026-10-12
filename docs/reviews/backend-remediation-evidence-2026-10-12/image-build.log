@@ -1,0 +1,27 @@
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon   21.1MB
+Step 1/13 : FROM python:3.12-alpine
+ ---> 1b668429b351
+Step 2/13 : ARG TARGETARCH
+ ---> Running in a9dc161f6c72
+ ---> Removed intermediate container a9dc161f6c72
+ ---> b97665266c01
+Step 3/13 : ARG TARGETVARIANT
+ ---> Running in ae6a2fa295e6
+ ---> Removed intermediate container ae6a2fa295e6
+ ---> 8f19f524db84
+Step 4/13 : ENV OJ_ENV production
+ ---> Running in 5bb9654fb7a2
+ ---> Removed intermediate container 5bb9654fb7a2
+ ---> 2aff9b547e19
+Step 5/13 : WORKDIR /app
+ ---> Running in 74104a6b7170
+ ---> Removed intermediate container 74104a6b7170
+ ---> 35b965d5b36f
+Step 6/13 : COPY backend/deploy/requirements.txt /app/deploy/
+ ---> 502040a5c652
+Step 7/13 : RUN --mount=type=cache,target=/etc/apk/cache,id=apk-cahce-$TARGETARCH$TARGETVARIANT-final     --mount=type=cache,target=/root/.cache/pip,id=pip-cahce-$TARGETARCH$TARGETVARIANT-final     sh -c "set -ex && apk add gcc libc-dev python3-dev libpq libpq-dev libjpeg-turbo libjpeg-turbo-dev zlib zlib-dev freetype freetype-dev supervisor openssl nginx curl unzip && pip install --upgrade pip==26.2.1 setuptools==83.0.0 && pip install -r /app/deploy/requirements.txt && apk del gcc libc-dev python3-dev libpq-dev libjpeg-turbo-dev zlib-dev freetype-dev"
+the --mount option requires BuildKit. Refer to https://docs.docker.com/go/buildkit/ to learn how to build images with BuildKit enabled

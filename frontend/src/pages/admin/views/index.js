@@ -12,8 +12,14 @@ import Login from './general/Login.vue'
 import Home from './Home.vue'
 import ProblemImportOrExport from './problem/ImportAndExport.vue'
 import ProblemTagGovernance from './problem/ProblemTagGovernance.vue'
+import KnowledgeList from './knowledge/KnowledgeList.vue'
+import KnowledgeDetail from './knowledge/KnowledgeDetail.vue'
+import KnowledgeGraph from './knowledge/KnowledgeGraph.vue'
+import ProblemKnowledge from './knowledge/ProblemKnowledge.vue'
+import KnowledgeReviews from './knowledge/KnowledgeReviews.vue'
 
 export {
   Announcement, User, Conf, JudgeServer, Problem, ProblemList, Contest,
-  ContestList, Login, Home, PruneTestCase, Dashboard, ProblemImportOrExport, ProblemTagGovernance
+  ContestList, Login, Home, PruneTestCase, Dashboard, ProblemImportOrExport, ProblemTagGovernance,
+  KnowledgeList, KnowledgeDetail, KnowledgeGraph, ProblemKnowledge, KnowledgeReviews
 }

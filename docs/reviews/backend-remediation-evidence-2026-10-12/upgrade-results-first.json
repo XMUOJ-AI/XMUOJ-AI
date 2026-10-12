@@ -1,0 +1,12 @@
+[
+  {
+    "check": "upgrade-old-migrate",
+    "exit_code": 0,
+    "elapsed_seconds": 3.169
+  },
+  {
+    "check": "upgrade-seed",
+    "exit_code": 1,
+    "elapsed_seconds": 0.243
+  }
+]

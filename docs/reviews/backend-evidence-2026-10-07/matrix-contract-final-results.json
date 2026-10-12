@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-07",
+  "scope": "working contracts and matrix checks; not sign-off",
+  "checks": [
+    {
+      "check": "matrix_http_rows",
+      "status": "passed",
+      "count": 34
+    },
+    {
+      "check": "matrix_model_rows",
+      "status": "passed",
+      "count": 28
+    },
+    {
+      "check": "matrix_tool_rows",
+      "status": "passed",
+      "count": 17
+    },
+    {
+      "check": "matrix_flow_rows",
+      "status": "passed",
+      "count": 11
+    },
+    {
+      "check": "named_test_references_exist",
+      "status": "passed"
+    },
+    {
+      "check": "explicit_backend_file_and_symbol_references_exist",
+      "status": "passed"
+    },
+    {
+      "check": "markdown_links_exist",
+      "status": "passed"
+    },
+    {
+      "check": "baseline_model_classes_exist",
+      "status": "passed",
+      "count": 28
+    },
+    {
+      "check": "openapi_agent-api-v1.yaml",
+      "status": "passed",
+      "operation_count": 4,
+      "version": "1.0.0"
+    },
+    {
+      "check": "openapi_knowledge-api-v1.yaml",
+      "status": "passed",
+      "operation_count": 19,
+      "version": "0.9.9"
+    },
+    {
+      "check": "openapi_learning-api-v1.yaml",
+      "status": "passed",
+      "operation_count": 6,
+      "version": "1.0.0"
+    },
+    {
+      "check": "openapi_problem-import-api-v1.yaml",
+      "status": "passed",
+      "operation_count": 5,
+      "version": "1.0.0"
+    },
+    {
+      "check": "learning_all_five_gets_declare_400_and_refresh_declares_csrf_403",
+      "status": "passed"
+    },
+    {
+      "check": "registered_tools",
+      "status": "passed",
+      "unique_names": 17,
+      "unique_signatures": 18
+    },
+    {
+      "check": "actual_learning_http_responses_match_declared_schemas",
+      "status": "passed",
+      "count": 12
+    }
+  ]
+}

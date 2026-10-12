@@ -1,7 +1,7 @@
 <template>
   <div>
     <Panel>
-      <div slot="title" class="title-bar">
+      <template #title><div class="title-bar">
         <span>{{$t('m.Problems_List')}}</span>
         <span v-if="isAuthenticated" class="progress-stats">
           ({{ completedCount }}/{{ problems.length }})
@@ -12,26 +12,26 @@
           size="small"
           class="hide-completed-switch"
           @on-change="onHideCompletedChange">
-          <span slot="open">{{$t('m.Show_All')}}</span>
-          <span slot="close">{{$t('m.Hide_Completed')}}</span>
+          <template #open><span>{{$t('m.Show_All')}}</span></template>
+          <template #close><span>{{$t('m.Hide_Completed')}}</span></template>
         </i-switch>
         <div class="view-toggles">
           <div class="view-mode-switch">
             <span class="view-mode-label">{{$t('m.Show_Source')}}</span>
             <i-switch v-model="showSourceColumn" size="small" @on-change="onToggleChange">
-              <span slot="open">{{$t('m.On')}}</span>
-              <span slot="close">{{$t('m.Off')}}</span>
+              <template #open><span>{{$t('m.On')}}</span></template>
+              <template #close><span>{{$t('m.Off')}}</span></template>
             </i-switch>
           </div>
           <div class="view-mode-switch">
             <span class="view-mode-label">{{$t('m.Study_View')}}</span>
             <i-switch v-model="showTagColumn" size="small" @on-change="onToggleChange">
-              <span slot="open">{{$t('m.On')}}</span>
-              <span slot="close">{{$t('m.Off')}}</span>
+              <template #open><span>{{$t('m.On')}}</span></template>
+              <template #close><span>{{$t('m.Off')}}</span></template>
             </i-switch>
           </div>
         </div>
-      </div>
+      </div></template>
       <Table v-if="contestRuleType == 'ACM' || OIContestRealTimePermission"
              :columns="ACMTableColumns"
              :data="displayProblems"
@@ -47,6 +47,8 @@
 </template>
 
 <script>
+  import { resolveComponent } from 'vue'
+
   import {mapState, mapGetters} from 'vuex'
   import {ProblemMixin} from '@oj/components/mixins'
   import utils from '@/utils/utils'
@@ -101,13 +103,13 @@
         let color = 'blue'
         if (d === 'Low') color = 'green'
         else if (d === 'High') color = 'yellow'
-        return h('Tag', { props: { color } }, this.$i18n.t('m.' + d))
+        return h(resolveComponent('Tag'), { color }, () => (this.$i18n.t('m.' + d)))
       },
       renderSource (h, params) {
         const source = params.row.source || '-'
         return h('span', {
           class: 'table-source-pill',
-          attrs: { title: source }
+          title: source
         }, source)
       },
       renderTagSummary (h, params) {
@@ -118,17 +120,17 @@
         const primaryTag = tags[0]
         const children = [h('span', {
           class: 'table-tag-chip table-tag-chip-primary',
-          attrs: { title: primaryTag }
+          title: primaryTag
         }, primaryTag)]
         if (tags.length > 1) {
           children.push(h('span', {
             class: 'table-tag-chip table-tag-chip-more',
-            attrs: { title: tags.slice(1).join(' / ') }
+            title: tags.slice(1).join(' / ')
           }, '+' + (tags.length - 1)))
         }
         return h('div', {
           class: 'table-tag-list',
-          attrs: { title: tags.join(' / ') }
+          title: tags.join(' / ')
         }, children)
       }
     },
@@ -158,8 +160,8 @@
             render: (h, params) => {
               let status = params.row.my_status
               if (status === null || status === undefined) return undefined
-              return h('Icon', {
-                props: { type: status === 0 ? 'checkmark-round' : 'minus-round', size: '16' },
+              return h(resolveComponent('Icon'), {
+                type: status === 0 ? 'checkmark-round' : 'minus-round', size: '16' ,
                 style: { color: status === 0 ? '#19be6b' : '#ed3f14' }
               })
             }

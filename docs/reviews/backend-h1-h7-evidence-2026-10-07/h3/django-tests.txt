@@ -1,0 +1,21 @@
+Creating test database for alias 'default'...
+Django VERSION (3, 2, 25, 'final', 0)
+System check identified no issues (0 silenced).
+....................Recovered 0 learning events
+Recovered 1 learning events
+Recovered 0 learning events
+.Recovered 0 learning events
+Recovered 1 learning events
+.Recovered 1 learning events
+Recovered 1 learning events
+Recovered 1 learning events
+Recovered 1 learning events
+.Updated class owned (f1241e47-6f84-4fac-a2f9-432827a7e279); merged 1 teachers and 1 students
+..Recovered 1 learning events
+...Updated class test-class (105603f6-9955-44b7-a0e3-597300bc1a33); merged 1 teachers and 1 students
+....
+----------------------------------------------------------------------
+Ran 32 tests in 25.159s
+
+OK
+Destroying test database for alias 'default'...

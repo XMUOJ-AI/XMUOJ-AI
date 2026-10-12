@@ -1,0 +1,555 @@
+{
+  "database": "xmuoj_h1",
+  "scope": "PostgreSQL real terminal transaction + outbox + profile replay; local bounded queues; excludes HTTP, sandbox, network and actual Dramatiq/Redis transport",
+  "started_at": "2026-10-07T08:55:09.934729+00:00",
+  "python": "3.11.15",
+  "postgres": "PostgreSQL 14.23 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+  "source_sha256": {
+    "backend/learning/ratings.py": "9ba18f30b187eee107fcb00c1a04e58be1e08ddeb0363e20dc95784e71567e81",
+    "backend/learning/signals.py": "3bb634b59ebaafcfc8bc4aef5d2538f1c2166afe7ec5c5014a2f063918d92018",
+    "backend/judge/dispatcher.py": "f28af69dc80ff3d4909db5d1fbb7a3a5f37b0bf7f297ad28c8e59c9e47bc951b",
+    "backend/judge/tasks.py": "3f65edc3115d0626d57cebe17881571b6bf04cae579d6e8f650da5d989523b85",
+    "backend/submission/models.py": "f1dd50f440f8ce3c214e7dea6ab1cd826e9ccc8f9d29beb3e3df72edd67c6777",
+    "tools/benchmark_learning.py": "8d8184a143b6980465a8c7e15a63c973ececc711a449bdf1c606b2e2dec9a803"
+  },
+  "slo_note": "Suggested local pilot SLO, not a production commitment; queue time is included",
+  "scenarios": [
+    {
+      "students": 60,
+      "history_before_burst": {
+        "min": 20,
+        "max": 20
+      },
+      "judge_threads": 4,
+      "learning_threads": 4,
+      "elapsed_s": 84.331,
+      "terminal_execution": {
+        "samples": 60,
+        "p50_ms": 3869.778,
+        "p95_ms": 5923.374,
+        "p99_ms": 11574.611,
+        "max_ms": 11574.611
+      },
+      "terminal_queue": {
+        "samples": 60,
+        "p50_ms": 30034.255,
+        "p95_ms": 57791.227,
+        "p99_ms": 60020.387,
+        "max_ms": 60020.387
+      },
+      "terminal_from_burst": {
+        "samples": 60,
+        "p50_ms": 35088.425,
+        "p95_ms": 60330.863,
+        "p99_ms": 63073.351,
+        "max_ms": 63073.351
+      },
+      "profile_from_commit": {
+        "samples": 60,
+        "p50_ms": 29133.988,
+        "p95_ms": 58335.134,
+        "p99_ms": 59037.182,
+        "max_ms": 59037.182
+      },
+      "profile_from_burst": {
+        "samples": 60,
+        "p50_ms": 66537.444,
+        "p95_ms": 82591.484,
+        "p99_ms": 84330.787,
+        "max_ms": 84330.787
+      },
+      "learning_job": {
+        "samples": 120,
+        "p50_ms": 2406.043,
+        "p95_ms": 5384.777,
+        "p99_ms": 9854.254,
+        "max_ms": 15661.631
+      },
+      "advisory_lock_query": {
+        "samples": 462,
+        "p50_ms": 13.038,
+        "p95_ms": 4353.604,
+        "p99_ms": 5007.457,
+        "max_ms": 5027.82
+      },
+      "row_lock_query": {
+        "samples": 180,
+        "p50_ms": 13.791,
+        "p95_ms": 35.282,
+        "p99_ms": 76.962,
+        "max_ms": 90.563
+      },
+      "knowledge_graph_lock_query": {
+        "samples": 184,
+        "p50_ms": 2485.702,
+        "p95_ms": 4824.607,
+        "p99_ms": 5024.406,
+        "max_ms": 5027.82
+      },
+      "learning_global_lock_query": {
+        "samples": 180,
+        "p50_ms": 9.768,
+        "p95_ms": 19.614,
+        "p99_ms": 27.495,
+        "max_ms": 28.918
+      },
+      "learning_path_lock_query": {
+        "samples": 98,
+        "p50_ms": 7.397,
+        "p95_ms": 15.416,
+        "p99_ms": 31.452,
+        "max_ms": 31.452
+      },
+      "postgres_lock_sampling": {
+        "interval_ms": 20,
+        "samples": 1288,
+        "max_waiters": 7,
+        "approx_session_wait_ms": 462964.828,
+        "events_seen": {
+          "advisory": 1279
+        }
+      },
+      "sql_statement_count": 4153,
+      "retries": [
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "judge",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 2
+        }
+      ],
+      "errors": [],
+      "sql_error_codes": {
+        "55P03": 4
+      },
+      "consistency": {
+        "committed_burst": true,
+        "observed_processed_burst": true,
+        "all_terminal_events_exist": true,
+        "all_revisions_processed": true,
+        "history_count": true,
+        "student_counts": true,
+        "legacy_user_counts": true,
+        "legacy_problem_counts": true,
+        "problem_rating_counts": true,
+        "deterministic_replay": true
+      },
+      "suggested_local_slo": {
+        "terminal_from_burst_p95_le_1000ms": false,
+        "profile_from_burst_p95_le_30000ms": false
+      }
+    },
+    {
+      "students": 120,
+      "history_before_burst": {
+        "min": 20,
+        "max": 21
+      },
+      "judge_threads": 4,
+      "learning_threads": 4,
+      "elapsed_s": 174.362,
+      "terminal_execution": {
+        "samples": 120,
+        "p50_ms": 4217.987,
+        "p95_ms": 5219.754,
+        "p99_ms": 5512.69,
+        "max_ms": 5745.746
+      },
+      "terminal_queue": {
+        "samples": 120,
+        "p50_ms": 59468.816,
+        "p95_ms": 113565.952,
+        "p99_ms": 119174.871,
+        "max_ms": 120088.98
+      },
+      "terminal_from_burst": {
+        "samples": 120,
+        "p50_ms": 62421.298,
+        "p95_ms": 118348.245,
+        "p99_ms": 123451.579,
+        "max_ms": 123866.419
+      },
+      "profile_from_commit": {
+        "samples": 120,
+        "p50_ms": 86691.196,
+        "p95_ms": 118916.345,
+        "p99_ms": 121642.031,
+        "max_ms": 121782.034
+      },
+      "profile_from_burst": {
+        "samples": 120,
+        "p50_ms": 137745.936,
+        "p95_ms": 170505.23,
+        "p99_ms": 173273.017,
+        "max_ms": 174239.243
+      },
+      "learning_job": {
+        "samples": 240,
+        "p50_ms": 2783.017,
+        "p95_ms": 5284.083,
+        "p99_ms": 9619.33,
+        "max_ms": 10418.037
+      },
+      "advisory_lock_query": {
+        "samples": 931,
+        "p50_ms": 12.714,
+        "p95_ms": 3909.929,
+        "p99_ms": 4855.031,
+        "max_ms": 5039.149
+      },
+      "row_lock_query": {
+        "samples": 360,
+        "p50_ms": 14.221,
+        "p95_ms": 35.399,
+        "p99_ms": 50.36,
+        "max_ms": 60.194
+      },
+      "knowledge_graph_lock_query": {
+        "samples": 363,
+        "p50_ms": 2848.155,
+        "p95_ms": 4661.858,
+        "p99_ms": 4955.71,
+        "max_ms": 5039.149
+      },
+      "learning_global_lock_query": {
+        "samples": 360,
+        "p50_ms": 10.198,
+        "p95_ms": 19.509,
+        "p99_ms": 27.066,
+        "max_ms": 34.034
+      },
+      "learning_path_lock_query": {
+        "samples": 208,
+        "p50_ms": 7.408,
+        "p95_ms": 12.578,
+        "p99_ms": 14.42,
+        "max_ms": 18.968
+      },
+      "postgres_lock_sampling": {
+        "interval_ms": 20,
+        "samples": 2622,
+        "max_waiters": 7,
+        "approx_session_wait_ms": 950732.522,
+        "events_seen": {
+          "advisory": 2621
+        }
+      },
+      "sql_statement_count": 8441,
+      "retries": [
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        }
+      ],
+      "errors": [],
+      "sql_error_codes": {
+        "55P03": 3
+      },
+      "consistency": {
+        "committed_burst": true,
+        "observed_processed_burst": true,
+        "all_terminal_events_exist": true,
+        "all_revisions_processed": true,
+        "history_count": true,
+        "student_counts": true,
+        "legacy_user_counts": true,
+        "legacy_problem_counts": true,
+        "problem_rating_counts": true,
+        "deterministic_replay": true
+      },
+      "suggested_local_slo": {
+        "terminal_from_burst_p95_le_1000ms": false,
+        "profile_from_burst_p95_le_30000ms": false
+      }
+    },
+    {
+      "students": 240,
+      "history_before_burst": {
+        "min": 20,
+        "max": 22
+      },
+      "judge_threads": 4,
+      "learning_threads": 4,
+      "elapsed_s": 329.159,
+      "terminal_execution": {
+        "samples": 240,
+        "p50_ms": 4503.994,
+        "p95_ms": 7570.877,
+        "p99_ms": 11236.115,
+        "max_ms": 17169.184
+      },
+      "terminal_queue": {
+        "samples": 240,
+        "p50_ms": 159283.741,
+        "p95_ms": 271103.69,
+        "p99_ms": 283602.879,
+        "max_ms": 285314.231
+      },
+      "terminal_from_burst": {
+        "samples": 240,
+        "p50_ms": 167757.679,
+        "p95_ms": 276825.48,
+        "p99_ms": 287088.139,
+        "max_ms": 289320.984
+      },
+      "profile_from_commit": {
+        "samples": 240,
+        "p50_ms": 5776.996,
+        "p95_ms": 278193.084,
+        "p99_ms": 284570.651,
+        "max_ms": 288490.555
+      },
+      "profile_from_burst": {
+        "samples": 240,
+        "p50_ms": 243304.689,
+        "p95_ms": 315820.141,
+        "p99_ms": 319720.071,
+        "max_ms": 324014.289
+      },
+      "learning_job": {
+        "samples": 480,
+        "p50_ms": 2347.731,
+        "p95_ms": 6026.357,
+        "p99_ms": 11579.377,
+        "max_ms": 17777.613
+      },
+      "advisory_lock_query": {
+        "samples": 1788,
+        "p50_ms": 14.753,
+        "p95_ms": 4589.912,
+        "p99_ms": 5023.551,
+        "max_ms": 5055.731
+      },
+      "row_lock_query": {
+        "samples": 720,
+        "p50_ms": 14.462,
+        "p95_ms": 38.615,
+        "p99_ms": 65.043,
+        "max_ms": 107.228
+      },
+      "knowledge_graph_lock_query": {
+        "samples": 758,
+        "p50_ms": 2918.568,
+        "p95_ms": 5011.491,
+        "p99_ms": 5036.266,
+        "max_ms": 5055.731
+      },
+      "learning_global_lock_query": {
+        "samples": 720,
+        "p50_ms": 9.936,
+        "p95_ms": 20.389,
+        "p99_ms": 28.51,
+        "max_ms": 42.177
+      },
+      "learning_path_lock_query": {
+        "samples": 310,
+        "p50_ms": 7.206,
+        "p95_ms": 14.271,
+        "p99_ms": 18.978,
+        "max_ms": 20.076
+      },
+      "postgres_lock_sampling": {
+        "interval_ms": 20,
+        "samples": 4604,
+        "max_waiters": 7,
+        "approx_session_wait_ms": 1959903.036,
+        "events_seen": {
+          "advisory": 4603
+        }
+      },
+      "sql_statement_count": 15611,
+      "retries": [
+        {
+          "role": "judge",
+          "attempt": 1
+        },
+        {
+          "role": "judge",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "judge",
+          "attempt": 1
+        },
+        {
+          "role": "judge",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "judge",
+          "attempt": 1
+        },
+        {
+          "role": "judge",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 2
+        },
+        {
+          "role": "judge",
+          "attempt": 1
+        },
+        {
+          "role": "judge",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 2
+        },
+        {
+          "role": "learning",
+          "attempt": 2
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "judge",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "judge",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "judge",
+          "attempt": 1
+        },
+        {
+          "role": "judge",
+          "attempt": 2
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "judge",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        },
+        {
+          "role": "learning",
+          "attempt": 1
+        }
+      ],
+      "errors": [],
+      "sql_error_codes": {
+        "55P03": 38
+      },
+      "consistency": {
+        "committed_burst": true,
+        "observed_processed_burst": true,
+        "all_terminal_events_exist": true,
+        "all_revisions_processed": true,
+        "history_count": true,
+        "student_counts": true,
+        "legacy_user_counts": true,
+        "legacy_problem_counts": true,
+        "problem_rating_counts": true,
+        "deterministic_replay": true
+      },
+      "suggested_local_slo": {
+        "terminal_from_burst_p95_le_1000ms": false,
+        "profile_from_burst_p95_le_30000ms": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+Django VERSION (3, 2, 25, 'final', 0)
+System check identified no issues (0 silenced).
+No broken requirements found.
+Django VERSION (3, 2, 25, 'final', 0)
+Creating test database for alias 'default'...
+System check identified no issues (0 silenced).
+....
+----------------------------------------------------------------------
+Ran 4 tests in 16.186s
+
+OK
+Destroying test database for alias 'default'...

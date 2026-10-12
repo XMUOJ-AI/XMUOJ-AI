@@ -1,0 +1,328 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xmuoj.example/schemas/problem-import-v1.schema.json",
+  "title": "XMUOJ-AI standardized problem record",
+  "description": "Leader-compatible schema for one standardized problem record in the collection/audit JSONL intermediate layer.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_platform",
+    "source_id",
+    "source_url",
+    "title",
+    "title_cn",
+    "description_html",
+    "input_description_html",
+    "output_description_html",
+    "samples",
+    "time_limit_ms",
+    "memory_limit_mb",
+    "difficulty_original",
+    "difficulty_unified",
+    "initial_problem_rating",
+    "tags_original",
+    "tags_unified",
+    "knowledge_candidates",
+    "duplicate_of",
+    "review_status",
+    "collected_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "problem_key": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{1,150}$"
+    },
+    "source_platform": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,49}$"
+    },
+    "source_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "source_url": {
+      "type": "string",
+      "format": "uri",
+      "maxLength": 2000
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "title_cn": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "description_html": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 524288
+    },
+    "input_description_html": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 131072
+    },
+    "output_description_html": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 131072
+    },
+    "hint_html": {
+      "type": ["string", "null"],
+      "maxLength": 131072
+    },
+    "samples": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "$ref": "#/$defs/sample"
+      }
+    },
+    "time_limit_ms": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60000
+    },
+    "memory_limit_mb": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4096
+    },
+    "rule_type": {
+      "enum": ["ACM", "OI"]
+    },
+    "difficulty_original": {
+      "type": ["string", "null"],
+      "maxLength": 100
+    },
+    "difficulty_unified": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "initial_problem_rating": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "maximum": 4000
+    },
+    "tags_original": {
+      "type": "array",
+      "maxItems": 50,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      }
+    },
+    "tags_unified": {
+      "type": "array",
+      "maxItems": 30,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      }
+    },
+    "knowledge_candidates": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "$ref": "#/$defs/knowledgeCandidateName"
+      }
+    },
+    "allowed_languages": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 30,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
+      }
+    },
+    "assets": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "$ref": "#/$defs/asset"
+      }
+    },
+    "judge_data": {
+      "$ref": "#/$defs/judgeData"
+    },
+    "raw_data_path": {
+      "type": ["string", "null"],
+      "pattern": "^(?:raw|metadata/raw)/(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+\\.json$",
+      "maxLength": 300
+    },
+    "content_hash": {
+      "$ref": "#/$defs/sha256"
+    },
+    "duplicate_of": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/duplicateOf"}
+      ]
+    },
+    "review_status": {
+      "enum": ["pending", "approved", "rejected"]
+    },
+    "collected_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "safeRelativePath": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$",
+      "maxLength": 300
+    },
+    "sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "output"],
+      "properties": {
+        "input": {
+          "type": "string",
+          "maxLength": 262144
+        },
+        "output": {
+          "type": "string",
+          "maxLength": 262144
+        }
+      }
+    },
+    "knowledgeCandidateName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["logical_name", "path", "media_type", "sha256", "size_bytes"],
+      "properties": {
+        "logical_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "path": {
+          "allOf": [
+            {"$ref": "#/$defs/safeRelativePath"},
+            {"pattern": "^assets/"}
+          ]
+        },
+        "media_type": {
+          "enum": ["image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml"]
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20971520
+        }
+      }
+    },
+    "judgeData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "testcase_manifest_path"],
+      "properties": {
+        "status": {
+          "enum": ["ready", "statement_only", "needs_review"]
+        },
+        "testcase_manifest_path": {
+          "type": ["string", "null"],
+          "pattern": "^testcases/[A-Za-z0-9._-]{1,150}/manifest\\.json$",
+          "maxLength": 300
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"status": {"const": "statement_only"}},
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {"testcase_manifest_path": {"type": "null"}}
+          }
+        },
+        {
+          "if": {
+            "properties": {"status": {"enum": ["ready", "needs_review"]}},
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {"testcase_manifest_path": {"type": "string"}}
+          }
+        }
+      ]
+    },
+    "duplicateOf": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_platform", "source_id", "reason"],
+      "properties": {
+        "source_platform": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{0,49}$"
+        },
+        "source_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "reason": {
+          "enum": ["same_source", "same_content_hash", "same_statement_and_tests", "manual_review"]
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["collector", "license", "attribution_required", "permission_note"],
+      "properties": {
+        "collector": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "attribution_required": {
+          "type": "boolean"
+        },
+        "permission_note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      }
+    }
+  }
+}

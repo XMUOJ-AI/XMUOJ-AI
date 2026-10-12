@@ -2,26 +2,26 @@
   <div class="setting-main">
     <p class="section-title">{{$t('m.Sessions')}}</p>
     <div class="flex-container setting-content">
-      <template v-for="session in sessions">
+      <template v-for="session in sessions" :key="session.session_key">
         <Card :padding="20" class="flex-child">
-          <span slot="title" style="line-height: 20px">{{session.ip}}</span>
-          <div slot="extra">
+          <template #title><span style="line-height: 20px">{{session.ip}}</span></template>
+          <template #extra><div>
             <Tag v-if="session.current_session" color="green">{{$t('m.Current')}}</Tag>
             <Button v-else
                     type="warning"
                     size="small"
                     @click="deleteSession(session.session_key)">{{$t('m.Revoke')}}
             </Button>
-          </div>
+          </div></template>
           <Form :label-width="100">
             <FormItem label="OS :" class="item">
-              {{session.user_agent | platform}}
+              {{ platform(session.user_agent) }}
             </FormItem>
             <FormItem label="Browser :" class="item">
-              {{session.user_agent | browser}}
+              {{ browser(session.user_agent) }}
             </FormItem>
             <FormItem label="Last Activity :" class="item">
-              {{session.last_activity | localtime }}
+              {{ $filters.localtime(session.last_activity) }}
             </FormItem>
           </Form>
         </Card>
@@ -85,91 +85,45 @@
         qrcodeSrc: '',
         loadingQRcode: false,
         loadingBtn: false,
+        securityEpoch: 0,
+        securityAlive: true,
+        securityAccountId: null,
+        securityTFAOpened: false,
         formTwoFactor: {
           code: ''
         },
         sessions: []
       }
     },
-    mounted () {
-      this.getSessions()
-      if (!this.TFAOpened) {
-        this.getAuthImg()
+    watch: {
+      securityIdentity: {
+        immediate: true,
+        handler () {
+          this.securityEpoch++
+          this.securityAccountId = this.user.id == null ? null : String(this.user.id)
+          this.securityTFAOpened = !!this.user.two_factor_auth
+          this.sessions = []
+          this.qrcodeSrc = ''
+          this.formTwoFactor.code = ''
+          this.loadingQRcode = false
+          this.loadingBtn = false
+          if (!this.user.id) return
+          this.getSessions()
+          if (!this.TFAOpened) this.getAuthImg()
+        }
       }
+    },
+    beforeUnmount () {
+      this.securityAlive = false
+      this.securityEpoch++
     },
     methods: {
-      ...mapActions(['getProfile']),
-      getAuthImg () {
-        this.loadingQRcode = true
-        api.twoFactorAuth('get').then(res => {
-          this.loadingQRcode = false
-          this.qrcodeSrc = res.data.data
-        })
+      currentSecurity (epoch) {
+        const user = this.$store.getters.user
+        const accountId = user.id == null ? null : String(user.id)
+        return this.securityAlive && epoch === this.securityEpoch && accountId !== null &&
+          accountId === this.securityAccountId && !!user.two_factor_auth === this.securityTFAOpened
       },
-      getSessions () {
-        api.getSessions().then(res => {
-          let data = res.data.data
-          // 将当前session放到第一个
-          let sessions = data.filter(session => {
-            return session.current_session
-          })
-          data.forEach(session => {
-            if (!session.current_session) {
-              sessions.push(session)
-            }
-          })
-          this.sessions = sessions
-        })
-      },
-      deleteSession (sessionKey) {
-        this.$Modal.confirm({
-          title: 'Confirm',
-          content: 'Are you sure to revoke the session?',
-          onOk: () => {
-            api.deleteSession(sessionKey).then(res => {
-              this.getSessions()
-            }, _ => {
-            })
-          }
-        })
-      },
-      closeTFA () {
-        this.$Modal.confirm({
-          title: 'Confirm',
-          content: 'Two-factor Authentication is a powerful tool to protect your account, are you sure to close it?',
-          onOk: () => {
-            this.updateTFA(true)
-          }
-        })
-      },
-      updateTFA (close) {
-        let method = close === false ? 'post' : 'put'
-        this.loadingBtn = true
-        api.twoFactorAuth(method, this.formTwoFactor).then(res => {
-          this.loadingBtn = false
-          this.getProfile()
-          if (close === true) {
-            this.getAuthImg()
-            this.formTwoFactor.code = ''
-          }
-          this.formTwoFactor.code = ''
-        }, err => {
-          this.formTwoFactor.code = ''
-          this.loadingBtn = false
-          if (err.data.data.indexOf('session') > -1) {
-            this.getProfile()
-            this.getAuthImg()
-          }
-        })
-      }
-    },
-    computed: {
-      ...mapGetters(['user']),
-      TFAOpened () {
-        return this.user && this.user.two_factor_auth
-      }
-    },
-    filters: {
       browser (value) {
         let b = loadBrowser(value)
         if (b.name && b.version) {
@@ -181,6 +135,90 @@
       platform (value) {
         let b = loadBrowser(value)
         return b.os ? b.os : 'Unknown'
+      },
+
+      ...mapActions(['getProfile']),
+      getAuthImg () {
+        const epoch = this.securityEpoch
+        if (!this.currentSecurity(epoch) || this.TFAOpened) return
+        this.loadingQRcode = true
+        api.twoFactorAuth('get').then(res => {
+          if (!this.currentSecurity(epoch)) return
+          this.loadingQRcode = false
+          this.qrcodeSrc = res.data.data
+        }).catch(() => {
+          if (this.currentSecurity(epoch)) this.loadingQRcode = false
+        })
+      },
+      getSessions () {
+        const epoch = this.securityEpoch
+        if (!this.currentSecurity(epoch)) return
+        api.getSessions().then(res => {
+          if (!this.currentSecurity(epoch)) return
+          let data = res.data.data
+          // 将当前session放到第一个
+          let sessions = data.filter(session => {
+            return session.current_session
+          })
+          data.forEach(session => {
+            if (!session.current_session) {
+              sessions.push(session)
+            }
+          })
+          this.sessions = sessions
+        }).catch(() => {})
+      },
+      deleteSession (sessionKey) {
+        const epoch = this.securityEpoch
+        this.$Modal.confirm({
+          title: 'Confirm',
+          content: 'Are you sure to revoke the session?',
+          onOk: () => {
+            if (!this.currentSecurity(epoch)) return
+            api.deleteSession(sessionKey).then(res => {
+              if (this.currentSecurity(epoch)) this.getSessions()
+            }, _ => {
+            })
+          }
+        })
+      },
+      closeTFA () {
+        const epoch = this.securityEpoch
+        this.$Modal.confirm({
+          title: 'Confirm',
+          content: 'Two-factor Authentication is a powerful tool to protect your account, are you sure to close it?',
+          onOk: () => {
+            if (this.currentSecurity(epoch)) this.updateTFA(true)
+          }
+        })
+      },
+      updateTFA (close) {
+        const epoch = this.securityEpoch
+        if (!this.currentSecurity(epoch)) return
+        let method = close === false ? 'post' : 'put'
+        this.loadingBtn = true
+        api.twoFactorAuth(method, this.formTwoFactor).then(res => {
+          if (!this.currentSecurity(epoch)) return
+          this.loadingBtn = false
+          this.getProfile()
+          this.formTwoFactor.code = ''
+        }, err => {
+          if (!this.currentSecurity(epoch)) return
+          this.formTwoFactor.code = ''
+          this.loadingBtn = false
+          const message = err && err.data && err.data.data
+          if (typeof message === 'string' && message.indexOf('session') > -1) {
+            this.getProfile()
+            this.getAuthImg()
+          }
+        })
+      }
+    },
+    computed: {
+      ...mapGetters(['user']),
+      securityIdentity () { return JSON.stringify([this.user.id || null, !!this.user.two_factor_auth]) },
+      TFAOpened () {
+        return this.user && this.user.two_factor_auth
       }
     }
   }

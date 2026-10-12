@@ -75,6 +75,9 @@ data/config/*
 
 http_locations.conf
 https_locations.conf
+https_protocol.conf
+https_proxy_guard.conf
+data/user_credentials/
 
 venv/
 #test docker-compose

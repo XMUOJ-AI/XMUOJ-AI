@@ -8,7 +8,9 @@
 
 <script>
   export default {
-    name: 'VerticalMenu'
+    name: 'VerticalMenu',
+    emits: ['on-click'],
+    provide () { return { selectVerticalMenu: route => this.$emit('on-click', route) } }
   }
 </script>
 

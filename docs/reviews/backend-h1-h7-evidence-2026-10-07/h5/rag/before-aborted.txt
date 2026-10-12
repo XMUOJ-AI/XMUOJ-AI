@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/docs/reviews/backend-h1-h7-evidence-2026-10-07/h5/rag/benchmark.py", line 161, in <module>
+    variants = ("original_or",) if args.stage == "before" else ("original_or", "global_union", "scoped_union")
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/docs/reviews/backend-h1-h7-evidence-2026-10-07/h5/rag/benchmark.py", line 134, in measure
+    cursor.execute(sql, params)
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 98, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 66, in execute
+    return self._execute_with_wrappers(sql, params, many=False, executor=self._execute)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 75, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/.venv/lib/python3.11/site-packages/django/db/backends/utils.py", line 84, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/encodings/utf_8.py", line 15, in decode
+    def decode(input, errors='strict'):
+    
+KeyboardInterrupt

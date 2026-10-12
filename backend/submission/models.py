@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 
 from utils.constants import ContestStatus
 from utils.models import JSONField
@@ -39,6 +39,12 @@ class Submission(models.Model):
     # {time_cost: "", memory_cost: "", err_info: "", score: 0}
     statistic_info = JSONField(default=dict)
     ip = models.TextField(null=True)
+
+    def save(self, *args, **kwargs):
+        # post_save captures the durable learning event. It must fail in the same
+        # transaction as the verdict even when the caller has no outer atomic().
+        with transaction.atomic():
+            return super().save(*args, **kwargs)
 
     def check_user_permission(self, user, check_share=True):
         if self.user_id == user.id or user.is_super_admin() or user.can_mgmt_all_problem() or self.problem.created_by_id == user.id:

@@ -1,0 +1,824 @@
+openapi: 3.0.3
+info:
+  title: XMUOJ-AI Learning and Recommendation API
+  version: 1.0.0
+  description: |
+    第一期学生画像、薄弱点诊断和个性化学习路径工作流 API。
+    本 API 直接覆盖《技术路线与功能实现设计》中的六个接口。
+    掌握度、薄弱点和学习路径均由确定性工作流生成；Agent 只能读取和解释，不能通过本 API 修改计算结果。
+    GET 查询只接受各操作声明的参数；未知字段、重复参数或非法类型返回 400。
+servers:
+  - url: /api
+    description: Same-origin XMUOJ backend
+tags:
+  - name: Student Learning
+  - name: Recommendation
+  - name: Teacher Learning
+security:
+  - sessionCookie: []
+paths:
+  /learning/profile:
+    get:
+      tags: [Student Learning]
+      summary: 获取当前学生知识点掌握情况
+      operationId: getCurrentStudentLearningProfile
+      responses:
+        '200':
+          description: 当前学生画像；尚无提交数据时 knowledge_states 为空数组
+          headers:
+            X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentProfileEnvelope'
+              example:
+                error: null
+                data:
+                  student_id: 1001
+                  algorithm_version: elo-v1
+                  updated_time: '2026-08-09T10:00:00Z'
+                  knowledge_states:
+                    - knowledge_code: bfs_basic
+                      name: BFS 基础遍历
+                      rating: 1040.0000
+                      mastery_level: learning
+                      attempt_count: 8
+                      accepted_count: 3
+                      recent_fail_count: 2
+                      confidence: 0.72
+                      last_submission_time: '2026-08-09T09:50:00Z'
+                request_id: req_01JEXAMPLE
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /learning/weakness:
+    get:
+      tags: [Student Learning]
+      summary: 获取当前学生薄弱知识点诊断
+      operationId: getCurrentStudentWeakness
+      parameters:
+        - $ref: '#/components/parameters/WeakPointLimit'
+      responses:
+        '200':
+          description: 规则工作流生成的薄弱点；无薄弱点时返回空数组
+          headers:
+            X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeaknessEnvelope'
+              example:
+                error: null
+                data:
+                  algorithm_version: elo-v1
+                  generated_time: '2026-08-09T10:00:00Z'
+                  weak_points:
+                    - knowledge_code: grid_bfs
+                      name: 网格图 BFS
+                      rating: 980.0000
+                      mastery_level: weak
+                      confidence: 0.81
+                      reason_codes: [low_rating, recent_failures]
+                request_id: req_01JEXAMPLE
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /recommendation/path:
+    get:
+      tags: [Recommendation]
+      summary: 获取当前学生个性化学习路径
+      operationId: getCurrentLearningPath
+      responses:
+        '200':
+          description: 当前活动学习路径
+          headers:
+            X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningPathEnvelope'
+              example:
+                error: null
+                data:
+                  path_id: 2caf14d0-8fc8-4994-a637-d8a82baf79bc
+                  algorithm_version: path-v1
+                  status: active
+                  target:
+                    knowledge_code: bfs_shortest_path
+                    name: BFS 最短路
+                  steps:
+                    - order: 1
+                      knowledge_code: queue
+                      knowledge_name: 队列
+                      problem_id: P101
+                      title: 队列基础
+                      problem_rating: 1050.0000
+                      reason_code: prerequisite_weak
+                      reason_text: 前置知识掌握不足
+                      status: pending
+                  generated_time: '2026-08-09T10:00:00Z'
+                  expires_time: '2026-08-16T10:00:00Z'
+                request_id: req_01JEXAMPLE
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/PathNotFound'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /recommendation/refresh:
+    post:
+      tags: [Recommendation]
+      summary: 手动刷新当前学生学习路径
+      description: |
+        调用确定性推荐工作流重新生成学习路径。该接口不调用 Agent，
+        Agent 也不得把本接口注册为可调用工具。
+      operationId: refreshCurrentLearningPath
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshPathRequest'
+            example:
+              target_knowledge_code: bfs_shortest_path
+      responses:
+        '200':
+          description: 路径已同步重新生成，或幂等返回同一次刷新结果
+          headers:
+            X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearningPathEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/RefreshConflict'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /admin/learning/student/{student_id}/profile:
+    get:
+      tags: [Teacher Learning]
+      summary: 教师查看指定学生画像
+      operationId: getStudentLearningProfileForTeacher
+      parameters:
+        - $ref: '#/components/parameters/StudentId'
+        - $ref: '#/components/parameters/ClassId'
+        - $ref: '#/components/parameters/AuditReason'
+      responses:
+        '200':
+          description: 指定学生的知识点掌握画像
+          headers:
+            X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentProfileEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/StudentNotFound'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /admin/learning/class/knowledge-stats:
+    get:
+      tags: [Teacher Learning]
+      summary: 教师查看班级知识点掌握统计
+      description: |
+        仅统计指定活动 TeachingClass 中的活动学生成员；
+        当前认证用户通常须在该班具有活动 owner/teacher/assistant 成员关系。
+        无该班成员关系的 Admin/Super Admin 必须提供非空 X-Audit-Reason，服务端记录跨班访问；
+        班级、学生或成员范围不符合要求时返回 404，不通过 403 暴露对象是否存在。
+      operationId: getClassKnowledgeStatsForTeacher
+      parameters:
+        - $ref: '#/components/parameters/ClassId'
+        - $ref: '#/components/parameters/AuditReason'
+      responses:
+        '200':
+          description: 班级或当前教师可管理范围内的聚合统计
+          headers:
+            X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassKnowledgeStatsEnvelope'
+              example:
+                error: null
+                data:
+                  class_id: 9f58ed7f-9d6a-4c3e-a366-4189f373a63a
+                  student_count: 42
+                  algorithm_version: elo-v1
+                  generated_time: '2026-08-09T10:00:00Z'
+                  knowledge_stats:
+                    - knowledge_code: bfs_basic
+                      name: BFS 基础遍历
+                      student_count: 40
+                      average_rating: 1168.5
+                      weak_count: 9
+                      mastered_count: 12
+                request_id: req_01JEXAMPLE
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/ClassNotFound'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+components:
+  headers:
+    ApiVersion:
+      description: 实际响应契约版本
+      schema:
+        type: string
+        enum: [1.0.0]
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: sessionid
+      description: 第一期使用现有 Django Session；用户身份不得由请求体提供。
+  parameters:
+    WeakPointLimit:
+      name: limit
+      in: query
+      required: false
+      description: 返回薄弱知识点数量。
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 10
+        default: 5
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: 同一用户范围内的刷新幂等键，1～100 字符。
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 100
+    CsrfToken:
+      name: X-CSRFToken
+      in: header
+      required: true
+      description: Django Session 写请求的 CSRF token。
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 256
+    StudentId:
+      name: student_id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    AuditReason:
+      name: X-Audit-Reason
+      in: header
+      required: false
+      description: >-
+        全站管理员无本班教师成员关系时必须提供的显式审计理由；普通教师仍按本班活动成员范围授权。
+        线协议为 UTF-8 百分号编码（前端 encodeURIComponent），服务端严格解码一次后去除首尾空白。
+        编码后限 4096 个 ASCII 字节，解码后限 1000 个 Unicode 字符，不允许 C0/C1 控制字符。
+        非法百分号序列、非法 UTF-8、原样非 ASCII 或超限返回 400 LEARNING_INPUT_INVALID；
+        空字符串与缺失头等价，跨班访问的理由缺失或全空白沿用 404 授权语义。
+        不含百分号的可打印 ASCII 理由仍兼容。
+      schema:
+        type: string
+        maxLength: 4096
+        example: '%E6%95%99%E5%AD%A6%E6%94%AF%E6%8C%81%E5%B7%A5%E5%8D%95'
+    ClassId:
+      name: class_id
+      in: query
+      required: true
+      description: TeachingClass.id；学生必须是该班的活动成员；教师须具备活动成员关系，或为提供 X-Audit-Reason 的全站管理员。
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: 请求参数不合法
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error: LEARNING_INPUT_INVALID
+            data:
+              message: 请求参数不合法
+              retryable: false
+              details: {}
+            request_id: req_01JEXAMPLE
+    Unauthorized:
+      description: 未登录或登录状态失效
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error: LEARNING_AUTH_REQUIRED
+            data:
+              message: 请先登录
+              retryable: false
+              details: {}
+            request_id: req_01JEXAMPLE
+    Forbidden:
+      description: Session 写请求 CSRF 校验失败或操作权限被拒绝；教学班/学生范围越界使用 404
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error: LEARNING_PERMISSION_DENIED
+            data:
+              message: CSRF 校验失败
+              retryable: false
+              details: {}
+            request_id: req_01JEXAMPLE
+    PathNotFound:
+      description: 当前学生尚无活动学习路径
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error: LEARNING_PATH_NOT_FOUND
+            data:
+              message: 尚未生成学习路径
+              retryable: true
+              details: {}
+            request_id: req_01JEXAMPLE
+    StudentNotFound:
+      description: 学生不存在或不在教师可管理范围内
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error: LEARNING_STUDENT_NOT_FOUND
+            data:
+              message: 学生不存在
+              retryable: false
+              details: {}
+            request_id: req_01JEXAMPLE
+    ClassNotFound:
+      description: 班级不存在或不在教师可管理范围内
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error: LEARNING_CLASS_NOT_FOUND
+            data:
+              message: 班级不存在
+              retryable: false
+              details: {}
+            request_id: req_01JEXAMPLE
+    RefreshConflict:
+      description: 正在刷新或幂等键与不同请求冲突
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error: LEARNING_REFRESH_CONFLICT
+            data:
+              message: 学习路径正在刷新
+              retryable: true
+              details: {}
+            request_id: req_01JEXAMPLE
+    RateLimited:
+      description: 手动刷新频率超限
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+        Retry-After:
+          description: 建议等待秒数
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error: LEARNING_RATE_LIMITED
+            data:
+              message: 刷新过于频繁，请稍后重试
+              retryable: true
+              details: {}
+            request_id: req_01JEXAMPLE
+    Unavailable:
+      description: Elo 或推荐工作流尚未就绪
+      headers:
+        X-API-Version: {$ref: '#/components/headers/ApiVersion'}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error: LEARNING_DEPENDENCY_NOT_READY
+            data:
+              message: 学习数据尚未准备好
+              retryable: true
+              details: {}
+            request_id: req_01JEXAMPLE
+  schemas:
+    StudentProfileEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error, data, request_id]
+      properties:
+        error:
+          type: string
+          nullable: true
+          example: null
+        data:
+          $ref: '#/components/schemas/StudentProfile'
+        request_id:
+          type: string
+    StudentProfile:
+      type: object
+      additionalProperties: false
+      required: [student_id, algorithm_version, updated_time, knowledge_states]
+      properties:
+        student_id:
+          type: integer
+          minimum: 1
+        algorithm_version:
+          type: string
+          minLength: 1
+          maxLength: 32
+        updated_time:
+          type: string
+          format: date-time
+          nullable: true
+        knowledge_states:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/KnowledgeState'
+    KnowledgeState:
+      type: object
+      additionalProperties: false
+      required:
+        - knowledge_code
+        - name
+        - rating
+        - mastery_level
+        - attempt_count
+        - accepted_count
+        - recent_fail_count
+        - confidence
+        - last_submission_time
+      properties:
+        knowledge_code:
+          type: string
+          pattern: '^[a-z][a-z0-9_]{0,63}$'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        rating:
+          type: number
+          multipleOf: 0.0001
+          minimum: 0
+        mastery_level:
+          type: string
+          enum: [unknown, weak, learning, stable, mastered]
+        attempt_count:
+          type: integer
+          minimum: 0
+        accepted_count:
+          type: integer
+          minimum: 0
+        recent_fail_count:
+          type: integer
+          minimum: 0
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        last_submission_time:
+          type: string
+          format: date-time
+          nullable: true
+    WeaknessEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error, data, request_id]
+      properties:
+        error:
+          type: string
+          nullable: true
+          example: null
+        data:
+          $ref: '#/components/schemas/WeaknessResult'
+        request_id:
+          type: string
+    WeaknessResult:
+      type: object
+      additionalProperties: false
+      required: [algorithm_version, generated_time, weak_points]
+      properties:
+        algorithm_version:
+          type: string
+          minLength: 1
+          maxLength: 32
+        generated_time:
+          type: string
+          format: date-time
+        weak_points:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/WeakPoint'
+    WeakPoint:
+      type: object
+      additionalProperties: false
+      required: [knowledge_code, name, rating, mastery_level, confidence, reason_codes]
+      properties:
+        knowledge_code:
+          type: string
+          pattern: '^[a-z][a-z0-9_]{0,63}$'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        rating:
+          type: number
+          multipleOf: 0.0001
+          minimum: 0
+        mastery_level:
+          type: string
+          enum: [unknown, weak, learning, stable, mastered]
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        reason_codes:
+          type: array
+          maxItems: 10
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+              - low_rating
+              - recent_failures
+              - low_acceptance
+              - prerequisite_gap
+              - low_confidence
+    LearningPathEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error, data, request_id]
+      properties:
+        error:
+          type: string
+          nullable: true
+          example: null
+        data:
+          $ref: '#/components/schemas/LearningPath'
+        request_id:
+          type: string
+    LearningPath:
+      type: object
+      additionalProperties: false
+      required:
+        - path_id
+        - algorithm_version
+        - status
+        - target
+        - steps
+        - generated_time
+        - expires_time
+      properties:
+        path_id:
+          type: string
+          format: uuid
+        algorithm_version:
+          type: string
+          minLength: 1
+          maxLength: 32
+        status:
+          type: string
+          enum: [active, completed, expired, superseded]
+        target:
+          oneOf:
+            - $ref: '#/components/schemas/KnowledgeRef'
+            - type: object
+              nullable: true
+              enum: [null]
+        steps:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/LearningPathStep'
+        generated_time:
+          type: string
+          format: date-time
+        expires_time:
+          type: string
+          format: date-time
+          nullable: true
+    KnowledgeRef:
+      type: object
+      additionalProperties: false
+      required: [knowledge_code, name]
+      properties:
+        knowledge_code:
+          type: string
+          pattern: '^[a-z][a-z0-9_]{0,63}$'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+    LearningPathStep:
+      type: object
+      additionalProperties: false
+      required:
+        - order
+        - knowledge_code
+        - knowledge_name
+        - problem_id
+        - title
+        - problem_rating
+        - reason_code
+        - reason_text
+        - status
+      properties:
+        order:
+          type: integer
+          minimum: 1
+        knowledge_code:
+          type: string
+          pattern: '^[a-z][a-z0-9_]{0,63}$'
+        knowledge_name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        problem_id:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: XMUOJ Problem._id 展示编号，例如 P101。
+          nullable: true
+        title:
+          type: string
+          maxLength: 300
+          nullable: true
+        problem_rating:
+          type: number
+          multipleOf: 0.0001
+          minimum: 0
+          nullable: true
+        reason_code:
+          type: string
+          minLength: 1
+          maxLength: 32
+        reason_text:
+          type: string
+          maxLength: 1000
+        status:
+          type: string
+          enum: [pending, in_progress, completed, skipped]
+    RefreshPathRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        target_knowledge_code:
+          type: string
+          pattern: '^[a-z][a-z0-9_]{0,63}$'
+          nullable: true
+    ClassKnowledgeStatsEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error, data, request_id]
+      properties:
+        error:
+          type: string
+          nullable: true
+          example: null
+        data:
+          $ref: '#/components/schemas/ClassKnowledgeStats'
+        request_id:
+          type: string
+    ClassKnowledgeStats:
+      type: object
+      additionalProperties: false
+      required:
+        - class_id
+        - student_count
+        - algorithm_version
+        - generated_time
+        - knowledge_stats
+      properties:
+        class_id:
+          type: string
+          format: uuid
+        student_count:
+          type: integer
+          minimum: 0
+        algorithm_version:
+          type: string
+          minLength: 1
+          maxLength: 32
+        generated_time:
+          type: string
+          format: date-time
+        knowledge_stats:
+          type: array
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/ClassKnowledgeStat'
+    ClassKnowledgeStat:
+      type: object
+      additionalProperties: false
+      required:
+        - knowledge_code
+        - name
+        - student_count
+        - average_rating
+        - weak_count
+        - mastered_count
+      properties:
+        knowledge_code:
+          type: string
+          pattern: '^[a-z][a-z0-9_]{0,63}$'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        student_count:
+          type: integer
+          minimum: 0
+        average_rating:
+          type: number
+          minimum: 0
+        weak_count:
+          type: integer
+          minimum: 0
+        mastered_count:
+          type: integer
+          minimum: 0
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error, data, request_id]
+      properties:
+        error:
+          type: string
+          pattern: '^[A-Z][A-Z0-9_]+$'
+        data:
+          $ref: '#/components/schemas/ErrorData'
+        request_id:
+          type: string
+    ErrorData:
+      type: object
+      additionalProperties: false
+      required: [message, retryable, details]
+      properties:
+        message:
+          type: string
+        retryable:
+          type: boolean
+        details:
+          type: object
+          additionalProperties: true

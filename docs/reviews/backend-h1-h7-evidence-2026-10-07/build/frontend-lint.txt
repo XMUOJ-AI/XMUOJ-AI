@@ -1,0 +1,379 @@
+
+> onlinejudge@2.7.6 lint
+> eslint --ext .js,.vue src
+
+
+/Users/jingweihao/大创/XMUOJ-AI/frontend/src/pages/oj/views/contest/children/ContestProblemList.vue
+   69:21  error  'localStorage' is not defined                                                no-undef
+   71:27  error  'localStorage' is not defined                                                no-undef
+   73:24  error  'localStorage' is not defined                                                no-undef
+   92:9   error  'localStorage' is not defined                                                no-undef
+   96:9   error  'localStorage' is not defined                                                no-undef
+   97:9   error  'localStorage' is not defined                                                no-undef
+  169:25  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  169:37  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  169:54  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  170:73  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  175:46  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  176:25  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  186:45  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  187:24  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  192:47  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  200:25  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  200:37  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  201:73  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  206:46  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  207:25  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  217:45  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  218:24  error  Object properties must go on a new line if they aren't all on the same line  object-property-newline
+  228:32  error  'localStorage' is not defined                                                no-undef
+  229:35  error  'localStorage' is not defined                                                no-undef
+  230:32  error  'localStorage' is not defined                                                no-undef
+
+/Users/jingweihao/大创/XMUOJ-AI/frontend/src/pages/oj/views/user/UserHome.vue
+  318:43  error  Unexpected mix of '&&' and '||'  no-mixed-operators
+  318:60  error  Unexpected mix of '&&' and '||'  no-mixed-operators
+
+/Users/jingweihao/大创/XMUOJ-AI/frontend/src/plugins/highlight.js
+   1:1   error  Expected space or tab after '//' in comment  spaced-comment
+   6:18  error  Strings must use singlequote                 quotes
+  18:37  error  Extra semicolon                              semi
+  33:37  error  Extra semicolon                              semi
+
+/Users/jingweihao/大创/XMUOJ-AI/frontend/src/plugins/highlightjs-line-numbers2.js
+    2:18  error  Strings must use singlequote                                   quotes
+    2:32  error  Extra semicolon                                                semi
+    3:8   error  Strings must use singlequote                                   quotes
+    5:5   error  Expected indentation of 2 spaces but found 4                   indent
+    5:17  error  Extra semicolon                                                semi
+    7:5   error  Expected indentation of 2 spaces but found 4                   indent
+    7:5   error  Split initialized 'var' declarations into multiple statements  one-var
+    8:9   error  Expected indentation of 6 spaces but found 8                   indent
+    9:9   error  Expected indentation of 6 spaces but found 8                   indent
+   10:9   error  Expected indentation of 6 spaces but found 8                   indent
+   11:9   error  Expected indentation of 6 spaces but found 8                   indent
+   12:9   error  Expected indentation of 6 spaces but found 8                   indent
+   13:9   error  Expected indentation of 6 spaces but found 8                   indent
+   13:42  error  Extra semicolon                                                semi
+   15:5   error  Expected indentation of 2 spaces but found 4                   indent
+   16:9   error  Expected indentation of 6 spaces but found 8                   indent
+   16:59  error  Extra semicolon                                                semi
+   17:9   error  Expected indentation of 6 spaces but found 8                   indent
+   17:49  error  Extra semicolon                                                semi
+   18:9   error  Expected indentation of 6 spaces but found 8                   indent
+   18:57  error  Extra semicolon                                                semi
+   19:9   error  Expected indentation of 6 spaces but found 8                   indent
+   19:49  error  Extra semicolon                                                semi
+   21:9   error  Expected indentation of 6 spaces but found 8                   indent
+   21:20  error  Extra semicolon                                                semi
+   23:9   error  Expected indentation of 6 spaces but found 8                   indent
+   23:54  error  Extra semicolon                                                semi
+   26:5   error  Expected indentation of 2 spaces but found 4                   indent
+   26:36  error  Missing space before function parentheses                      space-before-function-paren
+   27:9   error  Expected indentation of 6 spaces but found 8                   indent
+   27:28  error  Extra semicolon                                                semi
+   28:9   error  Expected indentation of 6 spaces but found 8                   indent
+   29:13  error  Expected indentation of 10 spaces but found 12                 indent
+   30:17  error  Expected indentation of 14 spaces but found 16                 indent
+   30:28  error  Extra semicolon                                                semi
+   32:13  error  Expected indentation of 10 spaces but found 12                 indent
+   32:39  error  Extra semicolon                                                semi
+   34:9   error  Expected indentation of 6 spaces but found 8                   indent
+   34:21  error  Extra semicolon                                                semi
+   37:5   error  Expected indentation of 2 spaces but found 4                   indent
+   37:28  error  Missing space before function parentheses                      space-before-function-paren
+   38:9   error  Expected indentation of 6 spaces but found 8                   indent
+   38:34  error  Extra semicolon                                                semi
+   39:9   error  Expected indentation of 6 spaces but found 8                   indent
+   40:13  error  Expected indentation of 10 spaces but found 12                 indent
+   40:39  error  Extra semicolon                                                semi
+   42:9   error  Expected indentation of 6 spaces but found 8                   indent
+   42:22  error  Extra semicolon                                                semi
+   50:5   error  Expected indentation of 2 spaces but found 4                   indent
+   50:38  error  Missing space before function parentheses                      space-before-function-paren
+   52:9   error  Expected indentation of 6 spaces but found 8                   indent
+   52:49  error  Extra semicolon                                                semi
+   55:9   error  Expected indentation of 6 spaces but found 8                   indent
+   55:44  error  Extra semicolon                                                semi
+   56:9   error  Expected indentation of 6 spaces but found 8                   indent
+   57:13  error  Expected indentation of 10 spaces but found 12                 indent
+   57:43  error  Extra semicolon                                                semi
+   61:9   error  Expected indentation of 6 spaces but found 8                   indent
+   61:42  error  Extra semicolon                                                semi
+   62:9   error  Expected indentation of 6 spaces but found 8                   indent
+   63:13  error  Expected indentation of 10 spaces but found 12                 indent
+   63:41  error  Extra semicolon                                                semi
+   67:9   error  Expected indentation of 6 spaces but found 8                   indent
+   67:68  error  Extra semicolon                                                semi
+   68:9   error  Expected indentation of 6 spaces but found 8                   indent
+   68:66  error  Extra semicolon                                                semi
+   71:9   error  Expected indentation of 6 spaces but found 8                   indent
+   71:29  error  Expected '!==' and instead saw '!='                            eqeqeq
+   71:48  error  Block must not be padded by blank lines                        padded-blocks
+   73:13  error  Expected indentation of 10 spaces but found 12                 indent
+   73:53  error  Extra semicolon                                                semi
+   74:13  error  Expected indentation of 10 spaces but found 12                 indent
+   74:51  error  Extra semicolon                                                semi
+   77:13  error  Expected indentation of 10 spaces but found 12                 indent
+   78:17  error  Expected indentation of 14 spaces but found 16                 indent
+   78:42  error  Extra semicolon                                                semi
+   79:17  error  Expected indentation of 14 spaces but found 16                 indent
+   79:49  error  Extra semicolon                                                semi
+   80:17  error  Expected indentation of 14 spaces but found 16                 indent
+   80:37  error  Extra semicolon                                                semi
+   81:17  error  Expected indentation of 14 spaces but found 16                 indent
+   81:36  error  Extra semicolon                                                semi
+   82:17  error  Expected indentation of 14 spaces but found 16                 indent
+   82:45  error  Extra semicolon                                                semi
+   83:17  error  Expected indentation of 14 spaces but found 16                 indent
+   83:35  error  Extra semicolon                                                semi
+   87:13  error  Expected indentation of 10 spaces but found 12                 indent
+   88:17  error  Expected indentation of 14 spaces but found 16                 indent
+   88:55  error  Extra semicolon                                                semi
+   92:13  error  Expected indentation of 10 spaces but found 12                 indent
+   93:17  error  Expected indentation of 14 spaces but found 16                 indent
+   93:57  error  Extra semicolon                                                semi
+   97:13  error  Expected indentation of 10 spaces but found 12                 indent
+   97:45  error  Extra semicolon                                                semi
+   98:13  error  Expected indentation of 10 spaces but found 12                 indent
+   98:55  error  Extra semicolon                                                semi
+   99:13  error  Expected indentation of 10 spaces but found 12                 indent
+   99:46  error  Unexpected whitespace before semicolon                         semi-spacing
+   99:67  error  Unexpected whitespace before semicolon                         semi-spacing
+  100:17  error  Expected indentation of 14 spaces but found 16                 indent
+  100:98  error  Extra semicolon                                                semi
+  101:17  error  Expected indentation of 14 spaces but found 16                 indent
+  101:73  error  Extra semicolon                                                semi
+  102:17  error  Expected indentation of 14 spaces but found 16                 indent
+  102:63  error  Extra semicolon                                                semi
+  104:13  error  Expected indentation of 10 spaces but found 12                 indent
+  104:48  error  Extra semicolon                                                semi
+  105:13  error  Expected indentation of 10 spaces but found 12                 indent
+  105:32  error  Extra semicolon                                                semi
+  108:13  error  Expected indentation of 10 spaces but found 12                 indent
+  108:33  error  Extra semicolon                                                semi
+  114:5   error  Expected indentation of 2 spaces but found 4                   indent
+  114:47  error  Missing space before function parentheses                      space-before-function-paren
+  116:9   error  Expected indentation of 6 spaces but found 8                   indent
+  116:46  error  Extra semicolon                                                semi
+  118:9   error  Expected indentation of 6 spaces but found 8                   indent
+  119:13  error  Expected indentation of 10 spaces but found 12                 indent
+  119:30  error  Extra semicolon                                                semi
+  122:13  error  Expected indentation of 10 spaces but found 12                 indent
+  123:17  error  Expected indentation of 14 spaces but found 16                 indent
+  123:68  error  Extra semicolon                                                semi
+  126:17  error  Expected indentation of 14 spaces but found 16                 indent
+  126:53  error  Extra semicolon                                                semi
+  128:13  error  Expected indentation of 10 spaces but found 12                 indent
+  128:65  error  Extra semicolon                                                semi
+  129:13  error  Expected indentation of 10 spaces but found 12                 indent
+  129:31  error  Extra semicolon                                                semi
+  131:7   error  Extra semicolon                                                semi
+  133:5   error  Expected indentation of 2 spaces but found 4                   indent
+  134:9   error  Expected indentation of 6 spaces but found 8                   indent
+  134:43  error  Extra semicolon                                                semi
+  135:9   error  Expected indentation of 6 spaces but found 8                   indent
+  135:30  error  Extra semicolon                                                semi
+  136:9   error  Expected indentation of 6 spaces but found 8                   indent
+  140:9   error  Expected indentation of 10 spaces but found 8                  indent
+  144:9   error  Expected indentation of 10 spaces but found 8                  indent
+  144:11  error  Extra semicolon                                                semi
+  145:9   error  Expected indentation of 6 spaces but found 8                   indent
+  145:59  error  Extra semicolon                                                semi
+  148:5   error  Expected indentation of 2 spaces but found 4                   indent
+  149:9   error  Expected indentation of 6 spaces but found 8                   indent
+  150:13  error  Expected indentation of 10 spaces but found 12                 indent
+  150:35  error  Extra semicolon                                                semi
+  152:13  error  Expected indentation of 10 spaces but found 12                 indent
+  153:17  error  Expected indentation of 14 spaces but found 16                 indent
+  153:39  error  Extra semicolon                                                semi
+  154:15  error  Extra semicolon                                                semi
+  158:5   error  Expected indentation of 2 spaces but found 4                   indent
+  159:9   error  Expected indentation of 6 spaces but found 8                   indent
+  160:13  error  Expected indentation of 10 spaces but found 12                 indent
+  160:74  error  Extra semicolon                                                semi
+  162:13  error  Expected indentation of 10 spaces but found 12                 indent
+  163:17  error  Expected indentation of 14 spaces but found 16                 indent
+  164:21  error  Expected indentation of 18 spaces but found 20                 indent
+  165:25  error  Expected indentation of 22 spaces but found 24                 indent
+  165:61  error  Extra semicolon                                                semi
+  170:13  error  Expected indentation of 10 spaces but found 12                 indent
+  170:54  error  Extra semicolon                                                semi
+  174:5   error  Expected indentation of 2 spaces but found 4                   indent
+  174:38  error  Missing space before function parentheses                      space-before-function-paren
+  175:9   error  Expected indentation of 6 spaces but found 8                   indent
+  175:54  error  Extra semicolon                                                semi
+  178:5   error  Expected indentation of 2 spaces but found 4                   indent
+  179:9   error  Expected indentation of 6 spaces but found 8                   indent
+  179:48  error  Extra semicolon                                                semi
+  181:9   error  Expected indentation of 6 spaces but found 8                   indent
+  182:13  error  Expected indentation of 10 spaces but found 12                 indent
+  182:70  error  Extra semicolon                                                semi
+  183:11  error  Extra semicolon                                                semi
+  186:5   error  Expected indentation of 2 spaces but found 4                   indent
+  187:9   error  Expected indentation of 6 spaces but found 8                   indent
+  187:48  error  Extra semicolon                                                semi
+  189:9   error  Expected indentation of 6 spaces but found 8                   indent
+  189:66  error  Extra semicolon                                                semi
+  192:5   error  Expected indentation of 2 spaces but found 4                   indent
+  193:9   error  Expected indentation of 6 spaces but found 8                   indent
+  193:46  error  Extra semicolon                                                semi
+  195:9   error  Expected indentation of 6 spaces but found 8                   indent
+  196:9   error  Expected indentation of 6 spaces but found 8                   indent
+  198:9   error  Expected indentation of 6 spaces but found 8                   indent
+  198:53  error  Extra semicolon                                                semi
+  201:5   error  Expected indentation of 2 spaces but found 4                   indent
+  201:53  error  Block must not be padded by blank lines                        padded-blocks
+  203:9   error  Expected indentation of 6 spaces but found 8                   indent
+  203:59  error  Extra semicolon                                                semi
+  205:9   error  Expected indentation of 6 spaces but found 8                   indent
+  205:41  error  Extra semicolon                                                semi
+  207:9   error  Expected indentation of 6 spaces but found 8                   indent
+  207:74  error  Extra semicolon                                                semi
+  210:5   error  Expected indentation of 2 spaces but found 4                   indent
+  211:9   error  Expected indentation of 6 spaces but found 8                   indent
+  211:40  error  Extra semicolon                                                semi
+  214:9   error  Expected indentation of 6 spaces but found 8                   indent
+  214:31  error  Infix operators must be spaced                                 space-infix-ops
+  215:13  error  Expected indentation of 10 spaces but found 12                 indent
+  215:24  error  Extra semicolon                                                semi
+  218:9   error  Expected indentation of 6 spaces but found 8                   indent
+  219:13  error  Expected indentation of 10 spaces but found 12                 indent
+  219:26  error  Extra semicolon                                                semi
+  221:13  error  Expected indentation of 10 spaces but found 12                 indent
+  222:17  error  Expected indentation of 14 spaces but found 16                 indent
+  231:17  error  Expected indentation of 18 spaces but found 16                 indent
+  239:17  error  Expected indentation of 18 spaces but found 16                 indent
+  239:19  error  Extra semicolon                                                semi
+  242:13  error  Expected indentation of 10 spaces but found 12                 indent
+  242:82  error  Extra semicolon                                                semi
+  245:9   error  Expected indentation of 6 spaces but found 8                   indent
+  245:25  error  Extra semicolon                                                semi
+  253:5   error  Expected indentation of 2 spaces but found 4                   indent
+  254:9   error  Expected indentation of 6 spaces but found 8                   indent
+  254:32  error  Extra semicolon                                                semi
+  255:9   error  Expected indentation of 6 spaces but found 8                   indent
+  256:13  error  Expected indentation of 10 spaces but found 12                 indent
+  257:13  error  Expected indentation of 10 spaces but found 12                 indent
+  258:10  error  Extra semicolon                                                semi
+  261:5   error  Expected indentation of 2 spaces but found 4                   indent
+  262:9   error  Expected indentation of 6 spaces but found 8                   indent
+  262:33  error  Extra semicolon                                                semi
+  263:9   error  Expected indentation of 6 spaces but found 8                   indent
+  263:14  error  Redundant double negation                                      no-extra-boolean-cast
+  264:13  error  Expected indentation of 10 spaces but found 12                 indent
+  264:38  error  Extra semicolon                                                semi
+  266:9   error  Expected indentation of 6 spaces but found 8                   indent
+  266:28  error  Extra semicolon                                                semi
+  269:5   error  Expected indentation of 2 spaces but found 4                   indent
+  270:9   error  Expected indentation of 6 spaces but found 8                   indent
+  270:29  error  Extra semicolon                                                semi
+  271:9   error  Expected indentation of 6 spaces but found 8                   indent
+  271:37  error  Extra semicolon                                                semi
+  273:9   error  Expected indentation of 6 spaces but found 8                   indent
+  274:13  error  Expected indentation of 10 spaces but found 12                 indent
+  274:42  error  Extra semicolon                                                semi
+  278:9   error  Expected indentation of 6 spaces but found 8                   indent
+  278:64  error  Extra semicolon                                                semi
+  279:9   error  Expected indentation of 6 spaces but found 8                   indent
+  280:13  error  Expected indentation of 10 spaces but found 12                 indent
+  280:54  error  Extra semicolon                                                semi
+  283:9   error  Expected indentation of 6 spaces but found 8                   indent
+  283:25  error  Extra semicolon                                                semi
+  291:5   error  Expected indentation of 2 spaces but found 4                   indent
+  292:9   error  Expected indentation of 6 spaces but found 8                   indent
+  292:39  error  Extra semicolon                                                semi
+  293:9   error  Expected indentation of 6 spaces but found 8                   indent
+  294:13  error  Expected indentation of 10 spaces but found 12                 indent
+  295:17  error  Expected indentation of 14 spaces but found 16                 indent
+  295:40  error  Extra semicolon                                                semi
+  296:17  error  Expected indentation of 14 spaces but found 16                 indent
+  297:21  error  Expected indentation of 18 spaces but found 20                 indent
+  298:25  error  Expected indentation of 22 spaces but found 24                 indent
+  298:55  error  Extra semicolon                                                semi
+  300:25  error  Expected indentation of 22 spaces but found 24                 indent
+  300:65  error  Extra semicolon                                                semi
+  311:5   error  Expected indentation of 2 spaces but found 4                   indent
+  312:9   error  Expected indentation of 6 spaces but found 8                   indent
+  312:42  error  Extra semicolon                                                semi
+  314:9   error  Expected indentation of 6 spaces but found 8                   indent
+  314:12  error  There should be no spaces inside this paren                    space-in-parens
+  314:14  error  Unexpected space after unary operator '!'                      space-unary-ops
+  314:47  error  Extra semicolon                                                semi
+  316:9   error  Expected indentation of 6 spaces but found 8                   indent
+  316:48  error  Extra semicolon                                                semi
+  318:9   error  Expected indentation of 6 spaces but found 8                   indent
+  319:13  error  Expected indentation of 10 spaces but found 12                 indent
+  319:64  error  Extra semicolon                                                semi
+  320:13  error  Expected indentation of 10 spaces but found 12                 indent
+  320:78  error  Multiple spaces found before 'lineText'                        no-multi-spaces
+  320:89  error  Extra semicolon                                                semi
+  323:9   error  Expected indentation of 6 spaces but found 8                   indent
+  323:42  error  Extra semicolon                                                semi
+  326:5   error  Expected indentation of 2 spaces but found 4                   indent
+  327:9   error  Expected indentation of 6 spaces but found 8                   indent
+  327:41  error  Extra semicolon                                                semi
+  328:9   error  Expected indentation of 6 spaces but found 8                   indent
+  328:45  error  Extra semicolon                                                semi
+  331:5   error  Expected indentation of 2 spaces but found 4                   indent
+  332:9   error  Expected indentation of 6 spaces but found 8                   indent
+  332:67  error  Extra semicolon                                                semi
+  335:5   error  Expected space or tab after '///' in comment                   spaced-comment
+  337:5   error  Expected space or tab after '///' in comment                   spaced-comment
+  339:5   error  Expected indentation of 2 spaces but found 4                   indent
+  340:9   error  Expected indentation of 6 spaces but found 8                   indent
+  340:30  error  Extra semicolon                                                semi
+  348:5   error  Expected indentation of 2 spaces but found 4                   indent
+  349:9   error  Expected indentation of 6 spaces but found 8                   indent
+  349:53  error  Missing space before function parentheses                      space-before-function-paren
+  349:59  error  Missing space before opening brace                             space-before-blocks
+  350:13  error  Expected indentation of 10 spaces but found 12                 indent
+  350:55  error  Extra semicolon                                                semi
+  351:11  error  Extra semicolon                                                semi
+  359:5   error  Expected indentation of 2 spaces but found 4                   indent
+  360:9   error  Expected indentation of 6 spaces but found 8                   indent
+  360:86  error  Extra semicolon                                                semi
+  368:5   error  Expected indentation of 2 spaces but found 4                   indent
+  369:9   error  Expected indentation of 6 spaces but found 8                   indent
+  369:34  error  Extra semicolon                                                semi
+  370:9   error  Expected indentation of 6 spaces but found 8                   indent
+  370:33  error  Extra semicolon                                                semi
+  371:9   error  Expected indentation of 6 spaces but found 8                   indent
+  371:52  error  Extra semicolon                                                semi
+  374:1   error  Block must not be padded by blank lines                        padded-blocks
+  374:21  error  Extra semicolon                                                semi
+  376:20  error  Extra semicolon                                                semi
+  376:21  error  Newline required at end of file but not found                  eol-last
+
+✖ 334 problems (334 errors, 0 warnings)
+
+(node:15613) Warning: Accessing non-existent property 'cat' of module exports inside circular dependency
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:15613) Warning: Accessing non-existent property 'cd' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'chmod' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'cp' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'dirs' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'pushd' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'popd' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'echo' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'tempdir' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'pwd' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'exec' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'ls' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'find' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'grep' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'head' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'ln' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'mkdir' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'rm' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'mv' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'sed' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'set' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'sort' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'tail' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'test' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'to' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'toEnd' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'touch' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'uniq' of module exports inside circular dependency
+(node:15613) Warning: Accessing non-existent property 'which' of module exports inside circular dependency

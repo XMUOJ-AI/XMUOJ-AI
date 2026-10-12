@@ -1,0 +1,19 @@
+time="2026-10-12T11:24:45+08:00" level=info msg="stopping colima [profile=xmuoj-merge-20261011]"
+time="2026-10-12T11:24:45+08:00" level=info msg="stopping ..." context=docker
+Stopping 'docker.service', but its triggering units are still active:
+docker.socket
+colima-xmuoj-merge-20261011
+time="2026-10-12T11:24:46+08:00" level=info msg="stopping ..." context=vm
+time="2026-10-12T11:24:46+08:00" level=info msg="Sending SIGINT to hostagent process 78560"
+time="2026-10-12T11:24:46+08:00" level=info msg="Waiting for the host agent and the driver processes to shut down"
+time="2026-10-12T11:24:46+08:00" level=info msg="[hostagent] Stopping forwarding TCP from 127.0.0.1:16379 to 127.0.0.1:16379"
+time="2026-10-12T11:24:46+08:00" level=info msg="[hostagent] Received SIGINT, shutting down the host agent"
+time="2026-10-12T11:24:46+08:00" level=info msg="[hostagent] Shutting down the host agent"
+time="2026-10-12T11:24:46+08:00" level=info msg="[hostagent] Stopping forwarding `/var/run/docker.sock` (guest) to `/Users/jingweihao/.colima/xmuoj-merge-20261011/docker.sock` (host)"
+time="2026-10-12T11:24:46+08:00" level=info msg="[hostagent] Stopping forwarding `/var/run/containerd/containerd.sock` (guest) to `/Users/jingweihao/.colima/xmuoj-merge-20261011/containerd.sock` (host)"
+time="2026-10-12T11:24:46+08:00" level=info msg="[hostagent] Unmounting disk `colima-xmuoj-merge-20261011`"
+time="2026-10-12T11:24:46+08:00" level=info msg="[hostagent] Shutting down VZ"
+time="2026-10-12T11:24:46+08:00" level=info msg="[hostagent] [VZ] - vm state change: stopped"
+time="2026-10-12T11:24:46+08:00" level=info msg="Waiting for the instance to shut down"
+time="2026-10-12T11:24:47+08:00" level=info msg="The instance colima-xmuoj-merge-20261011 has shut down"
+time="2026-10-12T11:24:47+08:00" level=info msg=done

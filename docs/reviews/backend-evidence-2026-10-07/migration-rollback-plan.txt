@@ -1,0 +1,450 @@
+{
+  "clone": "xmuoj_rollback",
+  "binding": "127.0.0.1:15432",
+  "leaf_nodes": [
+    [
+      "account",
+      "0013_reconcile_existing_models"
+    ],
+    [
+      "agent_service",
+      "0001_initial"
+    ],
+    [
+      "announcement",
+      "0003_auto_20180501_0436"
+    ],
+    [
+      "auth",
+      "0012_alter_user_first_name_max_length"
+    ],
+    [
+      "conf",
+      "0004_auto_20180501_0436"
+    ],
+    [
+      "contenttypes",
+      "0002_remove_content_type_name"
+    ],
+    [
+      "contest",
+      "0013_reconcile_existing_models"
+    ],
+    [
+      "django_dramatiq",
+      "0003_auto_20200204_0842"
+    ],
+    [
+      "knowledge",
+      "0002_immutable_history"
+    ],
+    [
+      "learning",
+      "0002_align_learning_contract"
+    ],
+    [
+      "options",
+      "0004_reconcile_existing_models"
+    ],
+    [
+      "problem",
+      "0017_public_display_id_unique"
+    ],
+    [
+      "problem_import",
+      "0001_initial"
+    ],
+    [
+      "rag",
+      "0001_initial"
+    ],
+    [
+      "sessions",
+      "0001_initial"
+    ],
+    [
+      "submission",
+      "0013_reconcile_existing_models"
+    ]
+  ],
+  "rollback_plan": [
+    {
+      "migration": "problem_import.0001_initial",
+      "backwards": true,
+      "operations": [
+        "Create model CollectedProblem",
+        "Create model ProblemImportBatch",
+        "Create model ExternalTagMapping",
+        "Create model ExternalProblemBinding",
+        "Add field batch to collectedproblem",
+        "Add field duplicate_of to collectedproblem",
+        "Add field imported_problem to collectedproblem",
+        "Create index pib_status_time_idx on field(s) status, created_time of model problemimportbatch",
+        "Create constraint pib_status_valid on model problemimportbatch",
+        "Create index etm_platform_status_idx on field(s) source_platform, status of model externaltagmapping",
+        "Create constraint etm_source_unique on model externaltagmapping",
+        "Create constraint etm_confidence_range on model externaltagmapping",
+        "Create constraint etm_status_valid on model externaltagmapping",
+        "Create constraint epb_source_unique on model externalproblembinding",
+        "Create constraint epb_hash_format on model externalproblembinding",
+        "Create index cp_source_idx on field(s) source_platform, source_id of model collectedproblem",
+        "Create index cp_batch_status_idx on field(s) batch, import_status of model collectedproblem",
+        "Create constraint cp_batch_line_unique on model collectedproblem",
+        "Create constraint cp_batch_source_unique on model collectedproblem",
+        "Create constraint cp_line_positive on model collectedproblem",
+        "Create constraint cp_status_valid on model collectedproblem",
+        "Create constraint cp_review_status_valid on model collectedproblem",
+        "Create constraint cp_allocation_format on model collectedproblem"
+      ]
+    },
+    {
+      "migration": "learning.0002_align_learning_contract",
+      "backwards": true,
+      "operations": [
+        "Remove constraint pkr_counts_valid from model problemknowledgerating",
+        "Rename field sample_count on problemknowledgerating to attempt_count",
+        "Create constraint pkr_counts_valid on model problemknowledgerating",
+        "Alter field term on teachingclass",
+        "Alter field status on teachingclass"
+      ]
+    },
+    {
+      "migration": "learning.0001_initial",
+      "backwards": true,
+      "operations": [
+        "Create model LearningPath",
+        "Create model TeachingClass",
+        "Create model TeachingClassTeacher",
+        "Create model TeachingClassStudent",
+        "Create model TeachingAccessEvent",
+        "Create model StudentKnowledgeState",
+        "Create model RatingHistory",
+        "Create model ProblemKnowledgeRating",
+        "Create model LearningSubmissionEvent",
+        "Create model LearningRefreshRequest",
+        "Create model LearningPathStep",
+        "Create constraint tct_member_unique on model teachingclassteacher",
+        "Create constraint tct_role_valid on model teachingclassteacher",
+        "Create constraint tct_status_valid on model teachingclassteacher",
+        "Create constraint tcs_member_unique on model teachingclassstudent",
+        "Create constraint tcs_number_unique on model teachingclassstudent",
+        "Create constraint tcs_status_valid on model teachingclassstudent",
+        "Create constraint tc_status_valid on model teachingclass",
+        "Create constraint sks_user_knowledge_unique on model studentknowledgestate",
+        "Create constraint sks_rating_nonnegative on model studentknowledgestate",
+        "Create constraint sks_confidence_range on model studentknowledgestate",
+        "Create constraint sks_accepted_count_valid on model studentknowledgestate",
+        "Create constraint sks_mastery_valid on model studentknowledgestate",
+        "Create constraint rh_submission_knowledge_version on model ratinghistory",
+        "Create constraint rh_score_range on model ratinghistory",
+        "Create constraint pkr_pair_unique on model problemknowledgerating",
+        "Create constraint pkr_rating_nonnegative on model problemknowledgerating",
+        "Create constraint pkr_confidence_range on model problemknowledgerating",
+        "Create constraint pkr_counts_valid on model problemknowledgerating",
+        "Create constraint pkr_source_valid on model problemknowledgerating",
+        "Create constraint lrr_user_key_unique on model learningrefreshrequest",
+        "Create constraint lps_order_unique on model learningpathstep",
+        "Create constraint lps_order_positive on model learningpathstep",
+        "Create constraint lps_status_valid on model learningpathstep",
+        "Create constraint lp_one_active_per_user on model learningpath",
+        "Create constraint lp_status_valid on model learningpath"
+      ]
+    },
+    {
+      "migration": "agent_service.0001_initial",
+      "backwards": true,
+      "operations": [
+        "Create model AgentConversation",
+        "Create model AgentRun",
+        "Create model AgentDispatch",
+        "Create model ErrorPattern",
+        "Create model AIFeedbackReview",
+        "Create model AgentToolCall",
+        "Create model AgentMessage",
+        "Create index error_patte_problem_4417ee_idx on field(s) problem, verdict, review_status of model errorpattern",
+        "Create constraint error_pattern_target_required on model errorpattern",
+        "Create constraint agent_feedback_unique on model aifeedbackreview",
+        "Create index agent_tool__tool_na_880139_idx on field(s) tool_name of model agenttoolcall",
+        "Create index agent_tool__error_c_cba41a_idx on field(s) error_code of model agenttoolcall",
+        "Create constraint agent_tool_sequence_unique on model agenttoolcall",
+        "Create index agent_run_user_id_d6b1cb_idx on field(s) user, created_time of model agentrun",
+        "Create index agent_run_status_cc2fc5_idx on field(s) status, created_time of model agentrun",
+        "Create constraint agent_run_idempotency on model agentrun",
+        "Create constraint agent_run_service_valid on model agentrun",
+        "Create constraint agent_run_status_valid on model agentrun",
+        "Create constraint agent_run_safety_valid on model agentrun",
+        "Create constraint agent_run_submission_required on model agentrun",
+        "Create constraint agent_message_sequence_unique on model agentmessage",
+        "Create index agent_conve_user_id_14b677_idx on field(s) user, problem, status of model agentconversation",
+        "Create constraint agent_hint_level_range on model agentconversation",
+        "Create constraint agent_conversation_status on model agentconversation",
+        "Create constraint agent_active_conversation on model agentconversation"
+      ]
+    },
+    {
+      "migration": "knowledge.0002_immutable_history",
+      "backwards": true,
+      "operations": [
+        "Raw Python operation"
+      ]
+    },
+    {
+      "migration": "knowledge.0001_initial",
+      "backwards": true,
+      "operations": [
+        "Create model KnowledgeDependency",
+        "Create model KnowledgePoint",
+        "Create model ProblemKnowledge",
+        "Create model KnowledgeReviewEvent",
+        "Create model KnowledgeMappingBatch",
+        "Create model KnowledgeDependencyChangeRequest",
+        "Add field dependent to knowledgedependency",
+        "Add field prerequisite to knowledgedependency",
+        "Create constraint pk_unique_knowledge on model problemknowledge",
+        "Create constraint pk_one_primary on model problemknowledge",
+        "Create constraint pk_approved_only on model problemknowledge",
+        "Create constraint pk_weight_range on model problemknowledge",
+        "Create constraint pk_confidence_range on model problemknowledge",
+        "Create constraint pk_role_valid on model problemknowledge",
+        "Create constraint pk_source_valid on model problemknowledge",
+        "Create index kre_object_history_idx on field(s) object_type, object_key, object_version, created_time of model knowledgereviewevent",
+        "Create constraint kre_object_type_valid on model knowledgereviewevent",
+        "Create constraint kre_action_valid on model knowledgereviewevent",
+        "Create constraint kp_level_range on model knowledgepoint",
+        "Create constraint kp_version_positive on model knowledgepoint",
+        "Create constraint kp_status_valid on model knowledgepoint",
+        "Create constraint kp_category_valid on model knowledgepoint",
+        "Create index kmb_queue_idx on field(s) status, created_time of model knowledgemappingbatch",
+        "Create constraint kmb_batch_version_unique on model knowledgemappingbatch",
+        "Create constraint kmb_approved_version_unique on model knowledgemappingbatch",
+        "Create constraint kmb_one_pending on model knowledgemappingbatch",
+        "Create constraint kmb_one_approved on model knowledgemappingbatch",
+        "Create constraint kmb_batch_version_positive on model knowledgemappingbatch",
+        "Create constraint kmb_approved_state on model knowledgemappingbatch",
+        "Create constraint kmb_no_self_review on model knowledgemappingbatch",
+        "Create constraint kmb_reviewer_state on model knowledgemappingbatch",
+        "Create index kdcr_queue_idx on field(s) status, created_time of model knowledgedependencychangerequest",
+        "Create constraint kdcr_pending_target_unique on model knowledgedependencychangerequest",
+        "Create constraint kdcr_pending_pair_unique on model knowledgedependencychangerequest",
+        "Create constraint kdcr_no_self_review on model knowledgedependencychangerequest",
+        "Create constraint kdcr_status_valid on model knowledgedependencychangerequest",
+        "Create constraint kdcr_operation_shape on model knowledgedependencychangerequest",
+        "Create constraint kdcr_weight_range on model knowledgedependencychangerequest",
+        "Create constraint kdcr_reviewer_state on model knowledgedependencychangerequest",
+        "Create constraint kd_unique_directed_pair on model knowledgedependency",
+        "Create constraint kd_no_self_edge on model knowledgedependency",
+        "Create constraint kd_weight_range on model knowledgedependency",
+        "Create constraint kd_confidence_range on model knowledgedependency",
+        "Create constraint kd_version_positive on model knowledgedependency",
+        "Create constraint kd_relation_valid on model knowledgedependency",
+        "Create constraint kd_source_valid on model knowledgedependency"
+      ]
+    },
+    {
+      "migration": "rag.0001_initial",
+      "backwards": true,
+      "operations": [
+        "Create model RagChunk",
+        "Create model RagDocument",
+        "Create index rag_documen_source__f64264_idx on field(s) source_type, status of model ragdocument",
+        "Create index rag_documen_metadat_01405a_gin on field(s) metadata of model ragdocument",
+        "Create constraint rag_doc_source_hash_unique on model ragdocument",
+        "Create constraint rag_doc_status_valid on model ragdocument",
+        "Create constraint rag_doc_scope_valid on model ragdocument",
+        "Create constraint rag_doc_type_valid on model ragdocument",
+        "Add field document to ragchunk",
+        "Create index rag_chunk_metadat_9db3e7_gin on field(s) metadata of model ragchunk",
+        "Create constraint rag_chunk_order_unique on model ragchunk"
+      ]
+    },
+    {
+      "migration": "account.0013_reconcile_existing_models",
+      "backwards": true,
+      "operations": [
+        "Alter field session_keys on user",
+        "Alter field acm_problems_status on userprofile",
+        "Alter field oi_problems_status on userprofile"
+      ]
+    },
+    {
+      "migration": "problem.0017_public_display_id_unique",
+      "backwards": true,
+      "operations": [
+        "Create constraint problem_public_display_id_unique on model problem"
+      ]
+    },
+    {
+      "migration": "problem.0016_reconcile_existing_models",
+      "backwards": true,
+      "operations": [
+        "Change Meta options on problemtag",
+        "Alter field io_mode on problem",
+        "Alter field languages on problem",
+        "Alter field samples on problem",
+        "Alter field statistic_info on problem",
+        "Alter field template on problem",
+        "Alter field test_case_score on problem"
+      ]
+    },
+    {
+      "migration": "submission.0013_reconcile_existing_models",
+      "backwards": true,
+      "operations": [
+        "Alter field info on submission",
+        "Alter field statistic_info on submission"
+      ]
+    },
+    {
+      "migration": "contest.0013_reconcile_existing_models",
+      "backwards": true,
+      "operations": [
+        "Add field is_exam to contest",
+        "Alter field submission_info on acmcontestrank",
+        "Alter field allowed_ip_ranges on contest",
+        "Alter field submission_info on oicontestrank"
+      ]
+    },
+    {
+      "migration": "options.0004_reconcile_existing_models",
+      "backwards": true,
+      "operations": [
+        "Alter field value on sysoptions"
+      ]
+    }
+  ],
+  "learning_rename_plan": [
+    {
+      "migration": "learning.0002_align_learning_contract",
+      "backwards": true,
+      "operations": [
+        "Remove constraint pkr_counts_valid from model problemknowledgerating",
+        "Rename field sample_count on problemknowledgerating to attempt_count",
+        "Create constraint pkr_counts_valid on model problemknowledgerating",
+        "Alter field term on teachingclass",
+        "Alter field status on teachingclass"
+      ]
+    }
+  ],
+  "knowledge_guard_plan": [
+    {
+      "migration": "problem_import.0001_initial",
+      "backwards": true,
+      "operations": [
+        "Create model CollectedProblem",
+        "Create model ProblemImportBatch",
+        "Create model ExternalTagMapping",
+        "Create model ExternalProblemBinding",
+        "Add field batch to collectedproblem",
+        "Add field duplicate_of to collectedproblem",
+        "Add field imported_problem to collectedproblem",
+        "Create index pib_status_time_idx on field(s) status, created_time of model problemimportbatch",
+        "Create constraint pib_status_valid on model problemimportbatch",
+        "Create index etm_platform_status_idx on field(s) source_platform, status of model externaltagmapping",
+        "Create constraint etm_source_unique on model externaltagmapping",
+        "Create constraint etm_confidence_range on model externaltagmapping",
+        "Create constraint etm_status_valid on model externaltagmapping",
+        "Create constraint epb_source_unique on model externalproblembinding",
+        "Create constraint epb_hash_format on model externalproblembinding",
+        "Create index cp_source_idx on field(s) source_platform, source_id of model collectedproblem",
+        "Create index cp_batch_status_idx on field(s) batch, import_status of model collectedproblem",
+        "Create constraint cp_batch_line_unique on model collectedproblem",
+        "Create constraint cp_batch_source_unique on model collectedproblem",
+        "Create constraint cp_line_positive on model collectedproblem",
+        "Create constraint cp_status_valid on model collectedproblem",
+        "Create constraint cp_review_status_valid on model collectedproblem",
+        "Create constraint cp_allocation_format on model collectedproblem"
+      ]
+    },
+    {
+      "migration": "learning.0002_align_learning_contract",
+      "backwards": true,
+      "operations": [
+        "Remove constraint pkr_counts_valid from model problemknowledgerating",
+        "Rename field sample_count on problemknowledgerating to attempt_count",
+        "Create constraint pkr_counts_valid on model problemknowledgerating",
+        "Alter field term on teachingclass",
+        "Alter field status on teachingclass"
+      ]
+    },
+    {
+      "migration": "learning.0001_initial",
+      "backwards": true,
+      "operations": [
+        "Create model LearningPath",
+        "Create model TeachingClass",
+        "Create model TeachingClassTeacher",
+        "Create model TeachingClassStudent",
+        "Create model TeachingAccessEvent",
+        "Create model StudentKnowledgeState",
+        "Create model RatingHistory",
+        "Create model ProblemKnowledgeRating",
+        "Create model LearningSubmissionEvent",
+        "Create model LearningRefreshRequest",
+        "Create model LearningPathStep",
+        "Create constraint tct_member_unique on model teachingclassteacher",
+        "Create constraint tct_role_valid on model teachingclassteacher",
+        "Create constraint tct_status_valid on model teachingclassteacher",
+        "Create constraint tcs_member_unique on model teachingclassstudent",
+        "Create constraint tcs_number_unique on model teachingclassstudent",
+        "Create constraint tcs_status_valid on model teachingclassstudent",
+        "Create constraint tc_status_valid on model teachingclass",
+        "Create constraint sks_user_knowledge_unique on model studentknowledgestate",
+        "Create constraint sks_rating_nonnegative on model studentknowledgestate",
+        "Create constraint sks_confidence_range on model studentknowledgestate",
+        "Create constraint sks_accepted_count_valid on model studentknowledgestate",
+        "Create constraint sks_mastery_valid on model studentknowledgestate",
+        "Create constraint rh_submission_knowledge_version on model ratinghistory",
+        "Create constraint rh_score_range on model ratinghistory",
+        "Create constraint pkr_pair_unique on model problemknowledgerating",
+        "Create constraint pkr_rating_nonnegative on model problemknowledgerating",
+        "Create constraint pkr_confidence_range on model problemknowledgerating",
+        "Create constraint pkr_counts_valid on model problemknowledgerating",
+        "Create constraint pkr_source_valid on model problemknowledgerating",
+        "Create constraint lrr_user_key_unique on model learningrefreshrequest",
+        "Create constraint lps_order_unique on model learningpathstep",
+        "Create constraint lps_order_positive on model learningpathstep",
+        "Create constraint lps_status_valid on model learningpathstep",
+        "Create constraint lp_one_active_per_user on model learningpath",
+        "Create constraint lp_status_valid on model learningpath"
+      ]
+    },
+    {
+      "migration": "agent_service.0001_initial",
+      "backwards": true,
+      "operations": [
+        "Create model AgentConversation",
+        "Create model AgentRun",
+        "Create model AgentDispatch",
+        "Create model ErrorPattern",
+        "Create model AIFeedbackReview",
+        "Create model AgentToolCall",
+        "Create model AgentMessage",
+        "Create index error_patte_problem_4417ee_idx on field(s) problem, verdict, review_status of model errorpattern",
+        "Create constraint error_pattern_target_required on model errorpattern",
+        "Create constraint agent_feedback_unique on model aifeedbackreview",
+        "Create index agent_tool__tool_na_880139_idx on field(s) tool_name of model agenttoolcall",
+        "Create index agent_tool__error_c_cba41a_idx on field(s) error_code of model agenttoolcall",
+        "Create constraint agent_tool_sequence_unique on model agenttoolcall",
+        "Create index agent_run_user_id_d6b1cb_idx on field(s) user, created_time of model agentrun",
+        "Create index agent_run_status_cc2fc5_idx on field(s) status, created_time of model agentrun",
+        "Create constraint agent_run_idempotency on model agentrun",
+        "Create constraint agent_run_service_valid on model agentrun",
+        "Create constraint agent_run_status_valid on model agentrun",
+        "Create constraint agent_run_safety_valid on model agentrun",
+        "Create constraint agent_run_submission_required on model agentrun",
+        "Create constraint agent_message_sequence_unique on model agentmessage",
+        "Create index agent_conve_user_id_14b677_idx on field(s) user, problem, status of model agentconversation",
+        "Create constraint agent_hint_level_range on model agentconversation",
+        "Create constraint agent_conversation_status on model agentconversation",
+        "Create constraint agent_active_conversation on model agentconversation"
+      ]
+    },
+    {
+      "migration": "knowledge.0002_immutable_history",
+      "backwards": true,
+      "operations": [
+        "Raw Python operation"
+      ]
+    }
+  ]
+}

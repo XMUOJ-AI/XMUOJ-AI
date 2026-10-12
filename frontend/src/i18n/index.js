@@ -1,39 +1,31 @@
-import Vue from 'vue'
-import VueI18n from 'vue-i18n'
-
-import ivenUS from 'iview/dist/locale/en-US'
-import ivzhCN from 'iview/dist/locale/zh-CN'
-import ivzhTW from 'iview/dist/locale/zh-TW'
-import elenUS from 'element-ui/lib/locale/lang/en'
-import elzhCN from 'element-ui/lib/locale/lang/zh-CN'
-import elzhTW from 'element-ui/lib/locale/lang/zh-TW'
+import { createI18n } from 'vue-i18n'
+import ivEN from 'view-ui-plus/dist/locale/en-US'
+import ivCN from 'view-ui-plus/dist/locale/zh-CN'
+import ivTW from 'view-ui-plus/dist/locale/zh-TW'
+import elEN from 'element-plus/es/locale/lang/en'
+import elCN from 'element-plus/es/locale/lang/zh-cn'
+import elTW from 'element-plus/es/locale/lang/zh-tw'
+import { m as ojEN } from './oj/en-US'
+import { m as ojCN } from './oj/zh-CN'
+import { m as ojTW } from './oj/zh-TW'
+import { m as adminEN } from './admin/en-US'
+import { m as adminCN } from './admin/zh-CN'
+import { m as adminTW } from './admin/zh-TW'
 import time from '@/utils/time'
 
-Vue.use(VueI18n)
-
-const languages = [
-  {value: 'en-US', label: 'English', iv: ivenUS, el: elenUS},
-  {value: 'zh-CN', label: '简体中文', iv: ivzhCN, el: elzhCN},
-  {value: 'zh-TW', label: '繁體中文', iv: ivzhTW, el: elzhTW}
+export const languages = [
+  { value: 'en-US', label: 'English', iv: ivEN, el: elEN },
+  { value: 'zh-CN', label: '简体中文', iv: ivCN, el: elCN },
+  { value: 'zh-TW', label: '繁體中文', iv: ivTW, el: elTW }
 ]
-const messages = {}
-
-// combine admin and oj
-for (let lang of languages) {
-  let locale = lang.value
-  let m = require(`./oj/${locale}`).m
-  Object.assign(m, require(`./admin/${locale}`).m)
-  let ui = Object.assign(lang.iv, lang.el)
-  messages[locale] = Object.assign({m: m}, ui)
-}
-
-// defalt time locale
+const appMessages = { 'en-US': { ...ojEN, ...adminEN }, 'zh-CN': { ...ojCN, ...adminCN }, 'zh-TW': { ...ojTW, ...adminTW } }
+const messages = Object.fromEntries(languages.map(lang => [lang.value, { m: appMessages[lang.value], ...lang.iv, ...lang.el }]))
+export const instance = createI18n({ legacy: false, locale: 'zh-CN', fallbackLocale: 'zh-CN', messages, missingWarn: false, fallbackWarn: false })
 time.changeLocale('zh-CN')
-
-// load language packages
-export default new VueI18n({
-  locale: 'zh-CN',
-  messages: messages
-})
-
-export {languages}
+// Preserve the non-component translation and locale interface used by the store.
+export default {
+  install (app) { app.use(instance); app.config.globalProperties.$i18n.t = instance.global.t },
+  t (...args) { return instance.global.t(...args) },
+  get locale () { return instance.global.locale.value },
+  set locale (value) { instance.global.locale.value = value }
+}

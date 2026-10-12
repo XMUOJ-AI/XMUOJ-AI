@@ -1,0 +1,54 @@
+#0 building with "colima-xmuoj-merge-20261011" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.07kB done
+#1 WARN: LegacyKeyValueFormat: "ENV key=value" should be used instead of legacy "ENV key value" format (line 5)
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.12-alpine
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 445B done
+#3 DONE 0.0s
+
+#4 [stage-0 1/7] FROM docker.io/library/python:3.12-alpine@sha256:1b668429b3511ab407d8e00648891631b0b1a4d7e15e3ca70f38ab5b91ad4ab4
+#4 resolve docker.io/library/python:3.12-alpine@sha256:1b668429b3511ab407d8e00648891631b0b1a4d7e15e3ca70f38ab5b91ad4ab4 done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 9.77MB 0.1s done
+#5 DONE 0.1s
+
+#6 [stage-0 2/7] WORKDIR /app
+#6 CACHED
+
+#7 [stage-0 3/7] COPY backend/deploy/requirements.txt /app/deploy/
+#7 CACHED
+
+#8 [stage-0 4/7] RUN --mount=type=cache,target=/etc/apk/cache,id=apk-cahce-arm64-final     --mount=type=cache,target=/root/.cache/pip,id=pip-cahce-arm64-final     sh -c "set -ex && apk add gcc libc-dev python3-dev libpq libpq-dev libjpeg-turbo libjpeg-turbo-dev zlib zlib-dev freetype freetype-dev supervisor openssl nginx curl unzip && pip install --upgrade pip==26.2.1 setuptools==83.0.0 && pip install -r /app/deploy/requirements.txt && apk del gcc libc-dev python3-dev libpq-dev libjpeg-turbo-dev zlib-dev freetype-dev"
+#8 CACHED
+
+#9 [stage-0 5/7] COPY backend/ /app/
+#9 DONE 0.0s
+
+#10 [stage-0 6/7] COPY frontend/dist/ /app/dist/
+#10 DONE 0.0s
+
+#11 [stage-0 7/7] RUN chmod -R u=rwX,go=rX ./ && chmod +x ./deploy/entrypoint.sh
+#11 DONE 0.3s
+
+#12 exporting to image
+#12 exporting layers
+#12 exporting layers done
+#12 exporting manifest sha256:845c2d7a7bacf24510fb2b0594e0cf448d7777363485870d76372dda43bdf3e1
+#12 exporting manifest sha256:845c2d7a7bacf24510fb2b0594e0cf448d7777363485870d76372dda43bdf3e1 done
+#12 exporting config sha256:0f115bc6c34ec4ac9fe94689838cf955b14083d4f1fec527be0a4af7fed0f440 done
+#12 exporting attestation manifest sha256:1d676531991919ee149b1e94eb2fd4dfe7329dd677c8f52c74b937d720961455 done
+#12 exporting manifest list sha256:8bb9418b74415a9e5826a02201dcbf7b58a32a0cf05a715c983aa16a54fffa94 done
+#12 naming to docker.io/library/xmuoj-ai:acceptance-20261012-r2 done
+#12 unpacking to docker.io/library/xmuoj-ai:acceptance-20261012-r2 0.1s done
+#12 DONE -3.8s
+
+ [33m1 warning found (use docker --debug to expand):
+[0m - LegacyKeyValueFormat: "ENV key=value" should be used instead of legacy "ENV key value" format (line 5)

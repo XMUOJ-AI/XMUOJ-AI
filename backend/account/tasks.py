@@ -19,4 +19,5 @@ def send_email_async(from_name, to_email, to_name, subject, content):
                    subject=subject,
                    content=content)
     except Exception as e:
-        logger.exception(e)
+        logger.error("email_delivery_failed type=%s", type(e).__name__)
+        raise dramatiq.Retry("Email delivery failed") from None

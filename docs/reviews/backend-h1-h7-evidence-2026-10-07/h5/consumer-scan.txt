@@ -1,0 +1,79 @@
+backend/knowledge/views.py:81:        return self.success(queries.detail(request.user, knowledge_code, public=True, include_collections=include == "true"))
+backend/knowledge/views.py:87:        queryset, serialize = queries.dependency_summaries(
+backend/knowledge/views.py:95:        queryset, serialize = queries.problem_summaries(services.get_point(knowledge_code, active=True), request.user, public=True)
+backend/knowledge/views.py:121:        return self.success(queries.detail(request.user, knowledge_code))
+backend/knowledge/views.py:155:        queryset, serialize = queries.dependency_summaries(services.get_point(knowledge_code), params.get("direction", "prerequisites"))
+backend/knowledge/views.py:163:        queryset, serialize = queries.problem_summaries(services.get_point(knowledge_code), request.user)
+backend/knowledge/queries.py:86:def dependency_summaries(point, direction, public=False):
+backend/knowledge/queries.py:104:def problem_summaries(point, user, public=False):
+backend/knowledge/queries.py:131:        queryset, serialize = dependency_summaries(point, direction, public)
+backend/knowledge/queries.py:134:    queryset, serialize = problem_summaries(point, user, public)
+backend/knowledge/queries.py:140:            base = "/api/knowledge-points/" + point.code
+backend/knowledge/urls.py:7:    path("knowledge-points", views.PublicKnowledgeList.as_view()),
+backend/knowledge/urls.py:8:    path("knowledge-points/<str:knowledge_code>", views.PublicKnowledgeDetail.as_view()),
+backend/knowledge/urls.py:9:    path("knowledge-points/<str:knowledge_code>/dependencies", views.PublicDependencySummaries.as_view()),
+backend/knowledge/urls.py:10:    path("knowledge-points/<str:knowledge_code>/related-problems", views.PublicProblemSummaries.as_view()),
+backend/knowledge/urls.py:12:    path("admin/knowledge-points", views.AdminKnowledgeList.as_view()),
+backend/knowledge/urls.py:13:    path("admin/knowledge-points/<str:knowledge_code>", views.AdminKnowledgeDetail.as_view()),
+backend/knowledge/urls.py:14:    path("admin/knowledge-points/<str:knowledge_code>/delete", views.AdminKnowledgeDelete.as_view()),
+backend/knowledge/urls.py:15:    path("admin/knowledge-points/<str:knowledge_code>/dependencies", views.AdminDependencySummaries.as_view()),
+backend/knowledge/urls.py:16:    path("admin/knowledge-points/<str:knowledge_code>/related-problems", views.AdminProblemSummaries.as_view()),
+backend/knowledge/tests.py:100:        for path in ("knowledge-points", "knowledge-graph", "admin/knowledge-points", "admin/knowledge-reviews"):
+backend/knowledge/tests.py:105:        response = anonymous.get("/api/knowledge-points", HTTP_APPKEY="appkey-only")
+backend/knowledge/tests.py:109:            self.call("get", "knowledge-points")
+backend/knowledge/tests.py:110:            self.call("get", "admin/knowledge-points", expected=403)
+backend/knowledge/tests.py:112:        self.call("get", "admin/knowledge-points")
+backend/knowledge/tests.py:118:        self.call("post", "admin/knowledge-points", payload, 403, csrf_client)
+backend/knowledge/tests.py:121:        response = csrf_client.post("/api/admin/knowledge-points", data=json.dumps(payload), content_type="application/json",
+backend/knowledge/tests.py:128:        created = self.call("post", "admin/knowledge-points", payload, 201)["data"]
+backend/knowledge/tests.py:131:        conflict = self.call("post", "admin/knowledge-points", dict(payload, code="other"), 409)
+backend/knowledge/tests.py:133:        self.call("patch", "admin/knowledge-points/new", {"version": 1, "code": "renamed"}, 400)
+backend/knowledge/tests.py:134:        self.call("patch", "admin/knowledge-points/new", {"version": 1, "status": "deprecated"}, 409)
+backend/knowledge/tests.py:135:        self.call("patch", "admin/knowledge-points/new", {"version": 0, "name": "bad"}, 400)
+backend/knowledge/tests.py:136:        self.call("patch", "admin/knowledge-points/new", {"version": 1, "status": "active"})
+backend/knowledge/tests.py:137:        self.call("patch", "admin/knowledge-points/new", {"version": 1, "name": "outdated"}, 409)
+backend/knowledge/tests.py:138:        self.call("post", "admin/knowledge-points/new/delete", {"version": 2, "reason": "删除测试"}, 409)
+backend/knowledge/tests.py:139:        self.call("patch", "admin/knowledge-points/new", {"version": 2, "status": "deprecated"})
+backend/knowledge/tests.py:140:        self.call("get", "knowledge-points/new", expected=404)
+backend/knowledge/tests.py:142:        self.call("post", "admin/knowledge-points/draft/delete", {"version": draft.version, "reason": "删除草稿"}, 204)
+backend/knowledge/tests.py:198:        self.call("patch", "admin/knowledge-points/c", {"version": 1, "status": "deprecated"}, 409)
+backend/knowledge/tests.py:251:        self.call("patch", "admin/knowledge-points/a", {"version": 1, "status": "deprecated"}, 409)
+backend/knowledge/tests.py:253:        self.call("patch", "admin/knowledge-points/a", {"version": 1, "status": "deprecated"})
+backend/knowledge/tests.py:265:        detail = self.call("get", "knowledge-points/a")["data"]
+backend/knowledge/tests.py:269:        self.call("get", "knowledge-points/" + draft.code, expected=404)
+backend/knowledge/tests.py:270:        self.call("get", "knowledge-points?status=draft", expected=400)
+backend/knowledge/tests.py:272:        self.call("get", "knowledge-points?page_size=101", expected=400)
+backend/knowledge/tests.py:274:        listing = self.call("get", "admin/knowledge-points")["data"]
+backend/knowledge/tests.py:276:        detail = self.call("get", "admin/knowledge-points/a")["data"]
+backend/knowledge/tests.py:292:        body = self.call("get", "knowledge-points/a")
+backend/knowledge/tests.py:298:            body = self.call("get", "knowledge-points/a", expected=409)
+backend/knowledge/tests.py:301:        self.assertEqual(body["data"]["details"]["endpoints"]["related_problems"], "/api/knowledge-points/a/related-problems")
+backend/knowledge/tests.py:307:        body = self.call("get", "knowledge-points/a?include_collections=false")
+backend/knowledge/tests.py:312:            self.call("get", "knowledge-points/a?" + query, expected=400)
+backend/knowledge/tests.py:333:            body = self.call("get", "knowledge-points/a/related-problems?page={}&page_size=40".format(page))
+backend/knowledge/tests.py:343:            self.assertEqual(self.call("get", "knowledge-points/a/related-problems")["data"]["total"], 103)
+backend/knowledge/tests.py:346:        self.assertEqual(self.call("get", "knowledge-points/a/related-problems")["data"]["total"], 102)
+backend/knowledge/tests.py:348:            self.call("get", "knowledge-points/a/related-problems?" + query, expected=400)
+backend/knowledge/tests.py:351:            self.call("get", "knowledge-points/" + point.code + "/related-problems", expected=404)
+backend/knowledge/tests.py:352:        self.call("get", "knowledge-points/missing/related-problems", expected=404)
+backend/knowledge/tests.py:354:        self.call("get", "knowledge-points/a/related-problems", expected=401)
+backend/knowledge/tests.py:364:        error = self.call("get", "knowledge-points/a", expected=409)
+backend/knowledge/tests.py:366:        self.assertEqual(error["data"]["details"]["endpoints"]["dependents"], "/api/knowledge-points/a/dependencies?direction=dependents")
+backend/knowledge/tests.py:367:        body = self.call("get", "knowledge-points/a?include_collections=false")
+backend/knowledge/tests.py:370:        first = self.call("get", "knowledge-points/a/dependencies")
+backend/knowledge/tests.py:372:        second = self.call("get", "knowledge-points/a/dependencies?direction=dependents&page=2&page_size=100")
+backend/knowledge/tests.py:378:            self.call("get", "knowledge-points/a/dependencies?" + query, expected=400)
+backend/knowledge/tests.py:379:        self.call("get", "knowledge-points/inactive_neighbor/dependencies", expected=404)
+backend/knowledge/tests.py:381:        self.call("get", "knowledge-points/a/dependencies", expected=401)
+backend/knowledge/tests.py:408:        detail = self.call("get", "admin/knowledge-points/a")["data"]
+backend/knowledge/tests.py:410:        page = self.call("get", "admin/knowledge-points/a/dependencies?direction=dependents&page=2&page_size=100")["data"]
+backend/knowledge/tests.py:508:        self.call("patch", "admin/knowledge-points/b", {"version": 1, "status": "deprecated"}, 409)
+backend/knowledge/tests.py:511:        self.call("patch", "admin/knowledge-points/b", {"version": 1, "status": "deprecated"})
+backend/knowledge/tests.py:513:        self.call("patch", "admin/knowledge-points/a", {"version": 1, "status": "deprecated"}, 409)
+backend/knowledge/tests.py:518:        self.call("patch", "admin/knowledge-points/a", {"version": 1, "status": "deprecated"}, 409)
+backend/knowledge/tests.py:521:        self.call("patch", "admin/knowledge-points/a", {"version": 1, "status": "deprecated"})
+backend/knowledge/tests.py:525:        self.call("post", "admin/knowledge-points/external_draft/delete", {"version": 1, "reason": "清理草稿"}, 409)
+backend/knowledge/tests.py:538:        self.call("patch", "admin/knowledge-points/a", {"version": 1, "status": "deprecated"}, 409)
+backend/knowledge/tests.py:546:        self.call("patch", "admin/knowledge-points/a", {"version": 1, "status": "deprecated"}, 409)
+backend/knowledge/tests.py:549:        self.call("patch", "admin/knowledge-points/a", {"version": 1, "status": "deprecated"})
+backend/knowledge/tests.py:553:        self.call("post", "admin/knowledge-points/rag_history/delete", {"version": 1, "reason": "不能丢失历史"}, 409)

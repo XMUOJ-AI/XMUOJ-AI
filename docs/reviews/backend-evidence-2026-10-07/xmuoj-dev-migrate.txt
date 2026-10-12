@@ -1,0 +1,17 @@
+Django VERSION (3, 2, 25, 'final', 0)
+Operations to perform:
+  Apply all migrations: account, agent_service, announcement, auth, conf, contenttypes, contest, django_dramatiq, knowledge, learning, options, problem, problem_import, rag, sessions, submission
+Running migrations:
+  Applying account.0013_reconcile_existing_models... OK
+  Applying submission.0013_reconcile_existing_models... OK
+  Applying problem.0016_reconcile_existing_models... OK
+  Applying problem.0017_public_display_id_unique... OK
+  Applying knowledge.0001_initial... OK
+  Applying knowledge.0002_immutable_history... OK
+  Applying agent_service.0001_initial... OK
+  Applying contest.0013_reconcile_existing_models... OK
+  Applying learning.0001_initial... OK
+  Applying learning.0002_align_learning_contract... OK
+  Applying options.0004_reconcile_existing_models... OK
+  Applying problem_import.0001_initial... OK
+  Applying rag.0001_initial... OK

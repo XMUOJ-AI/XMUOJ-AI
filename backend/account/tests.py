@@ -1,10 +1,22 @@
+import io
+import os
+import stat
+import tempfile
 import time
+import zipfile
+from xml.etree import ElementTree
 
 from unittest import mock
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 from datetime import timedelta
 from copy import deepcopy
 
 from django.contrib import auth
+from django.core.management import call_command
+from django.db import IntegrityError, close_old_connections, connections
+from django.test import TransactionTestCase
+from django.urls import reverse
 from django.utils.timezone import now
 from otpauth import OtpAuth
 
@@ -12,10 +24,32 @@ from utils.api.tests import APIClient, APITestCase
 from utils.shortcuts import rand_str
 from options.options import SysOptions
 from problem.models import Problem, ProblemRuleType
-from utils.constants import Difficulty, JudgeStatus
+from utils.constants import Difficulty
+from submission.models import JudgeStatus
 
-from .models import AdminType, ProblemPermission, User
+from .models import AdminType, ProblemPermission, User, UserProfile, UserCredentialExport
+from .credential_exports import EXPORT_LIFETIME, export_path
+from .decorators import super_admin_required
 from utils.constants import ContestRuleType
+
+
+def credential_test_directory(test):
+    directory = tempfile.TemporaryDirectory()
+    test.addCleanup(directory.cleanup)
+    override = test.settings(USER_CREDENTIAL_EXPORT_DIR=directory.name)
+    override.enable()
+    test.addCleanup(override.disable)
+    return directory.name
+
+
+def workbook_credentials(content):
+    namespace = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+    with zipfile.ZipFile(io.BytesIO(content)) as archive:
+        strings = ElementTree.fromstring(archive.read("xl/sharedStrings.xml"))
+        values = ["".join(node.itertext()) for node in strings]
+        sheet = ElementTree.fromstring(archive.read("xl/worksheets/sheet1.xml"))
+        rows = sheet.findall("m:sheetData/m:row", namespace)[1:]
+        return dict(tuple(values[int(cell.find("m:v", namespace).text)] for cell in row) for row in rows)
 
 
 class PermissionDecoratorTest(APITestCase):
@@ -518,7 +552,7 @@ class ProfileProblemDisplayIDRefreshAPITest(APITestCase):
             memory_limit=128,
             rule_type=rule_type,
             visible=True,
-            difficulty=Difficulty.Low,
+            difficulty=Difficulty.LOW,
             source="",
             share_submission=False
         )
@@ -564,6 +598,7 @@ class ProfileProblemDisplayIDRefreshAPITest(APITestCase):
 
 class AdminUserTest(APITestCase):
     def setUp(self):
+        self.export_directory = credential_test_directory(self)
         self.user = self.create_super_admin(login=True)
         self.username = self.password = "test"
         self.regular_user = self.create_user(username=self.username, password=self.password, login=False)
@@ -639,22 +674,227 @@ class AdminUserTest(APITestCase):
         self.assertEqual(User.objects.get(id=self.regular_user.id).open_api_appkey, key)
 
     def test_import_users(self):
-        data = {"users": [["user1", "pass1", "eami1@e.com", "user1"],
-                          ["user2", "pass3", "eamil3@e.com", "user2"]]
+        data = {"users": [["user1", "Student One", "Class A"],
+                          ["user2", "Student Two", "Class B"]]
                 }
         resp = self.client.post(self.url, data)
         self.assertSuccess(resp)
-        # successfully created 2 users
+        download = self.client.get(self.reverse("generate_user_api"), {"file_id": resp.data["data"]["file_id"]})
+        passwords = workbook_credentials(download.content)
+        self.assertEqual(len(set(passwords.values())), 2)
         self.assertEqual(User.objects.all().count(), 4)
+        for username, real_name, classroom in data["users"]:
+            user = User.objects.get(username=username)
+            self.assertFalse(user.check_password("123456"))
+            self.assertEqual(len(passwords[username]), 24)
+            self.assertTrue(user.check_password(passwords[username]))
+            self.assertNotEqual(user.password, passwords[username])
+            self.assertIsNone(user.email)
+            self.assertEqual(user.userprofile.real_name, real_name)
+            self.assertEqual(user.userprofile.school, classroom)
+            self.assertEqual(user.userprofile.language, "zh-CN")
 
     def test_import_duplicate_user(self):
-        data = {"users": [["user1", "pass1", "eami1@e.com", "user1"],
-                          ["user1", "pass1", "eami1@e.com", "user1"]]
+        data = {"users": [["user1", "Student One", "Class A"],
+                          ["user1", "Student One", "Class A"]]
                 }
         resp = self.client.post(self.url, data)
-        self.assertFailed(resp, "DETAIL:  Key (username)=(user1) already exists.")
+        self.assertFailed(resp, "Duplicate usernames in import")
         # no user is created
         self.assertEqual(User.objects.all().count(), 2)
+
+    def test_import_normalizes_new_names_and_matches_legacy_case_without_reset(self):
+        self.regular_user.username = "LegacyStudent"
+        self.regular_user.save(update_fields=["username"])
+        password_hash = self.regular_user.password
+        data = {"users": [["LEGACYSTUDENT", "Keep Existing Name", "New Class"], ["NewStudent", "New", "A"]]}
+        response = self.client.post(self.url, data)
+        self.assertSuccess(response)
+        self.regular_user.refresh_from_db()
+        self.assertEqual(self.regular_user.username, "LegacyStudent")
+        self.assertEqual(self.regular_user.password, password_hash)
+        self.assertEqual(self.regular_user.userprofile.school, "New Class")
+        self.assertEqual(User.objects.filter(username__iexact="legacystudent").count(), 1)
+        canonical = {"users": [[row[0].lower(), *row[1:]] for row in data["users"]]}
+        replay = self.client.post(self.url, canonical)
+        self.assertEqual(replay.data, response.data)
+        file_id = response.data["data"]["file_id"]
+        passwords = workbook_credentials(self.client.get(self.reverse("generate_user_api"), {"file_id": file_id}).content)
+        self.assertEqual(list(passwords), ["newstudent"])
+        self.client.logout()
+        self.assertSuccess(self.client.post(self.reverse("user_login_api"), {"username": "NEWSTUDENT", "password": passwords["newstudent"]}))
+
+    def test_import_rejects_same_batch_case_variants_before_any_changes(self):
+        before_school = self.regular_user.userprofile.school
+        rows = [[self.username, "Existing", "Changed"], ["StudentA", "First", "A"], ["studenta", "Second", "B"]]
+        response = self.client.post(self.url, {"users": rows})
+        self.assertFailed(response, "Duplicate usernames in import")
+        self.regular_user.userprofile.refresh_from_db()
+        self.assertEqual(self.regular_user.userprofile.school, before_school)
+        self.assertEqual(User.objects.count(), 2)
+        self.assertFalse(UserCredentialExport.objects.exists())
+
+    def test_import_rejects_ambiguous_historical_accounts_even_on_receipt_replay(self):
+        data = {"users": [["student", "New", "A"]]}
+        first = self.client.post(self.url, data)
+        self.assertSuccess(first)
+        self.create_user(username="STUDENT", password="legacy-pass", login=False)
+        original_passwords = dict(User.objects.filter(username__iexact="student").values_list("id", "password"))
+        response = self.client.post(self.url, data)
+        self.assertFailed(response, "Multiple existing accounts match the same login; no users were changed")
+        self.assertEqual(dict(User.objects.filter(username__iexact="student").values_list("id", "password")), original_passwords)
+        self.assertEqual(UserCredentialExport.objects.count(), 1)
+
+    def test_mixed_import_only_updates_existing_classroom(self):
+        profile = self.regular_user.userprofile
+        profile.real_name, profile.school, profile.language = "Original Name", "Old Class", "en-US"
+        profile.save()
+        password_hash = self.regular_user.password
+        data = {"users": [[self.username, "Do Not Replace", "New Class"], ["new_student", "New Name", "Class B"]]}
+        response = self.client.post(self.url, data)
+        self.assertSuccess(response)
+        download = self.client.get(self.reverse("generate_user_api"), {"file_id": response.data["data"]["file_id"]})
+        passwords = workbook_credentials(download.content)
+        self.assertEqual(list(passwords), ["new_student"])
+        self.regular_user.refresh_from_db()
+        profile.refresh_from_db()
+        self.assertEqual((profile.real_name, profile.school, profile.language), ("Original Name", "New Class", "en-US"))
+        self.assertEqual(self.regular_user.password, password_hash)
+        newcomer = User.objects.get(username="new_student")
+        self.assertTrue(newcomer.check_password(passwords["new_student"]))
+        self.assertEqual((newcomer.userprofile.real_name, newcomer.userprofile.school, newcomer.userprofile.language),
+                         ("New Name", "Class B", "zh-CN"))
+
+    def test_import_late_invalid_row_keeps_existing_profile(self):
+        profile = self.regular_user.userprofile
+        profile.school = "Old Class"
+        profile.save()
+        data = {"users": [[self.username, "Unchanged", "New Class"], ["invalid_student", "Missing Class"]]}
+        self.assertFailed(self.client.post(self.url, data))
+        profile.refresh_from_db()
+        self.assertEqual(profile.school, "Old Class")
+        self.assertEqual(User.objects.count(), 2)
+
+    def test_import_duplicate_new_user_rolls_back_existing_update(self):
+        profile = self.regular_user.userprofile
+        profile.school = "Old Class"
+        profile.save()
+        data = {"users": [[self.username, "Unchanged", "New Class"],
+                          ["duplicate_student", "New Name", "Class B"], ["duplicate_student", "Other Name", "Class C"]]}
+        self.assertFailed(self.client.post(self.url, data))
+        profile.refresh_from_db()
+        self.assertEqual(profile.school, "Old Class")
+        self.assertEqual(User.objects.count(), 2)
+
+    def test_import_download_and_login(self):
+        response = self.client.post(self.url, {"users": [["new_student", "Student", "A"]]})
+        self.assertSuccess(response)
+        download = self.client.get(self.reverse("generate_user_api"), {"file_id": response.data["data"]["file_id"]})
+        self.assertEqual(download["Cache-Control"], "no-store, private")
+        password = workbook_credentials(download.content)["new_student"]
+        self.client.logout()
+        self.assertSuccess(self.client.post(self.reverse("user_login_api"), {"username": "new_student", "password": password}))
+        self.assertEqual(auth.get_user(self.client).username, "new_student")
+
+    def test_import_response_loss_and_download_retry_preserve_credentials(self):
+        data = {"users": [["new_student", "Student", "A"]]}
+        first = self.client.post(self.url, data)
+        file_id = first.data["data"]["file_id"]
+        download_url = self.reverse("generate_user_api")
+        before = User.objects.get(username="new_student").password
+        content = self.client.get(download_url, {"file_id": file_id}).content
+        with mock.patch("account.views.admin.secrets.token_urlsafe") as random_password:
+            replay = self.client.post(self.url, data)
+        random_password.assert_not_called()
+        self.assertEqual(first.data, replay.data)
+        self.assertEqual(self.client.get(download_url, {"file_id": file_id}).content, content)
+        self.assertEqual(User.objects.get(username="new_student").password, before)
+        self.assertEqual(UserCredentialExport.objects.count(), 1)
+        self.assertEqual(self.client.get(download_url, {"list": 1}).data["data"][0]["file_id"], file_id)
+        self.assertEqual(stat.S_IMODE(os.stat(self.export_directory).st_mode), 0o700)
+        self.assertEqual(stat.S_IMODE(os.stat(export_path(file_id)).st_mode), 0o600)
+
+    def test_export_only_owner_super_admin_can_access(self):
+        data = {"users": [["new_student", "Student", "A"]]}
+        response = self.client.post(self.url, data)
+        file_id = response.data["data"]["file_id"]
+        download_url = self.reverse("generate_user_api")
+        self.client.logout()
+        for user in [None, self.regular_user, self.create_admin(login=False)]:
+            if user:
+                self.client.force_login(user)
+            self.assertFailed(self.client.post(self.url, data))
+            self.assertFailed(self.client.get(download_url, {"file_id": file_id}))
+            self.assertFailed(self.client.get(download_url, {"list": 1}))
+        self.create_super_admin(username="other_super")
+        self.assertFailed(self.client.get(download_url, {"file_id": file_id}))
+        self.assertEqual(self.client.get(download_url, {"list": 1}).data["data"], [])
+        repeat = self.client.post(self.url, data)
+        self.assertSuccess(repeat)
+        self.assertIsNone(repeat.data["data"]["file_id"])
+        self.client.force_login(self.user)
+        self.user.is_disabled = True
+        self.user.save(update_fields=["is_disabled"])
+        self.assertFailed(self.client.get(download_url, {"file_id": file_id}))
+
+    def test_export_failure_rolls_back_accounts_and_classroom(self):
+        profile = self.regular_user.userprofile
+        profile.school = "Original Class"
+        profile.save()
+        data = {"users": [[self.username, "Unchanged", "New Class"], ["new_student", "Student", "A"]]}
+        for target, failure in [("account.credential_exports.os.fsync", OSError("disk full")),
+                                ("account.credential_exports.UserCredentialExport.objects.create", IntegrityError("failed receipt"))]:
+            with self.subTest(target=target), mock.patch(target, side_effect=failure):
+                self.assertFailed(self.client.post(self.url, data))
+            profile.refresh_from_db()
+            self.assertEqual(profile.school, "Original Class")
+            self.assertEqual(User.objects.count(), 2)
+            self.assertFalse(UserCredentialExport.objects.exists())
+            self.assertEqual(os.listdir(self.export_directory), [])
+
+    def test_expired_exports_and_orphans_are_cleaned_without_reset(self):
+        data = {"users": [["new_student", "Student", "A"]]}
+        response = self.client.post(self.url, data)
+        file_id = response.data["data"]["file_id"]
+        path = export_path(file_id)
+        before = User.objects.get(username="new_student").password
+        UserCredentialExport.objects.filter(pk=file_id).update(expires_at=now() - timedelta(seconds=1))
+        self.assertFailed(self.client.get(self.reverse("generate_user_api"), {"file_id": file_id}))
+        self.assertFalse(os.path.exists(path))
+        repeat = self.client.post(self.url, data)
+        self.assertSuccess(repeat)
+        self.assertIsNone(repeat.data["data"]["file_id"])
+        self.assertEqual(User.objects.get(username="new_student").password, before)
+        with open(path, "wb") as abandoned:
+            abandoned.write(b"abandoned export")
+        old_time = (now() - EXPORT_LIFETIME - timedelta(seconds=1)).timestamp()
+        os.utime(path, (old_time, old_time))
+        call_command("cleanup_user_credentials", stdout=io.StringIO())
+        self.assertFalse(os.path.exists(path))
+
+    def test_cleanup_does_not_remove_a_live_export_with_old_file_mtime(self):
+        response = self.client.post(self.url, {"users": [["student", "New", "A"]]})
+        file_id = response.data["data"]["file_id"]
+        path = export_path(file_id)
+        current_time = now()
+        UserCredentialExport.objects.filter(pk=file_id).update(expires_at=current_time + timedelta(milliseconds=100))
+        written_at = (current_time - EXPORT_LIFETIME - timedelta(milliseconds=100)).timestamp()
+        os.utime(path, (written_at, written_at))
+        with mock.patch("account.credential_exports.timezone.now", return_value=current_time):
+            call_command("cleanup_user_credentials", stdout=io.StringIO())
+            response = self.client.get(self.reverse("generate_user_api"), {"file_id": file_id})
+        self.assertEqual(response["Content-Type"], "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        self.assertTrue(os.path.exists(path))
+        self.assertEqual(list(workbook_credentials(response.content)), ["student"])
+
+    def test_export_rejects_path_traversal_and_loose_file_permissions(self):
+        response = self.client.post(self.url, {"users": [["new_student", "Student", "A"]]})
+        file_id = response.data["data"]["file_id"]
+        download_url = self.reverse("generate_user_api")
+        for bad_id in ["../../etc/passwd", file_id + "\n", "a" * 64]:
+            self.assertFailed(self.client.get(download_url, {"file_id": bad_id}))
+        os.chmod(export_path(file_id), 0o644)
+        self.assertFailed(self.client.get(download_url, {"file_id": file_id}))
 
     def test_delete_users(self):
         self.test_import_users()
@@ -667,6 +907,7 @@ class AdminUserTest(APITestCase):
 
 class GenerateUserAPITest(APITestCase):
     def setUp(self):
+        self.export_directory = credential_test_directory(self)
         self.create_super_admin()
         self.url = self.reverse("generate_user_api")
         self.data = {
@@ -688,11 +929,46 @@ class GenerateUserAPITest(APITestCase):
         resp = self.client.post(self.url, data=data2)
         self.assertEqual(resp.data["data"], "Start number must be lower than end number")
 
-    @mock.patch("account.views.admin.xlsxwriter.Workbook")
-    def test_generate_user_success(self, mock_workbook):
+    def test_generate_user_success(self):
         resp = self.client.post(self.url, data=self.data)
         self.assertSuccess(resp)
-        mock_workbook.assert_called()
+        download = self.client.get(self.url, {"file_id": resp.data["data"]["file_id"]})
+        credentials = workbook_credentials(download.content)
+        self.assertEqual(len(credentials), 6)
+        for username, password in credentials.items():
+            self.assertTrue(User.objects.get(username=username).check_password(password))
+        retry = self.client.post(self.url, data=self.data)
+        self.assertEqual(retry.data, resp.data)
+        self.assertEqual(User.objects.count(), 7)
+
+    def test_generate_user_rejects_short_passwords(self):
+        self.data["password_length"] = 0
+        self.assertFailed(self.client.post(self.url, self.data))
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_generate_normalizes_prefix_suffix_and_replays_case_variants(self):
+        data = dict(self.data, prefix="Student", suffix="X", number_from=1, number_to=1)
+        response = self.client.post(self.url, data)
+        self.assertSuccess(response)
+        replay = self.client.post(self.url, dict(data, prefix="student", suffix="x"))
+        self.assertEqual(replay.data, response.data)
+        download = self.client.get(self.url, {"file_id": response.data["data"]["file_id"]})
+        credentials = workbook_credentials(download.content)
+        self.assertEqual(list(credentials), ["student1x"])
+        self.client.logout()
+        self.assertSuccess(self.client.post(self.reverse("user_login_api"), {"username": "STUDENT1X", "password": credentials["student1x"]}))
+
+    def test_generate_rejects_existing_mixed_case_and_ambiguous_history(self):
+        data = dict(self.data, prefix="student", suffix="", number_from=1, number_to=2)
+        existing = self.create_user(username="Student1", password="legacy-pass", login=False)
+        original_password = existing.password
+        self.assertFailed(self.client.post(self.url, data), "Username already exists; no users were created")
+        self.assertFalse(User.objects.filter(username="student2").exists())
+        self.create_user(username="STUDENT1", password="legacy-pass", login=False)
+        self.assertFailed(self.client.post(self.url, data), "Multiple existing accounts match the same login; no users were changed")
+        existing.refresh_from_db()
+        self.assertEqual(existing.password, original_password)
+        self.assertFalse(UserCredentialExport.objects.exists())
 
 
 class OpenAPIAppkeyAPITest(APITestCase):
@@ -709,3 +985,116 @@ class OpenAPIAppkeyAPITest(APITestCase):
         resp = self.client.post(self.url, data={})
         self.assertSuccess(resp)
         self.assertEqual(resp.data["data"]["appkey"], User.objects.get(username=self.user.username).open_api_appkey)
+
+
+class CredentialExportConcurrencyTest(TransactionTestCase):
+    def test_different_admins_import_case_variants_without_duplicate_logins(self):
+        self._different_admins_same_name(generate=False)
+
+    def test_different_admins_generate_case_variants_without_duplicate_logins(self):
+        self._different_admins_same_name(generate=True)
+
+    def _different_admins_same_name(self, generate):
+        credential_test_directory(self)
+        owners = [User.objects.create(username="owner" + str(index), admin_type=AdminType.SUPER_ADMIN) for index in range(2)]
+        UserProfile.objects.bulk_create([UserProfile(user=owner) for owner in owners])
+        barrier = Barrier(2)
+
+        def create_accounts(item):
+            index, owner = item
+            close_old_connections()
+            try:
+                client = APIClient()
+                client.force_login(User.objects.get(pk=owner.pk))
+                prefix = "STUDENT" if index else "student"
+                if generate:
+                    url, data = reverse("generate_user_api"), {"prefix": prefix, "suffix": "", "number_from": 1,
+                                                               "number_to": 1, "password_length": 16}
+                else:
+                    url, data = reverse("user_admin_api"), {"users": [[prefix + "1", "Student", "A"]]}
+                barrier.wait(timeout=10)
+                return client.post(url, data, format="json").data
+            finally:
+                connections.close_all()
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            responses = list(pool.map(create_accounts, enumerate(owners)))
+        self.assertEqual(User.objects.filter(username__iexact="student1").count(), 1)
+        self.assertEqual(UserCredentialExport.objects.count(), 1)
+        if generate:
+            self.assertEqual(sum(response["error"] is None for response in responses), 1)
+            self.assertIn("Username already exists; no users were created", [response["data"] for response in responses if response["error"]])
+        else:
+            self.assertTrue(all(response["error"] is None for response in responses))
+            self.assertEqual(sorted(response["data"]["created_count"] for response in responses), [0, 1])
+        receipt = UserCredentialExport.objects.get()
+        with open(export_path(receipt.pk), "rb") as source:
+            credentials = workbook_credentials(source.read())
+        self.assertTrue(User.objects.get(username="student1").check_password(credentials["student1"]))
+
+    def test_concurrent_import_retries_create_one_receipt_and_one_user(self):
+        credential_test_directory(self)
+        owner = User.objects.create(username="export_owner", admin_type=AdminType.SUPER_ADMIN)
+        UserProfile.objects.create(user=owner)
+        barrier = Barrier(2)
+
+        def import_users():
+            close_old_connections()
+            try:
+                client = APIClient()
+                client.force_login(User.objects.get(pk=owner.pk))
+                barrier.wait(timeout=10)
+                return client.post(reverse("user_admin_api"), {"users": [["student", "Student", "A"]]}, format="json").data
+            finally:
+                connections.close_all()
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            responses = list(pool.map(lambda _: import_users(), range(2)))
+        self.assertIsNone(responses[0]["error"])
+        self.assertEqual(responses[0], responses[1])
+        self.assertEqual(User.objects.filter(username="student").count(), 1)
+        self.assertEqual(UserCredentialExport.objects.count(), 1)
+
+    def test_concurrent_admin_and_super_admin_cannot_share_download_permission(self):
+        self._concurrent_export_permissions(other_role=AdminType.ADMIN, disabled=False)
+
+    def test_concurrent_disabled_and_active_super_admin_keep_separate_permissions(self):
+        self._concurrent_export_permissions(other_role=AdminType.SUPER_ADMIN, disabled=True)
+
+    def _concurrent_export_permissions(self, other_role, disabled):
+        credential_test_directory(self)
+        owner = User.objects.create(username="allowed_owner", admin_type=AdminType.SUPER_ADMIN)
+        denied = User.objects.create(username="denied_user", admin_type=other_role, is_disabled=disabled)
+        UserProfile.objects.bulk_create([UserProfile(user=owner), UserProfile(user=denied)])
+        barrier = Barrier(2)
+        original = super_admin_required.check_permission
+
+        def simultaneous_check(decorator, *args):
+            # Both requests have reached the SAME decorator before either checks its user.
+            if not disabled:
+                barrier.wait(timeout=10)
+            return original(decorator, *args)
+
+        def read_exports(user):
+            close_old_connections()
+            try:
+                client = APIClient()
+                client.force_login(user)
+                session = client.session
+                session_key = session.session_key
+                # Disabled sessions are rejected by middleware before the decorator.
+                if disabled:
+                    barrier.wait(timeout=10)
+                response = client.get(reverse("generate_user_api"), {"list": 1})
+                if disabled and user.pk == denied.pk:
+                    self.assertNotIn(auth.SESSION_KEY, client.session)
+                    self.assertFalse(session.exists(session_key))
+                return response.data
+            finally:
+                connections.close_all()
+
+        with mock.patch.object(super_admin_required, "check_permission", simultaneous_check):
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                allowed, forbidden = list(pool.map(read_exports, [owner, denied]))
+        self.assertIsNone(allowed["error"])
+        self.assertEqual(forbidden["error"], "login-required" if disabled else "permission-denied")

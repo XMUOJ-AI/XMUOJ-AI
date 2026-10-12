@@ -63,7 +63,7 @@ class User(AbstractBaseUser):
         return self.is_authenticated and (contest.created_by == self or self.admin_type == AdminType.SUPER_ADMIN)
 
     def __getattribute__(self, item):
-        if item == 'get_session_auth_hash':
+        if item == "get_session_auth_hash":
             raise AttributeError
         return super().__getattribute__(item)
 
@@ -122,3 +122,21 @@ class UserProfile(models.Model):
 
     class Meta:
         db_table = "user_profile"
+
+
+class UserCredentialExport(models.Model):
+    """Short-lived receipts only; raw passwords are never stored in the database."""
+
+    id = models.CharField(primary_key=True, max_length=64)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    operation = models.CharField(max_length=16)
+    request_digest = models.CharField(max_length=64)
+    created_count = models.PositiveIntegerField()
+    updated_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(db_index=True)
+
+    class Meta:
+        db_table = "user_credential_export"
+        constraints = [models.UniqueConstraint(
+            fields=["created_by", "operation", "request_digest"], name="user_export_request_unique")]

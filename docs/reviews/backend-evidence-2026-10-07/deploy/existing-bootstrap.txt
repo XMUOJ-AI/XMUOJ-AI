@@ -1,0 +1,9 @@
+Django VERSION (3, 2, 25, 'final', 0)
+Operations to perform:
+  Apply all migrations: account, agent_service, announcement, auth, conf, contenttypes, contest, django_dramatiq, knowledge, learning, options, problem, problem_import, rag, sessions, submission
+Running migrations:
+  No migrations to apply.
+Django VERSION (3, 2, 25, 'final', 0)
+An administrator already exists; bootstrap skipped
+Django VERSION (3, 2, 25, 'final', 0)
+EXISTING_DATABASE_STARTUP_PASS

@@ -1,0 +1,16 @@
+{
+  "check": "test-judge",
+  "command": [
+    "/Users/jingweihao/\u5927\u521b/XMUOJ-AI/.venv/bin/python",
+    "manage.py",
+    "test",
+    "judge",
+    "submission",
+    "conf",
+    "rag.tests.RagHTTPDeadlineTests",
+    "--settings=oj.settings",
+    "--noinput"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 14.13
+}

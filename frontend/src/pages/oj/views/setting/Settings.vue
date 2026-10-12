@@ -24,9 +24,9 @@
           </Menu>
         </div>
         <div class="panel">
-          <transition name="fadeInUp">
-            <router-view></router-view>
-          </transition>
+          <router-view v-slot="{ Component }">
+        <transition name="fadeInUp"><component :is="Component" /></transition>
+      </router-view>
         </div>
       </div>
     </Card>

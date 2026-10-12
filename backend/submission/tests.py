@@ -2,6 +2,8 @@ from copy import deepcopy
 from unittest import mock
 
 from problem.models import Problem, ProblemTag
+from judge.models import JudgeDispatch
+from judge.services import recover_dispatches
 from utils.api.tests import APITestCase
 from .models import Submission
 
@@ -57,7 +59,7 @@ class SubmissionListTest(SubmissionPrepare):
         self.assertSuccess(resp)
 
 
-@mock.patch("submission.views.oj.judge_task.send")
+@mock.patch("judge.tasks.judge_task.send")
 class SubmissionAPITest(SubmissionPrepare):
     def setUp(self):
         self._create_problem_and_submission()
@@ -65,14 +67,49 @@ class SubmissionAPITest(SubmissionPrepare):
         self.url = self.reverse("submission_api")
 
     def test_create_submission(self, judge_task):
-        resp = self.client.post(self.url, self.submission_data)
+        with self.captureOnCommitCallbacks(execute=True):
+            resp = self.client.post(self.url, self.submission_data)
         self.assertSuccess(resp)
         judge_task.assert_called()
+
+    def test_broker_failure_keeps_one_submission_and_recoverable_dispatch(self, judge_task):
+        self._assert_broker_failure_keeps_submission(judge_task, self.url)
+
+    def test_plugin_broker_failure_keeps_one_submission_and_recoverable_dispatch(self, judge_task):
+        self._assert_broker_failure_keeps_submission(judge_task, self.reverse("plugin_submission_api"))
+
+    def _assert_broker_failure_keeps_submission(self, judge_task, url):
+        before = Submission.objects.count()
+        judge_task.side_effect = RuntimeError("broker unavailable")
+        with self.assertLogs("judge.services", level="WARNING"), self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(url, self.submission_data)
+        self.assertSuccess(response)
+        submission_id = response.data["data"]["submission_id"]
+        dispatch = JudgeDispatch.objects.get(submission_id=submission_id)
+        self.assertEqual((dispatch.status, dispatch.delivered_time), ("queued", None))
+        self.assertEqual(Submission.objects.count(), before + 1)
+        judge_task.reset_mock(side_effect=True)
+        self.assertEqual(recover_dispatches(), 1)
+        judge_task.assert_called_once_with(submission_id, self.problem.pk)
+        self.assertEqual(Submission.objects.count(), before + 1)
 
     def test_create_submission_with_wrong_language(self, judge_task):
         self.submission_data.update({"language": "Python3"})
         resp = self.client.post(self.url, self.submission_data)
         self.assertFailed(resp)
         self.assertDictEqual(resp.data, {"error": "error",
-                                         "data": "Python3 is now allowed in the problem"})
+                                         "data": "Python3 is not allowed in the problem"})
         judge_task.assert_not_called()
+
+    def test_shared_oi_detail_never_exposes_submission_ip(self, judge_task):
+        self.problem.rule_type = "OI"
+        self.problem.share_submission = True
+        self.problem.save(update_fields=["rule_type", "share_submission"])
+        self.submission.ip = "198.51.100.17"
+        self.submission.info = {"data": [{"result": 0, "cpu_time": 1}]}
+        self.submission.save(update_fields=["ip", "info"])
+        response = self.client.get(self.url, {"id": self.submission.pk})
+        self.assertSuccess(response)
+        self.assertNotIn("ip", response.data["data"])
+        self.assertEqual(response.data["data"]["info"], self.submission.info)
+        self.assertEqual(response.data["data"]["code"], self.submission.code)

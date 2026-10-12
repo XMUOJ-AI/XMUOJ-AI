@@ -17,6 +17,7 @@ class my_property:
     2. ttl is callable，条件缓存
     3. 缓存 ttl 秒
     """
+
     def __init__(self, func=None, fset=None, ttl=None):
         self.fset = fset
         self.local = threading.local()
@@ -280,7 +281,6 @@ class _SysOptionsMeta(type):
     @my_property(ttl=DEFAULT_SHORT_TTL)
     def visible_spj_language_names(cls):
         return [item["name"] for item in cls.languages if "spj" in item and item.get("visible", True)]
-
 
     @my_property(ttl=DEFAULT_SHORT_TTL)
     def visible_languages(cls):

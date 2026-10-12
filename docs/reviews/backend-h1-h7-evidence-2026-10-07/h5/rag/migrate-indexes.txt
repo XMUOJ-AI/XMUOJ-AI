@@ -1,0 +1,7 @@
+Django VERSION (3, 2, 25, 'final', 0)
+Operations to perform:
+  Apply all migrations: rag
+Running migrations:
+  Applying rag.0002_lexical_search_indexes... OK
+
+Shell time: 0.30s user, 0.10s system, 5:42.44 total; process exit 0.

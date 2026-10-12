@@ -1,0 +1,21 @@
+{
+  "name": "simple-hotkeys",
+  "description": "Simple hotkeys for tower.im",
+  "version": "0.2.1",
+  "homepage": "https://github.com/ichord/simple-hotkeys",
+  "main": "lib/hotkeys.js",
+  "author": {
+    "name": "ichord",
+    "email": "chord.luo@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ichord/simple-hotkeys.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ichord/simple-hotkeys/issues"
+  },
+  "keywords": [
+    "hotkeys"
+  ]
+}

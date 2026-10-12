@@ -1,0 +1,16 @@
+题包构建器既有测试
+test_duplicate_source_key_is_rejected (test_build_qduoj_batch.BuildQduojBatchTests.test_duplicate_source_key_is_rejected) ... ok
+test_golden_zip_is_reproducible (test_build_qduoj_batch.BuildQduojBatchTests.test_golden_zip_is_reproducible) ... ok
+test_manifest_hashes_every_payload_file (test_build_qduoj_batch.BuildQduojBatchTests.test_manifest_hashes_every_payload_file) ... ok
+test_qduoj_problem_matches_existing_import_serializer_shape (test_build_qduoj_batch.BuildQduojBatchTests.test_qduoj_problem_matches_existing_import_serializer_shape) ... ok
+test_statement_only_is_metadata_only (test_build_qduoj_batch.BuildQduojBatchTests.test_statement_only_is_metadata_only) ... ok
+test_unsafe_raw_path_is_rejected (test_build_qduoj_batch.BuildQduojBatchTests.test_unsafe_raw_path_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.005s
+
+OK
+
+旧契约验证
+contract validation passed
+

@@ -1,13 +1,12 @@
 import hashlib
 import json
+import logging
 import os
 import re
 import shutil
-import smtplib
 import time
-from datetime import datetime
+from datetime import datetime, timezone as datetime_timezone
 
-import pytz
 import requests
 from django.conf import settings
 from django.utils import timezone
@@ -16,11 +15,11 @@ from requests.exceptions import RequestException
 from account.decorators import super_admin_required
 from account.models import User
 from contest.models import Contest
-from judge.dispatcher import process_pending_task
+from judge.dispatcher import process_pending_task, sync_judge_server_tasks
 from options.options import SysOptions
 from problem.models import Problem
 from submission.models import Submission
-from utils.api import APIView, CSRFExemptAPIView, validate_serializer
+from utils.api import APIError, APIView, CSRFExemptAPIView, validate_serializer
 from utils.shortcuts import send_email, get_env
 from utils.xss_filter import XSSHtml
 from .models import JudgeServer
@@ -71,19 +70,9 @@ class SMTPTestAPI(APIView):
                        to_email=request.data["email"],
                        subject="You have successfully configured SMTP",
                        content="You have successfully configured SMTP")
-        except smtplib.SMTPResponseException as e:
-            # guess error message encoding
-            msg = b"Failed to send email"
-            try:
-                msg = e.smtp_error
-                # qq mail
-                msg = msg.decode("gbk")
-            except Exception:
-                msg = msg.decode("utf-8", "ignore")
-            return self.error(msg)
         except Exception as e:
-            msg = str(e)
-            return self.error(msg)
+            logging.getLogger(__name__).error("smtp_test_failed type=%s", type(e).__name__)
+            return self.error("Failed to send email; check SMTP configuration and availability")
         return self.success()
 
 
@@ -137,26 +126,18 @@ class JudgeServerHeartbeatAPI(CSRFExemptAPIView):
         if hashlib.sha256(SysOptions.judge_server_token.encode("utf-8")).hexdigest() != client_token:
             return self.error("Invalid token")
 
-        try:
-            server = JudgeServer.objects.get(hostname=data["hostname"])
-            server.judger_version = data["judger_version"]
-            server.cpu_core = data["cpu_core"]
-            server.memory_usage = data["memory"]
-            server.cpu_usage = data["cpu"]
-            server.service_url = data["service_url"]
-            server.ip = request.ip
-            server.last_heartbeat = timezone.now()
-            server.save(update_fields=["judger_version", "cpu_core", "memory_usage", "service_url", "ip", "last_heartbeat"])
-        except JudgeServer.DoesNotExist:
-            JudgeServer.objects.create(hostname=data["hostname"],
-                                       judger_version=data["judger_version"],
-                                       cpu_core=data["cpu_core"],
-                                       memory_usage=data["memory"],
-                                       cpu_usage=data["cpu"],
-                                       ip=request.META["REMOTE_ADDR"],
-                                       service_url=data["service_url"],
-                                       last_heartbeat=timezone.now(),
-                                       )
+        # The hostname constraint resolves simultaneous first heartbeats; the row
+        # lock preserves dispatcher slot counts and administrator disable state.
+        server, _ = JudgeServer.objects.update_or_create(hostname=data["hostname"], defaults={
+            "judger_version": data["judger_version"],
+            "cpu_core": data["cpu_core"],
+            "memory_usage": data["memory"],
+            "cpu_usage": data["cpu"],
+            "service_url": data["service_url"],
+            "ip": request.ip,
+            "last_heartbeat": timezone.now,
+        })
+        sync_judge_server_tasks(server.pk)
         # 新server上线 处理队列中的，防止没有新的提交而导致一直waiting
         process_pending_task()
 
@@ -203,9 +184,15 @@ class TestCasePruneAPI(APIView):
 
     @staticmethod
     def delete_one(id):
+        if not isinstance(id, str) or not re.fullmatch(r"[a-zA-Z0-9]{32}", id):
+            raise APIError("Invalid test case id")
+        if Problem.objects.filter(test_case_id=id).exists():
+            raise APIError("Test case is still in use")
         test_case_dir = os.path.join(settings.TEST_CASE_DIR, id)
+        if os.path.islink(test_case_dir):
+            raise APIError("Invalid test case directory")
         if os.path.isdir(test_case_dir):
-            shutil.rmtree(test_case_dir, ignore_errors=True)
+            shutil.rmtree(test_case_dir)
 
 
 class ReleaseNotesAPI(APIView):
@@ -216,7 +203,8 @@ class ReleaseNotesAPI(APIView):
             releases = resp.json()
         except (RequestException, ValueError):
             return self.success()
-        with open("docs/data.json", "r") as f:
+        release_data_path = os.path.join(settings.BASE_DIR, "docs", "data.json")
+        with open(release_data_path, "r", encoding="utf-8") as f:
             local_version = json.load(f)["update"][0]["version"]
         releases["local_version"] = local_version
         return self.success(releases)
@@ -226,7 +214,7 @@ class DashboardInfoAPI(APIView):
     def get(self, request):
         today = datetime.today()
         today_submission_count = Submission.objects.filter(
-            create_time__gte=datetime(today.year, today.month, today.day, 0, 0, tzinfo=pytz.UTC)).count()
+            create_time__gte=datetime(today.year, today.month, today.day, 0, 0, tzinfo=datetime_timezone.utc)).count()
         recent_contest_count = Contest.objects.exclude(end_time__lt=timezone.now()).count()
         judge_server_count = len(list(filter(lambda x: x.status == "normal", JudgeServer.objects.all())))
         return self.success({

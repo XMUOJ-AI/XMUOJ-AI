@@ -1,11 +1,11 @@
 import ipaddress
 import logging
-from django.db import DatabaseError
+from django.db import DatabaseError, transaction
 from django.utils.timezone import now
 
 from account.decorators import login_required, check_contest_permission
 from contest.models import ContestStatus, ContestRuleType, Contest, ACMContestRank, OIContestRank
-from judge.tasks import judge_task
+from judge.services import request_judge
 from options.options import SysOptions
 # from judge.dispatcher import JudgeDispatcher
 from problem.models import Problem, ProblemRuleType
@@ -76,16 +76,15 @@ class SubmissionAPI(APIView):
             return self.error("Problem not exist")
         if data["language"] not in problem.languages:
             return self.error(f"{data['language']} is not allowed in the problem")
-        submission = Submission.objects.create(user_id=request.user.id,
-                                               username=request.user.username,
-                                               language=data["language"],
-                                               code=data["code"],
-                                               problem_id=problem.id,
-                                               ip=request.session["ip"],
-                                               contest_id=data.get("contest_id"))
-        # use this for debug
-        # JudgeDispatcher(submission.id, problem.id).judge()
-        judge_task.send(submission.id, problem.id)
+        with transaction.atomic():
+            submission = Submission.objects.create(user_id=request.user.id,
+                                                   username=request.user.username,
+                                                   language=data["language"],
+                                                   code=data["code"],
+                                                   problem_id=problem.id,
+                                                   ip=request.session["ip"],
+                                                   contest_id=data.get("contest_id"))
+            request_judge(submission)
         if hide_id:
             return self.success()
         else:
@@ -244,12 +243,9 @@ class SubmissionListAPI(APIView):
                     # Do not broaden query scope when public problem id is missing.
                     return self.success(self._safe_fallback_result(request.user, problem_id))
                 except DatabaseError:
-                    return self.success(self._safe_fallback_result(request.user, problem_id))
+                    return self.server_error()
                 submissions = submissions.filter(problem=problem)
-            try:
-                submission_list_show_all = SysOptions.submission_list_show_all
-            except Exception:
-                submission_list_show_all = True
+            submission_list_show_all = SysOptions.submission_list_show_all
 
             if (myself and myself == "1") or not submission_list_show_all:
                 submissions = submissions.filter(user_id=request.user.id)
@@ -266,9 +262,9 @@ class SubmissionListAPI(APIView):
                 if fallback["total"] > 0:
                     return self.success(fallback)
             return self.success(data)
-        except Exception:
-            logger.exception("SubmissionListAPI failed, query=%s, user_id=%s", dict(request.GET), getattr(request.user, "id", None))
-            return self.success(self._safe_fallback_result(request.user, problem_id))
+        except Exception as exc:
+            logger.error("submission_list_failed type=%s", type(exc).__name__)
+            return self.server_error()
 
 
 class ContestSubmissionListAPI(APIView):
@@ -380,10 +376,9 @@ class ContestSubmissionListAPI(APIView):
                 if fallback["total"] > 0:
                     return self.success(fallback)
             return self.success(data)
-        except Exception:
-            logger.exception("ContestSubmissionListAPI failed, contest_id=%s, query=%s, user_id=%s",
-                             getattr(contest, "id", None), dict(request.GET), getattr(request.user, "id", None))
-            return self.success(self._safe_fallback_result_for_contest(contest, request.user, problem_id))
+        except Exception as exc:
+            logger.error("contest_submission_list_failed type=%s", type(exc).__name__)
+            return self.server_error()
 
 
 class SubmissionExistsAPI(APIView):

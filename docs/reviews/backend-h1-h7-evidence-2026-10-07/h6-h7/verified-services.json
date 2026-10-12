@@ -1,0 +1,23 @@
+[
+  {
+    "name": "/xmuoj-h7-20261007-backend",
+    "image": "xmuoj-ai:h1-h7-20261007",
+    "image_id": "sha256:8458e9b8f186148f02c82b07ac57436ad29b75fd4c1a37a19436816b2f6dd33f",
+    "running": true,
+    "health": "healthy"
+  },
+  {
+    "name": "/xmuoj-h7-20261007-judge",
+    "image": "registry.cn-hongkong.aliyuncs.com/oj-image/judge:1.6.1",
+    "image_id": "sha256:2dd902870f5e6f69866aa339a6a98b6da9eb1693e2e9936dce23d73203151501",
+    "running": true,
+    "health": "healthy"
+  },
+  {
+    "name": "/xmuoj-h7-20261007-redis",
+    "image": "redis:7-alpine",
+    "image_id": "sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2",
+    "running": true,
+    "health": null
+  }
+]
