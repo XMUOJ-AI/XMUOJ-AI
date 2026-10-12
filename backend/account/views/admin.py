@@ -282,10 +282,10 @@ class ChangeUserpasswordAPI(APIView):
                     if right_length > 0:
                         newpass = user.username[-right_length:] + suffix
                     user.set_password(newpass)
-                    user.save()
+                    user.save(update_fields=["password"])
                 return self.success()
-            except IntegrityError as e:
-                return self.error(str(e).split("\n")[1])
+            except IntegrityError:
+                return self.error("Password update conflicted; refresh and retry")
         else:
             try:
                 for userprofile in UserProfile.objects.filter(school__contains=target_name):
@@ -294,10 +294,10 @@ class ChangeUserpasswordAPI(APIView):
                     if right_length > 0:
                         newpass = user.username[-right_length:] + suffix
                     user.set_password(newpass)
-                    user.save()
+                    user.save(update_fields=["password"])
                 return self.success()
-            except IntegrityError as e:
-                return self.error(str(e).split("\n")[1])
+            except IntegrityError:
+                return self.error("Password update conflicted; refresh and retry")
 
 
 class BatchResetPasswordAPI(APIView):

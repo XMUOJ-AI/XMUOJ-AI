@@ -1,0 +1,38 @@
+[
+  {
+    "check": "fresh-migrate",
+    "command": [
+      "migrate",
+      "--noinput"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 2.328
+  },
+  {
+    "check": "migration-drift",
+    "command": [
+      "makemigrations",
+      "--check",
+      "--dry-run"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.297
+  },
+  {
+    "check": "system-check",
+    "command": [
+      "check"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.225
+  },
+  {
+    "check": "migration-plan",
+    "command": [
+      "migrate",
+      "--plan"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.272
+  }
+]

@@ -7,6 +7,7 @@ from unittest import skipUnless
 from unittest.mock import patch
 
 from django.db import IntegrityError, close_old_connections, connection, transaction
+from django.db.models.query import QuerySet
 from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.test.utils import CaptureQueriesContext
 from jsonschema import Draft202012Validator
@@ -147,6 +148,20 @@ class KnowledgeAPITests(TestCase):
         self.assert_snapshots()
         with self.assertRaises(TypeError):
             event.delete()
+
+    def test_deprecated_point_only_allows_description_and_aliases(self):
+        point = make_point("retired", self.author, status="deprecated")
+        for field, value in (("name", "New name"), ("category", "graph"), ("level", 5),
+                             ("metadata", {"display_order": 9}), ("status", "deprecated")):
+            with self.subTest(field=field):
+                result = self.call("patch", "admin/knowledge-points/retired", {"version": 1, field: value}, 409)
+                self.assertEqual(result["error"], "KNOWLEDGE_STATE_CONFLICT")
+                point.refresh_from_db()
+                self.assertEqual((point.version, point.name, point.category, point.level, point.metadata),
+                                 (1, "retired", "algorithm", 2, {}))
+        result = self.call("patch", "admin/knowledge-points/retired", {
+            "version": 1, "description": "保留历史说明", "aliases": ["旧称"]})["data"]
+        self.assertEqual((result["version"], result["description"], result["aliases"]), (2, "保留历史说明", ["旧称"]))
 
     def test_dependency_create_update_delete_retains_original_history(self):
         create = self.submit_dependency()
@@ -475,6 +490,28 @@ class KnowledgeAPITests(TestCase):
         self.review("dependency_change", obj, approve=False)
         self.assertEqual(self.call("get", "admin/knowledge-reviews")["data"]["total"], 0)
         self.assertEqual(self.call("get", "admin/knowledge-reviews?status=rejected&object_type=dependency_change")["data"]["total"], 1)
+
+    def test_review_queue_survives_status_change_after_page_selection(self):
+        change = services.submit_dependency(self.author, edge_data(self.a, self.b), "queue_dependency")
+        batch = services.submit_mapping(self.author, self.problem.pk, mapping_data(self.a), "queue_mapping")
+        fetch = QuerySet._fetch_all
+        reviewed = False
+
+        def review_after_selection(queryset):
+            nonlocal reviewed
+            fetch(queryset)
+            rows = queryset._result_cache
+            if not reviewed and rows and isinstance(rows[0], dict) and "queue_type" in rows[0]:
+                reviewed = True
+                for object_type, obj in (("dependency_change", change), ("problem_mapping", batch)):
+                    services.review(self.reviewer, object_type, obj.pk, {"expected_updated_time": obj.updated_time}, True, "queue_approve")
+
+        with patch.object(QuerySet, "_fetch_all", review_after_selection):
+            queue = self.call("get", "admin/knowledge-reviews")["data"]
+        self.assertTrue(reviewed)
+        self.assertEqual(queue["total"], 2)
+        self.assertEqual({row["object_key"] for row in queue["items"]}, {str(change.pk), str(batch.pk)})
+        self.assertEqual([row["status"] for row in queue["items"]], ["approved", "approved"])
 
     def test_mixed_review_queue_pagination_has_no_duplicates(self):
         self.submit_dependency()

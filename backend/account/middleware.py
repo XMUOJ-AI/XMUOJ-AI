@@ -1,5 +1,6 @@
 from django.conf import settings
-from django.db import connection
+from django.contrib.auth import logout
+from django.db import connection, transaction
 from django.utils.timezone import now
 from django.utils.deprecation import MiddlewareMixin
 
@@ -9,6 +10,8 @@ from account.models import User
 
 class APITokenAuthMiddleware(MiddlewareMixin):
     def process_request(self, request):
+        if request.user.is_authenticated and request.user.is_disabled:
+            logout(request)
         appkey = request.META.get("HTTP_APPKEY")
         if appkey:
             try:
@@ -27,17 +30,21 @@ class SessionRecordMiddleware(MiddlewareMixin):
             session["user_agent"] = request.META.get("HTTP_USER_AGENT", "")
             session["ip"] = request.ip
             session["last_activity"] = now()
-            user_sessions = request.user.session_keys
-            if session.session_key not in user_sessions:
-                user_sessions.append(session.session_key)
-                request.user.save()
+            if session.session_key and session.session_key not in request.user.session_keys:
+                # Merge against the latest keys without overwriting concurrent account changes.
+                with transaction.atomic():
+                    user = User.objects.select_for_update().only("session_keys").get(pk=request.user.pk)
+                    if session.session_key not in user.session_keys:
+                        user.session_keys.append(session.session_key)
+                        user.save(update_fields=["session_keys"])
+                    request.user.session_keys = user.session_keys
 
 
 class AdminRoleRequiredMiddleware(MiddlewareMixin):
     def process_request(self, request):
         path = request.path_info
         if path.startswith("/admin/") or path.startswith("/api/admin/"):
-            if not (request.user.is_authenticated and request.user.is_admin_role()):
+            if not (request.user.is_authenticated and not request.user.is_disabled and request.user.is_admin_role()):
                 return JSONResponse.response({"error": "login-required", "data": "Please login in first"})
 
 

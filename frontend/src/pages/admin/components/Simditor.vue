@@ -4,6 +4,7 @@
 
 <script>
   import { markRaw } from 'vue'
+  import { getCSRFHeaders } from '@/utils/csrf'
   import Simditor from 'tar-simditor'
   import 'tar-simditor/styles/simditor.css'
   import 'tar-simditor-markdown'
@@ -38,6 +39,9 @@
         },
         allowedStyles: { span: ['color'] }
       }))
+      this.editor.uploader.on('beforeupload', (event, file) => {
+        file.params = { ...file.params, csrfmiddlewaretoken: getCSRFHeaders()['X-CSRFToken'] || '' }
+      })
       this.editor.setValue(this.modelValue)
       this.editor.on('valuechanged', this.onValueChanged)
       this.editor.on('decorate', this.onValueChanged)

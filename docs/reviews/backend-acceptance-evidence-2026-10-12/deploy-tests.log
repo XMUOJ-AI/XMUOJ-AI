@@ -1,0 +1,16 @@
+test_application_error_response_is_unhealthy (test_health_check.HealthCheckTests.test_application_error_response_is_unhealthy) ... ok
+test_invalid_http_body_is_unhealthy_without_echoing_body (test_health_check.HealthCheckTests.test_invalid_http_body_is_unhealthy_without_echoing_body) ... ok
+test_running_processes_and_valid_http_response_are_healthy (test_health_check.HealthCheckTests.test_running_processes_and_valid_http_response_are_healthy) ... ok
+test_running_processes_but_http_timeout_are_unhealthy (test_health_check.HealthCheckTests.test_running_processes_but_http_timeout_are_unhealthy) ... ok
+test_running_processes_but_unreachable_http_are_unhealthy (test_health_check.HealthCheckTests.test_running_processes_but_unreachable_http_are_unhealthy) ... ok
+test_stopped_supervisor_process_does_not_probe_http (test_health_check.HealthCheckTests.test_stopped_supervisor_process_does_not_probe_http) ... ok
+test_unexpected_http_status_is_unhealthy (test_health_check.HealthCheckTests.test_unexpected_http_status_is_unhealthy) ... ok
+test_unreachable_supervisor_is_unhealthy (test_health_check.HealthCheckTests.test_unreachable_supervisor_is_unhealthy) ... ok
+test_invalid_configuration_does_not_replace_previous_files (test_https.HTTPSConfigurationTests.test_invalid_configuration_does_not_replace_previous_files) ... ok
+test_production_defaults_secure_and_development_stays_http (test_https.HTTPSConfigurationTests.test_production_defaults_secure_and_development_stays_http) ... ok
+test_proxy_requires_explicit_bounded_networks (test_https.HTTPSConfigurationTests.test_proxy_requires_explicit_bounded_networks) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.006s
+
+OK

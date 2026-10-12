@@ -1,0 +1,130 @@
+Creating test database for alias 'default'...
+Django VERSION (3, 2, 25, 'final', 0)
+System check identified no issues (0 silenced).
+.........................................................................................[2026-10-12 02:42:09] - [ERROR] - [django.request:224]  - Service Unavailable: /api/agent/v1/runs
+[2026-10-12 02:42:09] - [ERROR] - [django.request:224]  - Service Unavailable: /api/agent/v1/runs
+.....1 reviewed error patterns imported
+....................................................................................................Recovered 0 learning events
+Recovered 1 learning events
+Recovered 0 learning events
+.Recovered 0 learning events
+Recovered 1 learning events
+.Recovered 1 learning events
+Recovered 1 learning events
+Recovered 1 learning events
+Recovered 1 learning events
+.Recovered 1 learning events
+.Updated class owned (5a9b48f4-2d27-43ba-930c-a54291d19a07); merged 1 teachers and 1 students
+....Updated class test-class (055f3ff8-63e7-4019-9eb6-2d011cb4b488); merged 1 teachers and 1 students
+......[2026-10-12 02:42:17] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF cookie not set.): /api/admin/test_case
+[2026-10-12 02:42:17] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF token missing or incorrect.): /api/admin/import_problem
+[2026-10-12 02:42:17] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF token missing or incorrect.): /api/admin/import_fps
+......[2026-10-12 02:42:18] - [ERROR] - [root:162]  - legacy_api_error type=RuntimeError
+[2026-10-12 02:42:18] - [ERROR] - [root:162]  - legacy_api_error type=RuntimeError
+.................F...........Problem Tag Audit
+- total tags: 2
+- active tags: 2
+- duplicate groups: 1
+- zero problem tags: 2
+- low frequency tags: 0
+
+Duplicate groups:
+- greedy => Greedy, greedy
+
+Zero problem tags:
+- Greedy (38)
+- greedy (39)
+.......................................[2026-10-12 02:42:25] - [ERROR] - [django.request:224]  - Internal Server Error: /api/test-failure
+[2026-10-12 02:42:25] - [ERROR] - [django.request:224]  - Internal Server Error: /api/test-failure
+.....[2026-10-12 02:42:25] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF cookie not set.): /api/admin/upload_file
+[2026-10-12 02:42:25] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF cookie not set.): /api/admin/upload_image/
+..[2026-10-12 02:42:36] - [ERROR] - [root:162]  - legacy_api_error type=BrokenBarrierError
+F....[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'agent_fixture'.
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):248]  - Running consumer thread...
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'agent_fixture.DQ'.
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):248]  - Running consumer thread...
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.WorkerThread:449]  - Running worker thread...
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message 'db3f4eb9-d120-4c1c-895a-70a236b2eeb7' on queue 'agent_fixture'.
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):326]  - Pushing message 'db3f4eb9-d120-4c1c-895a-70a236b2eeb7' onto work queue.
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message fixture_agent_execute('ec1775e9-95c1-454a-b0be-117324957e89') with id 'db3f4eb9-d120-4c1c-895a-70a236b2eeb7'.
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):350]  - Acknowledging message 'db3f4eb9-d120-4c1c-895a-70a236b2eeb7'.
+[2026-10-12 02:42:37] - [INFO] - [dramatiq.worker.Worker:128]  - Shutting down...
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.Worker:133]  - Stopping workers...
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.WorkerThread:548]  - Stopping worker thread...
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.WorkerThread:465]  - Worker thread stopped.
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.Worker:138]  - Workers stopped.
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.Worker:139]  - Stopping consumers...
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):411]  - Stopping consumer thread...
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):411]  - Stopping consumer thread...
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):294]  - Consumer thread stopped.
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):294]  - Consumer thread stopped.
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.Worker:144]  - Consumers stopped.
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.Worker:146]  - Requeueing in-memory messages...
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.Worker:156]  - Done requeueing in-progress messages.
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.Worker:158]  - Closing consumers...
+[2026-10-12 02:42:37] - [DEBUG] - [dramatiq.worker.Worker:162]  - Consumers closed.
+[2026-10-12 02:42:37] - [INFO] - [dramatiq.worker.Worker:164]  - Worker has been shut down.
+.............................[2026-10-12 02:42:45] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF cookie not set.): /api/admin/submission/rejudge
+............................[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'problem_import'.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):248]  - Running consumer thread...
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'agent'.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'agent': not whitelisted.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'default'.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'default': not whitelisted.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'agent.DQ'.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'agent.DQ': not whitelisted.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'problem_import.DQ'.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):248]  - Running consumer thread...
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'default.DQ'.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'default.DQ': not whitelisted.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.WorkerThread:449]  - Running worker thread...
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message '0d2b8e87-c311-478a-bd17-c390a8e1091b' on queue 'problem_import'.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):326]  - Pushing message '0d2b8e87-c311-478a-bd17-c390a8e1091b' onto work queue.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message validate_import_batch('3b54dec0-927e-4a05-bc15-53f5485e82fb') with id '0d2b8e87-c311-478a-bd17-c390a8e1091b'.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):350]  - Acknowledging message '0d2b8e87-c311-478a-bd17-c390a8e1091b'.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message 'eebeb263-9ab0-4cdc-9e7a-88f2c46af2e3' on queue 'problem_import'.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):326]  - Pushing message 'eebeb263-9ab0-4cdc-9e7a-88f2c46af2e3' onto work queue.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message commit_import_batch('3b54dec0-927e-4a05-bc15-53f5485e82fb') with id 'eebeb263-9ab0-4cdc-9e7a-88f2c46af2e3'.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):350]  - Acknowledging message 'eebeb263-9ab0-4cdc-9e7a-88f2c46af2e3'.
+[2026-10-12 02:42:52] - [INFO] - [dramatiq.worker.Worker:128]  - Shutting down...
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.Worker:133]  - Stopping workers...
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.WorkerThread:548]  - Stopping worker thread...
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.WorkerThread:465]  - Worker thread stopped.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.Worker:138]  - Workers stopped.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.Worker:139]  - Stopping consumers...
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):411]  - Stopping consumer thread...
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):411]  - Stopping consumer thread...
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):294]  - Consumer thread stopped.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):294]  - Consumer thread stopped.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.Worker:144]  - Consumers stopped.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.Worker:146]  - Requeueing in-memory messages...
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.Worker:156]  - Done requeueing in-progress messages.
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.Worker:158]  - Closing consumers...
+[2026-10-12 02:42:52] - [DEBUG] - [dramatiq.worker.Worker:162]  - Consumers closed.
+[2026-10-12 02:42:52] - [INFO] - [dramatiq.worker.Worker:164]  - Worker has been shut down.
+.......[2026-10-12 02:42:54] - [ERROR] - [django.request:224]  - Service Unavailable: /api/admin/problem-import/batches
+[2026-10-12 02:42:54] - [ERROR] - [django.request:224]  - Service Unavailable: /api/admin/problem-import/batches
+....................
+======================================================================
+FAIL: test_public_problem_can_download_test_case (problem.tests.DownloadTestCaseAPITest.test_public_problem_can_download_test_case)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem/tests.py", line 324, in test_public_problem_can_download_test_case
+    self.assertIn("attachment; filename=problem_", resp["Content-Disposition"])
+AssertionError: 'attachment; filename=problem_' not found in 'attachment; filename="problem_319_test_cases.zip"'
+
+======================================================================
+FAIL: test_concurrent_disabled_and_active_super_admin_keep_separate_permissions (account.tests.CredentialExportConcurrencyTest.test_concurrent_disabled_and_active_super_admin_keep_separate_permissions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/account/tests.py", line 1062, in test_concurrent_disabled_and_active_super_admin_keep_separate_permissions
+    self._concurrent_export_permissions(other_role=AdminType.SUPER_ADMIN, disabled=True)
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/account/tests.py", line 1089, in _concurrent_export_permissions
+    self.assertIsNone(allowed["error"])
+AssertionError: 'server-error' is not None
+
+----------------------------------------------------------------------
+Ran 378 tests in 55.438s
+
+FAILED (failures=2)
+Destroying test database for alias 'default'...

@@ -1,13 +1,15 @@
 import hashlib
 import json
 import os
-# import shutil
+import re
+import shutil
+import stat
 import tempfile
 import zipfile
 from wsgiref.util import FileWrapper
 
 from django.conf import settings
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Q, Count
 from django.http import StreamingHttpResponse, FileResponse
 
@@ -17,8 +19,10 @@ from fps.parser import FPSHelper, FPSParser
 from judge.dispatcher import SPJCompiler
 from options.options import SysOptions
 from submission.models import Submission, JudgeStatus
-from utils.api import APIView, CSRFExemptAPIView, validate_serializer, APIError
+from utils.api import APIView, validate_serializer, APIError
+from problem_import.archive import WEB_LIMIT, COMMAND_LIMIT, FILE_LIMIT, LINE_LIMIT
 from utils.constants import Difficulty
+from utils.contract_api import transaction_lock
 from utils.shortcuts import rand_str, natural_sort_key
 from utils.tasks import delete_files
 from ..models import Problem, ProblemRuleType, ProblemTag
@@ -39,27 +43,70 @@ from ..utils import (TEMPLATE_BASE, build_problem_template,
 
 
 class TestCaseZipProcessor(object):
+    @staticmethod
+    def validate_zip(zip_file):
+        entries = zip_file.infolist()
+        if len(entries) > 100000 or sum(entry.file_size for entry in entries) > COMMAND_LIMIT:
+            raise APIError("ZIP exceeds the uncompressed size or file count limit")
+        names = set()
+        for entry in entries:
+            name = entry.filename
+            if (not re.fullmatch(r"[A-Za-z0-9._/-]{1,500}", name)
+                    or any(part in ("", ".", "..") for part in name.rstrip("/").split("/"))
+                    or name in names):
+                raise APIError("ZIP contains unsafe or duplicate paths")
+            names.add(name)
+            mode = entry.external_attr >> 16
+            if (entry.flag_bits & 1 or stat.S_IFMT(mode) not in (0, stat.S_IFREG, stat.S_IFDIR)
+                    or not entry.is_dir() and mode & 0o111
+                    or entry.compress_type not in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED)):
+                raise APIError("ZIP contains unsupported entries")
+            if entry.file_size > FILE_LIMIT or entry.file_size > max(entry.compress_size, 1) * 1000:
+                raise APIError("ZIP entry exceeds the size or compression ratio limit")
+
+    @staticmethod
+    def read_member(zip_file, name, limit=FILE_LIMIT):
+        if zip_file.getinfo(name).file_size > limit:
+            raise APIError("ZIP entry exceeds the size limit")
+        with zip_file.open(name) as source:
+            content = source.read(limit + 1)
+        if len(content) > limit:
+            raise APIError("ZIP entry exceeds the size limit")
+        return content
+
     def process_zip(self, uploaded_zip_file, spj, dir=""):
         try:
-            zip_file = zipfile.ZipFile(uploaded_zip_file, "r")
+            with zipfile.ZipFile(uploaded_zip_file, "r") as zip_file:
+                self.validate_zip(zip_file)
+                return self._process_zip(zip_file, spj, dir)
         except zipfile.BadZipFile:
             raise APIError("Bad zip file")
+
+    def _process_zip(self, zip_file, spj, dir):
         name_list = zip_file.namelist()
         test_case_list = self.filter_name_list(name_list, spj=spj, dir=dir)
         if not test_case_list:
             raise APIError("Empty file")
+        if sum(zip_file.getinfo(dir + name).file_size for name in test_case_list) > 512 * 1024 * 1024:
+            raise APIError("Test cases exceed the per-problem size limit")
 
         test_case_id = rand_str()
         test_case_dir = os.path.join(settings.TEST_CASE_DIR, test_case_id)
         os.mkdir(test_case_dir)
-        os.chmod(test_case_dir, 0o710)
+        try:
+            os.chmod(test_case_dir, 0o710)
+            return self._write_test_cases(zip_file, test_case_list, spj, dir, test_case_id, test_case_dir)
+        except BaseException:
+            shutil.rmtree(test_case_dir, ignore_errors=True)
+            raise
 
+    def _write_test_cases(self, zip_file, test_case_list, spj, dir, test_case_id, test_case_dir):
         size_cache = {}
         md5_cache = {}
 
         for item in test_case_list:
             with open(os.path.join(test_case_dir, item), "wb") as f:
-                content = zip_file.read(f"{dir}{item}").replace(b"\r\n", b"\n")
+                content = self.read_member(zip_file, f"{dir}{item}").replace(b"\r\n", b"\n")
                 size_cache[item] = len(content)
                 if item.endswith(".out"):
                     md5_cache[item] = hashlib.md5(content.rstrip()).hexdigest()
@@ -94,6 +141,7 @@ class TestCaseZipProcessor(object):
         return info, test_case_id
 
     def filter_name_list(self, name_list, spj, dir=""):
+        name_list = set(name_list)
         ret = []
         prefix = 1
         if spj:
@@ -118,7 +166,7 @@ class TestCaseZipProcessor(object):
                     return sorted(ret, key=natural_sort_key)
 
 
-class TestCaseAPI(CSRFExemptAPIView, TestCaseZipProcessor):
+class TestCaseAPI(APIView, TestCaseZipProcessor):
     request_parsers = ()
 
     def get(self, request):
@@ -151,6 +199,7 @@ class TestCaseAPI(CSRFExemptAPIView, TestCaseZipProcessor):
         response["Content-Length"] = os.path.getsize(file_name)
         return response
 
+    @problem_permission_required
     def post(self, request):
         form = TestCaseUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -158,12 +207,9 @@ class TestCaseAPI(CSRFExemptAPIView, TestCaseZipProcessor):
             file = form.cleaned_data["file"]
         else:
             return self.error("Upload failed")
-        zip_file = f"/tmp/{rand_str()}.zip"
-        with open(zip_file, "wb") as f:
-            for chunk in file:
-                f.write(chunk)
-        info, test_case_id = self.process_zip(zip_file, spj=spj)
-        os.remove(zip_file)
+        if file.size > WEB_LIMIT:
+            return self.error("ZIP exceeds the upload size limit")
+        info, test_case_id = self.process_zip(file, spj=spj)
         return self.success({"id": test_case_id, "info": info, "spj": spj})
 
 
@@ -630,64 +676,88 @@ class MakeContestProblemPublicAPIView(APIView):
     def post(self, request):
         data = request.data
         display_id = data.get("display_id")
-        if Problem.objects.filter(_id=display_id, contest_id__isnull=True).exists():
-            return self.error("Duplicate display ID")
-
+        copied_test_case = None
         try:
-            problem = Problem.objects.get(id=data["id"])
+            with transaction.atomic():
+                transaction_lock("public-problem", display_id)
+                problem = Problem.objects.select_for_update().get(id=data["id"])
+                if not problem.contest or problem.is_public:
+                    return self.error("Already be a public problem")
+                ensure_created_by(problem.contest, request.user)
+                if Problem.objects.filter(_id=display_id, contest_id__isnull=True).exists():
+                    return self.error("Duplicate display ID")
+
+                tags = list(problem.tags.all())
+                copied_test_case = clone_test_case(problem.test_case_id)
+                source_id = problem.pk
+                problem.pk = None
+                problem.contest = None
+                problem._id = display_id
+                problem.test_case_id = copied_test_case
+                problem.is_public = True
+                problem.visible = False
+                problem.submission_number = problem.accepted_number = 0
+                problem.statistic_info = {}
+                problem.save()
+                problem.tags.set(tags)
+                Problem.objects.filter(pk=source_id).update(is_public=True)
         except Problem.DoesNotExist:
             return self.error("Problem does not exist")
-
-        if not problem.contest or problem.is_public:
-            return self.error("Already be a public problem")
-        problem.is_public = True
-        problem.save()
-        # https://docs.djangoproject.com/en/1.11/topics/db/queries/#copying-model-instances
-        tags = problem.tags.all()
-        problem.pk = None
-        problem.contest = None
-        problem._id = display_id
-        try:
-            problem.test_case_id = clone_test_case(problem.test_case_id)
-        except FileNotFoundError:
-            return self.error("Test case does not exists")
-        problem.visible = False
-        problem.submission_number = problem.accepted_number = 0
-        problem.statistic_info = {}
-        problem.save()
-        problem.tags.set(tags)
+        except Exception as error:
+            if copied_test_case:
+                shutil.rmtree(os.path.join(settings.TEST_CASE_DIR, copied_test_case), ignore_errors=True)
+            if isinstance(error, FileNotFoundError):
+                return self.error("Test case does not exists")
+            if isinstance(error, IntegrityError):
+                return self.error("Duplicate display ID")
+            raise
         return self.success()
 
 
 class AddContestProblemAPI(APIView):
     @validate_serializer(AddContestProblemSerializer)
+    @problem_permission_required
     def post(self, request):
         data = request.data
+        copied_test_case = None
         try:
-            contest = Contest.objects.get(id=data["contest_id"])
-            problem = Problem.objects.get(id=data["problem_id"])
+            with transaction.atomic():
+                transaction_lock("contest-problem", data["contest_id"])
+                contest = Contest.objects.get(id=data["contest_id"])
+                problem = Problem.objects.select_for_update().get(id=data["problem_id"])
+                ensure_created_by(contest, request.user)
+                if problem.contest:
+                    ensure_created_by(problem.contest, request.user)
+                elif not problem.visible:
+                    ensure_created_by(problem, request.user)
+
+                if contest.status == ContestStatus.CONTEST_ENDED:
+                    return self.error("Contest has ended")
+                if Problem.objects.filter(contest=contest, _id=data["display_id"]).exists():
+                    return self.error("Duplicate display id in this contest")
+
+                tags = list(problem.tags.all())
+                copied_test_case = clone_test_case(problem.test_case_id)
+                problem.pk = None
+                problem.contest = contest
+                problem.is_public = True
+                problem.test_case_id = copied_test_case
+                problem.visible = True
+                problem._id = data["display_id"]
+                problem.submission_number = problem.accepted_number = 0
+                problem.statistic_info = {}
+                problem.save()
+                problem.tags.set(tags)
         except (Contest.DoesNotExist, Problem.DoesNotExist):
             return self.error("Contest or Problem does not exist")
-
-        if contest.status == ContestStatus.CONTEST_ENDED:
-            return self.error("Contest has ended")
-        if Problem.objects.filter(contest=contest, _id=data["display_id"]).exists():
-            return self.error("Duplicate display id in this contest")
-
-        tags = problem.tags.all()
-        problem.pk = None
-        problem.contest = contest
-        problem.is_public = True
-        try:
-            problem.test_case_id = clone_test_case(problem.test_case_id)
-        except FileNotFoundError:
-            return self.error("Test case does not exists")
-        problem.visible = True
-        problem._id = request.data["display_id"]
-        problem.submission_number = problem.accepted_number = 0
-        problem.statistic_info = {}
-        problem.save()
-        problem.tags.set(tags)
+        except Exception as error:
+            if copied_test_case:
+                shutil.rmtree(os.path.join(settings.TEST_CASE_DIR, copied_test_case), ignore_errors=True)
+            if isinstance(error, FileNotFoundError):
+                return self.error("Test case does not exists")
+            if isinstance(error, IntegrityError):
+                return self.error("Duplicate display id in this contest")
+            raise
         return self.success()
 
 
@@ -741,94 +811,103 @@ class ExportProblemAPI(APIView):
         return resp
 
 
-class ImportProblemAPI(CSRFExemptAPIView, TestCaseZipProcessor):
+class ImportProblemAPI(APIView, TestCaseZipProcessor):
     request_parsers = ()
 
+    @problem_permission_required
     def post(self, request):
         form = UploadProblemForm(request.POST, request.FILES)
         if form.is_valid():
             file = form.cleaned_data["file"]
-            tmp_file = f"/tmp/{rand_str()}.zip"
-            with open(tmp_file, "wb") as f:
-                for chunk in file:
-                    f.write(chunk)
         else:
             return self.error("Upload failed")
+        if file.size > WEB_LIMIT:
+            return self.error("ZIP exceeds the upload size limit")
+        created_dirs = []
+        try:
+            return self.import_problems(file, request.user, created_dirs)
+        except BaseException:
+            for path in created_dirs:
+                shutil.rmtree(path, ignore_errors=True)
+            raise
 
+    def import_problems(self, file, user, created_dirs):
         count = 0
-        with zipfile.ZipFile(tmp_file, "r") as zip_file:
+        with zipfile.ZipFile(file, "r") as zip_file:
+            self.validate_zip(zip_file)
             name_list = zip_file.namelist()
             for item in name_list:
                 if "/problem.json" in item:
                     count += 1
+            if not 1 <= count <= 500:
+                raise APIError("ZIP must contain 1 to 500 problems")
             with transaction.atomic():
                 for i in range(1, count + 1):
-                    with zip_file.open(f"{i}/problem.json") as f:
-                        problem_info = json.load(f)
-                        serializer = ImportProblemSerializer(data=problem_info)
-                        if not serializer.is_valid():
-                            return self.error(f"Invalid problem format, error is {serializer.errors}")
-                        else:
-                            problem_info = serializer.data
-                            for item in problem_info["template"].keys():
-                                if item not in SysOptions.language_names:
-                                    return self.error(f"Unsupported language {item}")
+                    problem_info = json.loads(self.read_member(zip_file, f"{i}/problem.json", LINE_LIMIT))
+                    serializer = ImportProblemSerializer(data=problem_info)
+                    if not serializer.is_valid():
+                        raise APIError(f"Invalid problem format, error is {serializer.errors}")
+                    else:
+                        problem_info = serializer.data
+                        for item in problem_info["template"].keys():
+                            if item not in SysOptions.language_names:
+                                raise APIError(f"Unsupported language {item}")
 
-                        problem_info["display_id"] = problem_info["display_id"][:24]
-                        for k, v in problem_info["template"].items():
-                            problem_info["template"][k] = build_problem_template(v["prepend"], v["template"],
-                                                                                 v["append"])
+                    problem_info["display_id"] = problem_info["display_id"][:24]
+                    for k, v in problem_info["template"].items():
+                        problem_info["template"][k] = build_problem_template(v["prepend"], v["template"],
+                                                                             v["append"])
 
-                        spj = problem_info["spj"] is not None
-                        rule_type = problem_info["rule_type"]
-                        test_case_score = problem_info["test_case_score"]
+                    spj = problem_info["spj"] is not None
+                    rule_type = problem_info["rule_type"]
+                    test_case_score = problem_info["test_case_score"]
+                    if rule_type == ProblemRuleType.OI and not test_case_score:
+                        raise APIError("OI problems require test case scores")
 
-                        # process test case
-                        _, test_case_id = self.process_zip(tmp_file, spj=spj, dir=f"{i}/testcase/")
+                    # process test case
+                    _, test_case_id = self._process_zip(zip_file, spj=spj, dir=f"{i}/testcase/")
+                    created_dirs.append(os.path.join(settings.TEST_CASE_DIR, test_case_id))
 
-                        problem_obj = Problem.objects.create(_id=problem_info["display_id"],
-                                                             title=problem_info["title"],
-                                                             description=problem_info["description"]["value"],
-                                                             input_description=problem_info["input_description"][
-                                                                 "value"],
-                                                             output_description=problem_info["output_description"][
-                                                                 "value"],
-                                                             hint=problem_info["hint"]["value"],
-                                                             test_case_score=test_case_score if test_case_score else [],
-                                                             time_limit=problem_info["time_limit"],
-                                                             memory_limit=problem_info["memory_limit"],
-                                                             samples=problem_info["samples"],
-                                                             template=problem_info["template"],
-                                                             rule_type=problem_info["rule_type"],
-                                                             source=problem_info["source"],
-                                                             spj=spj,
-                                                             spj_code=problem_info["spj"]["code"] if spj else None,
-                                                             spj_language=problem_info["spj"][
-                                                                 "language"] if spj else None,
-                                                             spj_version=rand_str(8) if spj else "",
-                                                             languages=SysOptions.language_names,
-                                                             created_by=request.user,
-                                                             visible=False,
-                                                             difficulty=Difficulty.MID,
-                                                             total_score=sum(item["score"] for item in test_case_score)
-                                                             if rule_type == ProblemRuleType.OI else 0,
-                                                             test_case_id=test_case_id
-                                                             )
-                        try:
-                            assign_problem_tags(problem_obj, problem_info["tags"], allow_create=False)
-                        except APIError as error:
-                            return self.error(error.msg, error.err)
-                        try:
-                            set_public_test_case_download_flag(
-                                problem_obj.test_case_id,
-                                problem_info.get("allow_public_test_case_download", False)
-                            )
-                        except FileNotFoundError:
-                            return self.error("Test case does not exists")
+                    problem_obj = Problem.objects.create(_id=problem_info["display_id"],
+                                                         title=problem_info["title"],
+                                                         description=problem_info["description"]["value"],
+                                                         input_description=problem_info["input_description"][
+                                                             "value"],
+                                                         output_description=problem_info["output_description"][
+                                                             "value"],
+                                                         hint=problem_info["hint"]["value"],
+                                                         test_case_score=test_case_score if test_case_score else [],
+                                                         time_limit=problem_info["time_limit"],
+                                                         memory_limit=problem_info["memory_limit"],
+                                                         samples=problem_info["samples"],
+                                                         template=problem_info["template"],
+                                                         rule_type=problem_info["rule_type"],
+                                                         source=problem_info["source"],
+                                                         spj=spj,
+                                                         spj_code=problem_info["spj"]["code"] if spj else None,
+                                                         spj_language=problem_info["spj"][
+                                                             "language"] if spj else None,
+                                                         spj_version=rand_str(8) if spj else "",
+                                                         languages=SysOptions.language_names,
+                                                         created_by=user,
+                                                         visible=False,
+                                                         difficulty=Difficulty.MID,
+                                                         total_score=sum(item["score"] for item in test_case_score)
+                                                         if rule_type == ProblemRuleType.OI else 0,
+                                                         test_case_id=test_case_id
+                                                         )
+                    assign_problem_tags(problem_obj, problem_info["tags"], allow_create=False)
+                    try:
+                        set_public_test_case_download_flag(
+                            problem_obj.test_case_id,
+                            problem_info.get("allow_public_test_case_download", False)
+                        )
+                    except FileNotFoundError:
+                        raise APIError("Test case does not exists")
         return self.success({"import_count": count})
 
 
-class FPSProblemImport(CSRFExemptAPIView):
+class FPSProblemImport(APIView):
     request_parsers = ()
 
     def _create_problem(self, problem_data, creator):
@@ -873,37 +952,53 @@ class FPSProblemImport(CSRFExemptAPIView):
                                          test_case_id=problem_data["test_case_id"])
         set_public_test_case_download_flag(problem.test_case_id, False)
 
+    @problem_permission_required
     def post(self, request):
         form = UploadProblemForm(request.POST, request.FILES)
         if form.is_valid():
             file = form.cleaned_data["file"]
-            with tempfile.NamedTemporaryFile("wb") as tf:
-                for chunk in file.chunks(4096):
-                    tf.file.write(chunk)
-
-                tf.file.flush()
-                os.fsync(tf.file)
-
-                problems = FPSParser(tf.name).parse()
+            if file.size > WEB_LIMIT:
+                return self.error("FPS exceeds the upload size limit")
+            problems = FPSParser(file).parse()
         else:
             return self.error("Parse upload file error")
+        if not 1 <= len(problems) <= 500:
+            return self.error("FPS must contain 1 to 500 problems")
+        created_dirs = []
+        try:
+            return self.import_problems(problems, request.user, created_dirs)
+        except BaseException:
+            for path in created_dirs:
+                shutil.rmtree(path, ignore_errors=True)
+            raise
 
+    def import_problems(self, problems, user, created_dirs):
         helper = FPSHelper()
         with transaction.atomic():
             for _problem in problems:
                 test_case_id = rand_str()
                 test_case_dir = os.path.join(settings.TEST_CASE_DIR, test_case_id)
                 os.mkdir(test_case_dir)
+                created_dirs.append(test_case_dir)
+                os.chmod(test_case_dir, 0o710)
                 score = []
                 for item in helper.save_test_case(_problem, test_case_dir)["test_cases"].values():
                     score.append({"score": 0, "input_name": item["input_name"],
                                   "output_name": item.get("output_name")})
-                problem_data = helper.save_image(_problem, settings.UPLOAD_DIR, settings.UPLOAD_PREFIX)
+                for name in os.listdir(test_case_dir):
+                    os.chmod(os.path.join(test_case_dir, name), 0o640)
+                problem_data = _problem
+                if _problem["images"]:
+                    image_dir = tempfile.mkdtemp(prefix="fps-", dir=settings.UPLOAD_DIR)
+                    created_dirs.append(image_dir)
+                    os.chmod(image_dir, 0o755)
+                    image_url = settings.UPLOAD_PREFIX + "/" + os.path.basename(image_dir)
+                    problem_data = helper.save_image(_problem, image_dir, image_url)
                 s = FPSProblemSerializer(data=problem_data)
                 if not s.is_valid():
-                    return self.error(f"Parse FPS file error: {s.errors}")
+                    raise APIError(f"Parse FPS file error: {s.errors}")
                 problem_data = s.data
                 problem_data["test_case_id"] = test_case_id
                 problem_data["test_case_score"] = score
-                self._create_problem(problem_data, request.user)
+                self._create_problem(problem_data, user)
         return self.success({"import_count": len(problems)})

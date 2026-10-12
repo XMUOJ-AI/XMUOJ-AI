@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/opt/homebrew/lib/docker/cli-plugins/docker-buildx",
+    "build",
+    "--progress=plain",
+    "--load",
+    "-f",
+    "backend/Dockerfile",
+    "-t",
+    "xmuoj-ai:acceptance-20261012-r2",
+    "."
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 1.318
+}

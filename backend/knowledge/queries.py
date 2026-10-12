@@ -261,6 +261,7 @@ def review_queue(params):
         queryset = model.objects.select_related("submitted_by")
         if not dependency:
             queryset = queryset.select_related("problem").defer("payload")
+        sources[object_type] = queryset
         queryset = queryset.filter(status=params.get("status", "pending"))
         for parameter, field in (("submitter_id", "submitted_by_id"), ("updated_from", "updated_time__gte"),
                                  ("updated_to", "updated_time__lte")):
@@ -278,7 +279,6 @@ def review_queue(params):
             else:
                 predicate |= Q(problem___id__icontains=keyword) | Q(problem__title__icontains=keyword)
             queryset = queryset.filter(predicate)
-        sources[object_type] = queryset
         source_index = queryset.order_by().annotate(queue_type=Value(object_type), queue_key=Cast("pk", CharField()))
         source_index = source_index.values("queue_type", "queue_key", "created_time")
         index = source_index if index is None else index.union(source_index, all=True)
@@ -287,6 +287,7 @@ def review_queue(params):
     page = list(index.order_by("created_time", "queue_key")[start:start + params["page_size"]])
     objects = {}
     for object_type, queryset in sources.items():
+        # A review may finish after page selection; hydrate the selected IDs regardless of their new status.
         keys = [item["queue_key"] for item in page if item["queue_type"] == object_type]
         if keys:
             objects.update({str(obj.pk): review_item(obj) for obj in queryset.filter(pk__in=keys)})

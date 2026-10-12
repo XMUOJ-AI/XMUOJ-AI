@@ -1,0 +1,12 @@
+{
+  "check": "test-final",
+  "command": [
+    "/tmp/xmuoj-remediation-20261012/venv/bin/python",
+    "manage.py",
+    "test",
+    "--settings=oj.settings",
+    "--noinput"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 85.227
+}

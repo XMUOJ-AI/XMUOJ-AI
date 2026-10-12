@@ -65,7 +65,8 @@ def package(key="test-batch", count=1, mutate=None):
     target = io.BytesIO()
     with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
         for name, data in files.items():
-            archive.writestr(name, data)
+            entry = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
+            archive.writestr(entry, data, compress_type=zipfile.ZIP_DEFLATED)
     target.seek(0)
     return target
 

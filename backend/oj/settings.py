@@ -50,12 +50,7 @@ VENDOR_APPS = [
     'django.contrib.postgres',
     'rest_framework',
     'django_dramatiq',
-    'django_dbconn_retry',
 ]
-
-if sentry_enabled:
-    VENDOR_APPS.append('raven.contrib.django.raven_compat')
-
 
 LOCAL_APPS = [
     'account',
@@ -136,8 +131,6 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
@@ -159,7 +152,7 @@ UPLOAD_DIR = f"{DATA_DIR}{UPLOAD_PREFIX}"
 STATICFILES_DIRS = [os.path.join(DATA_DIR, "public")]
 
 
-LOGGING_HANDLERS = ['console', 'sentry'] if sentry_enabled else ['console']
+LOGGING_HANDLERS = ['console']
 LOGGING = {
    'version': 1,
    'disable_existing_loggers': False,
@@ -173,11 +166,6 @@ LOGGING = {
        'console': {
            'level': 'DEBUG',
            'class': 'logging.StreamHandler',
-           'formatter': 'standard'
-       },
-       'sentry': {
-           'level': 'ERROR',
-           'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
            'formatter': 'standard'
        }
    },
@@ -205,9 +193,6 @@ LOGGING = {
    },
 }
 
-if not sentry_enabled:
-    LOGGING["handlers"].pop("sentry")
-
 REST_FRAMEWORK = {
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     'DEFAULT_RENDERER_CLASSES': (
@@ -227,7 +212,8 @@ def redis_config(db):
         "LOCATION": f"{REDIS_URL}/{db}",
         "TIMEOUT": None,
         "KEY_PREFIX": "",
-        "KEY_FUNCTION": make_key
+        "KEY_FUNCTION": make_key,
+        "OPTIONS": {"SOCKET_CONNECT_TIMEOUT": 2, "SOCKET_TIMEOUT": 5},
     }
 
 
@@ -241,9 +227,8 @@ SESSION_CACHE_ALIAS = "default"
 DRAMATIQ_BROKER = {
     "BROKER": "dramatiq.brokers.redis.RedisBroker",
     "OPTIONS": {
-        "url": f"{REDIS_URL}/4",
-        "socket_connect_timeout": 2,
-        "socket_timeout": 5,
+        # Dramatiq builds its pool from the URL, ignoring sibling socket options.
+        "url": f"{REDIS_URL}/4?socket_connect_timeout=2&socket_timeout=5",
     },
     "MIDDLEWARE": [
         # "dramatiq.middleware.Prometheus",
@@ -259,14 +244,16 @@ DRAMATIQ_BROKER = {
 DRAMATIQ_RESULT_BACKEND = {
     "BACKEND": "dramatiq.results.backends.redis.RedisBackend",
     "BACKEND_OPTIONS": {
-        "url": f"{REDIS_URL}/4",
+        "url": f"{REDIS_URL}/4?socket_connect_timeout=2&socket_timeout=5",
     },
     "MIDDLEWARE_OPTIONS": {
         "result_ttl": None
     }
 }
 
-RAVEN_CONFIG = {"dsn": SENTRY_DSN}
+if sentry_enabled:
+    from .error_reporting import init_sentry
+    init_sentry(SENTRY_DSN)
 
 IP_HEADER = "HTTP_X_REAL_IP"
 

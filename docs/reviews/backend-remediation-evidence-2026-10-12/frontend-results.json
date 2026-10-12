@@ -1,0 +1,31 @@
+[
+  {
+    "check": "frontend-tests",
+    "command": [
+      "npm",
+      "test"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 4.284
+  },
+  {
+    "check": "frontend-lint",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.964
+  },
+  {
+    "check": "frontend-build",
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 1.033
+  }
+]

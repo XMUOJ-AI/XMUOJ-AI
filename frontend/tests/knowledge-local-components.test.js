@@ -102,6 +102,20 @@ describe('knowledge pages against local backend', () => {
     })
   })
 
+  test('a deprecated point only sends editable description and aliases', async () => {
+    adminApi.getKnowledgePoint.mockResolvedValue({ ...adminDetail(), knowledge_point: { ...point(), status: 'deprecated' } })
+    const wrapper = create(AdminDetail)
+    await flushPromises()
+    wrapper.vm.openEdit()
+    wrapper.vm.editing.description = '历史补充说明'
+    wrapper.vm.editing.aliases = ['旧名称']
+    await wrapper.vm.saveEdit()
+    expect(adminApi.updateKnowledgePoint).toHaveBeenCalledWith('root', {
+      version: 4, description: '历史补充说明', aliases: ['旧名称']
+    })
+    expect(wrapper.vm.editVisible).toBe(false)
+  })
+
   test('edit conflict refreshes the version while preserving the open form and user input', async () => {
     adminApi.updateKnowledgePoint.mockRejectedValue({ code: 'KNOWLEDGE_VERSION_CONFLICT', status: 409 })
     const wrapper = create(AdminDetail, false, { edit: '1' })

@@ -582,6 +582,7 @@ components:
           minLength: 1
           maxLength: 500
     SubmissionFeedbackResult:
+      description: 学生输出仅允许自然语言提示和自然语言伪代码；所有文本字段均禁止可执行代码、代码围栏和编码/JSON包装的代码。
       type: object
       additionalProperties: false
       required:
@@ -614,6 +615,7 @@ components:
             minLength: 1
             maxLength: 128
         contains_full_solution:
+          description: 兼容字段，必须为false；不作为内容安全或审核通过的凭据，服务端逐字段独立检查。
           type: boolean
           enum:
           - false
@@ -663,6 +665,7 @@ components:
             minLength: 1
             maxLength: 300
     CodeExplanationResult:
+      description: 仅解释本人代码，以code_refs引用行号；文本字段不得复制代码或输出可执行修复片段。允许变量名、数学式和复杂度。
       type: object
       additionalProperties: false
       required:
@@ -692,10 +695,12 @@ components:
             minLength: 1
             maxLength: 500
         contains_full_solution:
+          description: 兼容字段，必须为false；不作为内容安全或审核通过的凭据，服务端逐字段独立检查。
           type: boolean
           enum:
           - false
     SocraticHintResult:
+      description: question和focus仅允许启发问题、自然语言提示或文字伪代码；不得输出可执行代码片段。
       type: object
       additionalProperties: false
       required:
@@ -722,6 +727,7 @@ components:
           format: date-time
           nullable: true
         contains_full_solution:
+          description: 兼容字段，必须为false；不作为内容安全或审核通过的凭据，服务端逐字段独立检查。
           type: boolean
           enum:
           - false
@@ -745,6 +751,7 @@ components:
           minLength: 1
           maxLength: 500
     LearningPathExplanationResult:
+      description: overview、reason和next_action仅允许自然语言解释；path_id、order、knowledge_code须保持已有路径。禁止可执行代码。
       type: object
       additionalProperties: false
       required:
@@ -772,6 +779,7 @@ components:
           minLength: 1
           maxLength: 500
         contains_full_solution:
+          description: 兼容字段，必须为false；不作为内容安全或审核通过的凭据，服务端逐字段独立检查。
           type: boolean
           enum:
           - false

@@ -12,6 +12,8 @@ PostgreSQL 迁移 `rag.0002_lexical_search_indexes` 为 `to_tsvector('simple', C
 
 JSON 字段是 `title`、`source_type`、`source_id`、`source_url`（可省略）、`content`、`access_scope`、`status`、`metadata`。`metadata.knowledge_id` 使用知识点内部整数 ID；`metadata.problem_id` 使用题目展示编号。题目和题解资料必须带题目绑定。学生范围只接受可见普通题和 active 知识点，题解、完整程序或明显凭据不能进入学生范围。导入不抓取来源 URL，也不读取提交或隐藏测试点。
 
+学生资料默认仅允许自然语言提示、策略和文字步骤式伪代码，不提供代码片段审核豁免。与 Agent 输出共用 `rag/safety.py` 的保守检查：正文、标题和元数据逐字段校验，拒绝可执行语句、代码围栏和常见编码/JSON伪装；`contains_full_solution=false` 不能绕过检查。检索时复检历史切片、标题和元数据，因此先前入库的代码也不会返回学生。teacher/admin 原文仍可保存，供管理员审核；`active` 只代表资料审核状态，不代表学生可以读取代码。未知语言和任意混淆不保证全部识别，类似代码的教学文本可能需要改写为自然语言。
+
 在 backend 目录运行：
 
 ```sh

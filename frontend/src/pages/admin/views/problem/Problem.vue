@@ -199,6 +199,8 @@
             <el-form-item :label="$t('m.TestCase')" :error="error.testcase">
               <el-upload
                 action="/api/admin/test_case"
+                :headers="uploadHeaders"
+                :before-upload="prepareUpload"
                 name="file"
                 :data="{spj: problem.spj}"
                 :show-file-list="true"
@@ -280,6 +282,7 @@
   import Accordion from '../../components/Accordion'
   import CodeMirror from '../../components/CodeMirror'
   import api from '../../api'
+  import { getCSRFHeaders } from '@/utils/csrf'
 
   export default {
     name: 'Problem',
@@ -290,6 +293,7 @@
     },
     data () {
       return {
+        uploadHeaders: {},
         rules: {
           _id: {required: true, message: 'Display ID is required', trigger: 'blur'},
           title: {required: true, message: 'Title is required', trigger: 'blur'},
@@ -430,6 +434,10 @@
       }
     },
     methods: {
+      prepareUpload () {
+        delete this.uploadHeaders['X-CSRFToken']
+        Object.assign(this.uploadHeaders, getCSRFHeaders())
+      },
       switchSpj () {
         if (this.testCaseUploaded) {
           this.$confirm('If you change problem judge method, you need to re-upload test cases', 'Warning', {

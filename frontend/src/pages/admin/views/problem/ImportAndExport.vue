@@ -68,6 +68,8 @@
       <el-upload
         ref="QDU"
         action="/api/admin/import_problem"
+        :headers="uploadHeaders"
+        :before-upload="prepareUpload"
         name="file"
         :data="buildImportPayload(importTagsQDU)"
         :file-list="fileList1"
@@ -93,6 +95,8 @@
       <el-upload
         ref="FPS"
         action="/api/admin/import_fps"
+        :headers="uploadHeaders"
+        :before-upload="prepareUpload"
         name="file"
         :data="buildImportPayload(importTagsFPS)"
         :file-list="fileList2"
@@ -112,11 +116,13 @@
 <script>
   import api from '@admin/api'
   import utils from '@/utils/utils'
+  import { getCSRFHeaders } from '@/utils/csrf'
 
   export default {
     name: 'import_and_export',
     data () {
       return {
+        uploadHeaders: {},
         fileList1: [],
         fileList2: [],
         page: 1,
@@ -140,6 +146,10 @@
       this.getProblems(this.page, false)
     },
     methods: {
+      prepareUpload () {
+        delete this.uploadHeaders['X-CSRFToken']
+        Object.assign(this.uploadHeaders, getCSRFHeaders())
+      },
       fetchAvailableTags () {
         api.getProblemTagList({include_inactive: true}).then(res => {
           this.availableTags = res.data.data.map(item => item.name)

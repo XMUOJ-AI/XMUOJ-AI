@@ -132,12 +132,12 @@ class ContestRankAPI(APIView):
             return ACMContestRank.objects.filter(contest=self.contest,
                                                  user__admin_type=AdminType.REGULAR_USER,
                                                  user__is_disabled=False).\
-                select_related("user").order_by("-accepted_number", "total_time")
+                select_related("user").order_by("-accepted_number", "total_time", "user_id")
         else:
             return OIContestRank.objects.filter(contest=self.contest,
                                                 user__admin_type=AdminType.REGULAR_USER,
                                                 user__is_disabled=False). \
-                select_related("user").order_by("-total_score")
+                select_related("user").order_by("-total_score", "user_id")
 
     def column_string(self, n):
         string = ""
@@ -156,7 +156,9 @@ class ContestRankAPI(APIView):
         else:
             serializer = ACMContestRankSerializer
 
-        if force_refresh == "1" and is_contest_admin:
+        frozen = (self.contest.rule_type == ContestRuleType.ACM and not self.contest.real_time_rank
+                  and self.contest.status == ContestStatus.CONTEST_UNDERWAY)
+        if not frozen or (force_refresh == "1" and is_contest_admin):
             qs = self.get_rank()
         else:
             cache_key = f"{CacheKey.contest_rank_cache}:{self.contest.id}"
@@ -190,7 +192,8 @@ class ContestRankAPI(APIView):
                     worksheet.write_string(index + 1, 1, user.school or "")
                     worksheet.write_string(index + 1, 4, str(item["total_score"]))
                     for k, v in item["submission_info"].items():
-                        worksheet.write_string(index + 1, 5 + problem_ids.index(int(k)), str(v))
+                        if int(k) in problem_ids:
+                            worksheet.write_string(index + 1, 5 + problem_ids.index(int(k)), str(v))
             else:
                 worksheet.write("D1", "AC")
                 worksheet.write("E1", "Total Submission")
@@ -206,7 +209,8 @@ class ContestRankAPI(APIView):
                     worksheet.write_string(index + 1, 4, str(item["submission_number"]))
                     worksheet.write_string(index + 1, 5, str(item["total_time"]))
                     for k, v in item["submission_info"].items():
-                        worksheet.write_string(index + 1, 6 + problem_ids.index(int(k)), str(v["is_ac"]))
+                        if int(k) in problem_ids:
+                            worksheet.write_string(index + 1, 6 + problem_ids.index(int(k)), str(v["is_ac"]))
 
             workbook.close()
             f.seek(0)

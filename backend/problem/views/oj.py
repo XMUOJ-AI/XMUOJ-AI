@@ -11,11 +11,11 @@ from contest.models import ContestRuleType, ContestStatus, ContestType
 import hashlib
 import json
 import os
+import tempfile
 import zipfile
-from wsgiref.util import FileWrapper
 from django.conf import settings
 from utils.shortcuts import rand_str, natural_sort_key
-from django.http import StreamingHttpResponse
+from django.http import FileResponse
 from utils.api import APIError
 from utils.constants import CONTEST_PASSWORD_SESSION_KEY
 
@@ -184,6 +184,23 @@ class ContestProblemAPI(APIView):
 
 
 class DLTestCaseZipProcessor(object):
+    def build_download_response(self, problem):
+        test_case_dir = os.path.join(settings.TEST_CASE_DIR, problem.test_case_id)
+        if not os.path.isdir(test_case_dir):
+            raise APIError("Test case does not exists")
+        names = self.filter_name_list(os.listdir(test_case_dir), problem.spj) + ["info"]
+        archive = tempfile.TemporaryFile()
+        try:
+            with zipfile.ZipFile(archive, "w") as zip_file:
+                for name in names:
+                    zip_file.write(os.path.join(test_case_dir, name), name)
+            archive.seek(0)
+            return FileResponse(archive, as_attachment=True, filename=f"problem_{problem.id}_test_cases.zip",
+                                content_type="application/octet-stream")
+        except Exception:
+            archive.close()
+            raise
+
     def process_zip(self, uploaded_zip_file, spj, dir=""):
         try:
             zip_file = zipfile.ZipFile(uploaded_zip_file, "r")
@@ -273,6 +290,8 @@ class DLTestCaseAPI(APIView, DLTestCaseZipProcessor):
             return True, None
 
         contest = problem.contest
+        if not contest.visible:
+            return False, "Problem does not exists"
         user = request.user
         if not user.is_authenticated:
             return False, "Please login first."
@@ -303,18 +322,4 @@ class DLTestCaseAPI(APIView, DLTestCaseZipProcessor):
         if problem.contest and problem.contest.is_exam:
             return self.error("考试题目不允许下载测试数据")
 
-        test_case_dir = os.path.join(settings.TEST_CASE_DIR, problem.test_case_id)
-        if not os.path.isdir(test_case_dir):
-            return self.error("Test case does not exists")
-        name_list = self.filter_name_list(os.listdir(test_case_dir), problem.spj)
-        name_list.append("info")
-        file_name = os.path.join(test_case_dir, problem.test_case_id + ".zip")
-        with zipfile.ZipFile(file_name, "w") as file:
-            for test_case in name_list:
-                file.write(f"{test_case_dir}/{test_case}", test_case)
-        response = StreamingHttpResponse(FileWrapper(open(file_name, "rb")),
-                                         content_type="application/octet-stream")
-
-        response["Content-Disposition"] = f"attachment; filename=problem_{problem.id}_test_cases.zip"
-        response["Content-Length"] = os.path.getsize(file_name)
-        return response
+        return self.build_download_response(problem)

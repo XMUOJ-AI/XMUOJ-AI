@@ -9,6 +9,8 @@
 - [后端开发与运行](backend-development.md)：环境、服务、数据准备及恢复入口。
 - [开发后的当前任务清单](plans/backend-follow-up-2026-10-07.md)：已完成内容及真实联调、试点、冻结和发布的后续责任。
 - [完整实现与验收矩阵](plans/backend-completion-matrix.md)：各模型、接口、工具及业务链路的实际证据。
+- [2026-10-12 后端完整验收与整改](reviews/backend-acceptance-2026-10-12.md)：首轮权限、文件、并发、判题恢复及超时整改，以及当时的人工待决。
+- [2026-10-12 确认项整改与第二轮验收](reviews/backend-remediation-2026-10-12.md)：比赛计分、AI 输出、依赖升级和插件 Session 的最新结果、证据与剩余阻断；功能扩展和真实环境联调暂缓。
 - [Claude初次独立验收](reviews/claude-backend-acceptance-2026-10-07.md)：当轮有条件通过；3项修复、整改后271项全库回归及7项人工决策，不替代后续H1–H7验证。
 - [工作契约修订说明](knowledge/implementation-notes-2026-10-07.md)：null、历史快照及新增查询闭环。
 - [学习与班级实现](learning-implementation-2026-10-07.md)：算法参数、重判、班级权限及管理命令。

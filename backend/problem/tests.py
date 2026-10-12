@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 from datetime import timedelta
+from email.message import Message
 from zipfile import ZipFile
 
 from django.conf import settings
@@ -321,7 +322,10 @@ class DownloadTestCaseAPITest(ProblemCreateTestBase):
     def test_public_problem_can_download_test_case(self):
         resp = self.client.get(self.url + f"?problem_id={self.problem.id}")
         self.assertEqual(resp.status_code, 200)
-        self.assertIn("attachment; filename=problem_", resp["Content-Disposition"])
+        header = Message()
+        header["Content-Disposition"] = resp["Content-Disposition"]
+        self.assertEqual(header.get_content_disposition(), "attachment")
+        self.assertEqual(header.get_filename(), f"problem_{self.problem.id}_test_cases.zip")
 
     def test_problem_download_disabled_returns_error(self):
         self.ensure_test_case_dir(self.test_case_id, allow_public_download=False)

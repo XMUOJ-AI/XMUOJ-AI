@@ -16,6 +16,7 @@ from rag.models import RagDocument
 from utils.contract_api import ContractError, request_fingerprint, transaction_lock
 from .contracts import validate_api
 from .models import AgentConversation, AgentRun, AgentDispatch, AIFeedbackReview, ErrorPattern
+from .safety import check_output
 from .tools import visible_problem, owned_submission, timestamp, append_message, problem_version
 
 
@@ -86,6 +87,8 @@ def authorize_run(user, run_id, check_sources=True):
         source_run = run.cached_from if run.cached_from_id else run
         for refs in source_run.tool_calls.filter(status="succeeded").values_list("result_summary", flat=True):
             check_references(refs.get("references", {}))
+    if run.status == "succeeded":
+        check_output(run.output_payload)
     return run
 
 
@@ -119,7 +122,7 @@ def create_run(user, data, key):
     transaction_lock("agent-user", user.pk)
     submission, problem, conversation = None, None, None
     payload = dict(data)
-    context = {"user_id": user.pk, "request": data, "prompt": "agent-v1", "model": config("AGENT_MODEL_NAME", ""),
+    context = {"user_id": user.pk, "request": data, "prompt": "agent-v2-hints-only", "model": config("AGENT_MODEL_NAME", ""),
                "model_config_version": config("AGENT_MODEL_CONFIG_VERSION", "v1")}
     service = data["service_type"]
     if "submission_id" in data:
@@ -176,6 +179,11 @@ def create_run(user, data, key):
     cached = AgentRun.objects.filter(user=user, input_hash=input_hash, status="succeeded", safety_status="passed", cached_from__isnull=True,
                                      created_time__gt=timezone.now() - timedelta(minutes=30)).order_by("-created_time").first() if not conversation else None
     if cached:
+        try:
+            check_output(cached.output_payload)
+        except ContractError:
+            cached = None
+    if cached:
         authorize_run(user, cached.pk)
     if not cached:
         model_ready()
@@ -185,6 +193,7 @@ def create_run(user, data, key):
         fail("RATE_LIMITED", "每分钟最多创建6个运行", 429, True)
     run = AgentRun.objects.create(user=user, service_type=service, problem=problem, submission=submission, conversation=conversation,
                                   idempotency_key=key, request_hash=fingerprint, input_hash=input_hash, input_payload=payload,
+                                  prompt_version=context["prompt"],
                                   provider="http", model_name=config("AGENT_MODEL_NAME", ""), cached_from=(cached.cached_from or cached) if cached else None,
                                   status="succeeded" if cached else "queued", output_payload=cached.output_payload if cached else None,
                                   safety_status="passed" if cached else "pending", finished_time=timezone.now() if cached else None)
@@ -215,6 +224,8 @@ def deliver_run(run_id):
 
 
 def run_data(run):
+    if run.status == "succeeded":
+        check_output(run.output_payload)
     return {"run_id": str(run.pk), "service_type": run.service_type, "status": run.status, "cached": run.cached_from_id is not None,
             "result": run.output_payload if run.status == "succeeded" else None,
             "error_detail": {"code": run.error_code, "message": run.error_message, "retryable": run.error_retryable, "details": {}} if run.error_code else None,

@@ -182,6 +182,8 @@ def update_point(user, code, data):
         point = get_point(code, lock=True)
         if data["version"] != point.version:
             error("VERSION_CONFLICT", "知识点版本已变化")
+        if point.status == "deprecated" and set(data) - {"version", "description", "aliases"}:
+            error("STATE_CONFLICT", "已废弃知识点仅允许修改描述和别名")
         status = data.get("status", point.status)
         if status != point.status:
             if (point.status, status) not in (("draft", "active"), ("active", "deprecated")):

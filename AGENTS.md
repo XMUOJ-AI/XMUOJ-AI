@@ -4,7 +4,7 @@
 
 XMUOJ-AI 是一个在线编程评测系统，仓库包含前端和后端代码，基于 OnlineJudge 项目扩展。主要功能包括题目浏览、代码提交、比赛、排名以及用户和题目管理。
 
-前端采用 Vue 3、Vue Router 4、Vuex 4 和 Vite，保留 JavaScript 和 Options API；学生端使用 View UI Plus，管理端使用 Element Plus。后端采用 Django 3.2、Django REST Framework，通过 PostgreSQL 保存数据，使用 Redis 和 Dramatiq 支撑缓存及后台任务。执行代码的判题服务器和判题沙箱属于外部配套组件，不包含在此仓库中。
+前端采用 Vue 3、Vue Router 4、Vuex 4 和 Vite，保留 JavaScript 和 Options API；学生端使用 View UI Plus，管理端使用 Element Plus。后端采用 Django 5.2 LTS、Django REST Framework，要求 Python 3.10+、PostgreSQL 14+，使用 Redis 和 Dramatiq 支撑缓存及后台任务。执行代码的判题服务器和判题沙箱属于外部配套组件，不包含在此仓库中。
 
 ## 项目简要导览
 

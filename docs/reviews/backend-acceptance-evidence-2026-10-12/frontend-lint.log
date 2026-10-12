@@ -1,0 +1,4 @@
+
+> onlinejudge@2.7.6 lint
+> eslint src build tests *.mjs
+

@@ -1,22 +1,19 @@
 import ipaddress
-import os
-import zipfile
 
 from django.contrib import auth
+from django.db import transaction
 from django.db.models import Q
-from django.conf import settings
-from django.http import StreamingHttpResponse
-from wsgiref.util import FileWrapper
+from django.middleware.csrf import get_token
 
 from account.decorators import login_required, check_contest_password
 from contest.models import Contest, ContestStatus, ContestRuleType, ContestType
-from judge.tasks import judge_task
+from judge.services import request_judge
 from options.options import SysOptions
 from problem.models import Problem, ProblemRuleType
 from problem.views.oj import DLTestCaseZipProcessor
 from problem.utils import is_problem_public_test_case_download_enabled, load_test_case_info
 from submission.models import Submission
-from utils.api import APIView, CSRFExemptAPIView, validate_serializer
+from utils.api import APIView, validate_serializer
 from utils.cache import cache
 from utils.captcha import Captcha
 from utils.shortcuts import rand_str
@@ -42,6 +39,8 @@ class ContestAccessMixin(object):
 
     def check_plugin_contest_permission(self, request, contest, check_type="problems", contest_password=None):
         user = request.user
+        if not contest.visible:
+            return self.error("Contest does not exist")
         if not user.is_authenticated:
             return self.error("Please login first.")
 
@@ -84,7 +83,7 @@ class ProblemStatusMixin(object):
             problem["my_status"] = source.get(str(problem["id"]), {}).get("status")
 
 
-class PluginLoginAPI(CSRFExemptAPIView):
+class PluginLoginAPI(APIView):
     @validate_serializer(PluginLoginSerializer)
     def post(self, request):
         data = request.data
@@ -104,9 +103,11 @@ class PluginLoginAPI(CSRFExemptAPIView):
         token = rand_str()
         user.auth_token = token
         user.save(update_fields=["auth_token"])
+        auth.login(request, user)
         return self.success({
             "token": token,
             "user": PluginUserSerializer(user.userprofile).data,
+            "csrf_token": get_token(request),
         })
 
 
@@ -115,6 +116,7 @@ class PluginLogoutAPI(APIView):
     def post(self, request):
         request.user.auth_token = None
         request.user.save(update_fields=["auth_token"])
+        auth.logout(request)
         return self.success("Succeeded")
 
 
@@ -124,6 +126,7 @@ class PluginBootstrapAPI(APIView):
         if request.user.is_authenticated:
             user_data = PluginUserSerializer(request.user.userprofile).data
         return self.success({
+            "csrf_token": get_token(request),
             "site": {
                 "name": SysOptions.website_name,
                 "base_url": SysOptions.website_base_url,
@@ -170,7 +173,9 @@ class PluginProblemsetAPI(APIView, ProblemStatusMixin):
         if tag:
             problems = problems.filter(tags__name=tag).distinct()
         data = self.paginate_data(request, problems, PluginProblemSummarySerializer)
-        for item, problem in zip(data["results"], problems[int(request.GET.get("offset", 0)):int(request.GET.get("offset", 0)) + len(data["results"])]):
+        page_problems = {problem.id: problem for problem in problems.filter(id__in=[item["id"] for item in data["results"]])}
+        for item in data["results"]:
+            problem = page_problems[item["id"]]
             item["can_download_test_case"] = is_problem_public_test_case_download_enabled(problem)
         self.add_problem_status(request, data["results"])
         return self.success(data)
@@ -332,16 +337,17 @@ class PluginSubmissionAPI(APIView, ContestAccessMixin):
         if data["language"] not in problem.languages:
             return self.error(f"{data['language']} is not allowed in the problem")
 
-        submission = Submission.objects.create(
-            user_id=request.user.id,
-            username=request.user.username,
-            language=data["language"],
-            code=data["code"],
-            problem_id=problem.id,
-            ip=request.session.get("ip", request.ip),
-            contest_id=data.get("contest_id"),
-        )
-        judge_task.send(submission.id, problem.id)
+        with transaction.atomic():
+            submission = Submission.objects.create(
+                user_id=request.user.id,
+                username=request.user.username,
+                language=data["language"],
+                code=data["code"],
+                problem_id=problem.id,
+                ip=request.session.get("ip", request.ip),
+                contest_id=data.get("contest_id"),
+            )
+            request_judge(submission)
         payload = {
             "submission_id": submission.id,
             "display_id": problem._id,
@@ -392,22 +398,7 @@ class PluginTestCaseDownloadAPI(APIView, ContestAccessMixin, DLTestCaseZipProces
             if permission_error:
                 return permission_error
 
-        test_case_dir = os.path.join(settings.TEST_CASE_DIR, problem.test_case_id)
-        if not os.path.isdir(test_case_dir):
-            return self.error("Test case does not exists")
-
-        name_list = self.filter_name_list(os.listdir(test_case_dir), problem.spj)
-        name_list.append("info")
-        file_name = os.path.join(test_case_dir, problem.test_case_id + ".zip")
-        with zipfile.ZipFile(file_name, "w") as zip_file:
-            for test_case in name_list:
-                zip_file.write(f"{test_case_dir}/{test_case}", test_case)
-
-        response = StreamingHttpResponse(FileWrapper(open(file_name, "rb")),
-                                         content_type="application/octet-stream")
-        response["Content-Disposition"] = f"attachment; filename=problem_{problem.id}_test_cases.zip"
-        response["Content-Length"] = os.path.getsize(file_name)
-        return response
+        return self.build_download_response(problem)
 
 
 class PluginVersionAPI(APIView):

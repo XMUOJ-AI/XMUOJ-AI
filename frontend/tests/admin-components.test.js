@@ -30,6 +30,7 @@ vi.mock('tar-simditor', () => ({ default: class {
   constructor () {
     const events = {}; let value = ''
     this.on = vi.fn((name, fn) => { events[name] = fn })
+    this.uploader = { on: vi.fn((name, fn) => { events[name] = fn }), events }
     this.off = vi.fn(name => { delete events[name] })
     this.getValue = () => value
     this.setValue = vi.fn(next => { value = next; if (events.valuechanged) events.valuechanged() })
@@ -82,6 +83,19 @@ describe('admin component contracts', () => {
     expect(editor.off).toHaveBeenCalledWith('valuechanged', expect.any(Function))
     expect(editor.off).toHaveBeenCalledWith('decorate', expect.any(Function))
     expect(editor.destroy).toHaveBeenCalledTimes(1)
+  })
+  test('Simditor uploads use the current CSRF token after login rotation', () => {
+    const wrapper = mount(Simditor, { global })
+    const beforeUpload = editors[0].uploader.events.beforeupload
+    const file = { params: { existing: 'kept' } }
+    document.cookie = 'csrftoken=first; path=/'
+    beforeUpload({}, file)
+    expect(file.params).toEqual({ existing: 'kept', csrfmiddlewaretoken: 'first' })
+    document.cookie = 'csrftoken=rotated; path=/'
+    beforeUpload({}, file)
+    expect(file.params.csrfmiddlewaretoken).toBe('rotated')
+    document.cookie = 'csrftoken=; Max-Age=0; path=/'
+    wrapper.unmount()
   })
   test('student editor preserves cursor/scroll on prop sync without emitting user edits', async () => {
     const wrapper = mount(StudentCodeMirror, { props: { value: 'initial' } })

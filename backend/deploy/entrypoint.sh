@@ -62,12 +62,12 @@ python manage.py inituser --action=bootstrap
 python manage.py shell <<'PY'
 import os
 from options.options import SysOptions
-from conf.models import JudgeServer
+from judge.dispatcher import sync_judge_server_tasks
 
 token = os.environ.get("JUDGE_SERVER_TOKEN")
 if token:
     SysOptions.judge_server_token = token
-JudgeServer.objects.update(task_number=0)
+sync_judge_server_tasks()
 PY
 
 grep -q '^spj:' /etc/group || addgroup -g 903 spj

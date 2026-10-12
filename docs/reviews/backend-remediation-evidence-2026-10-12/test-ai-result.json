@@ -1,0 +1,14 @@
+{
+  "check": "test-ai",
+  "command": [
+    "/tmp/xmuoj-remediation-20261012/venv/bin/python",
+    "manage.py",
+    "test",
+    "agent_service",
+    "rag",
+    "--settings=oj.settings",
+    "--noinput"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 11.767
+}

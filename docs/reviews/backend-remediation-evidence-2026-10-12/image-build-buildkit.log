@@ -1,0 +1,337 @@
+#0 building with "colima-xmuoj-merge-20261011" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.07kB done
+#1 WARN: LegacyKeyValueFormat: "ENV key=value" should be used instead of legacy "ENV key value" format (line 5)
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.12-alpine
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 445B done
+#3 DONE 0.0s
+
+#4 [stage-0 1/7] FROM docker.io/library/python:3.12-alpine@sha256:1b668429b3511ab407d8e00648891631b0b1a4d7e15e3ca70f38ab5b91ad4ab4
+#4 resolve docker.io/library/python:3.12-alpine@sha256:1b668429b3511ab407d8e00648891631b0b1a4d7e15e3ca70f38ab5b91ad4ab4 done
+#4 DONE 0.0s
+
+#5 [stage-0 2/7] WORKDIR /app
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 13.46MB 0.1s done
+#6 DONE 0.1s
+
+#7 [stage-0 3/7] COPY backend/deploy/requirements.txt /app/deploy/
+#7 DONE 0.0s
+
+#8 [stage-0 4/7] RUN --mount=type=cache,target=/etc/apk/cache,id=apk-cahce-arm64-final     --mount=type=cache,target=/root/.cache/pip,id=pip-cahce-arm64-final     sh -c "set -ex && apk add gcc libc-dev python3-dev libpq libpq-dev libjpeg-turbo libjpeg-turbo-dev zlib zlib-dev freetype freetype-dev supervisor openssl nginx curl unzip && pip install --upgrade pip==26.2.1 setuptools==83.0.0 && pip install -r /app/deploy/requirements.txt && apk del gcc libc-dev python3-dev libpq-dev libjpeg-turbo-dev zlib-dev freetype-dev"
+#8 0.089 + apk add gcc libc-dev python3-dev libpq libpq-dev libjpeg-turbo libjpeg-turbo-dev zlib zlib-dev freetype freetype-dev supervisor openssl nginx curl unzip
+#8 2.663 ( 1/57) Upgrading zlib (1.3.2-r0 -> 1.3.2-r1)
+#8 -1.289 ( 2/57) Installing brotli-libs (1.2.0-r1)
+#8 3.226 ( 3/57) Installing c-ares (1.34.8-r0)
+#8 3.419 ( 4/57) Installing libunistring (1.4.2-r0)
+#8 4.462 ( 5/57) Installing libidn2 (2.3.8-r0)
+#8 4.651 ( 6/57) Installing nghttp2-libs (1.70.0-r0)
+#8 4.828 ( 7/57) Installing libpsl (0.21.5-r3)
+#8 5.042 ( 8/57) Installing zstd-libs (1.5.7-r2)
+#8 5.390 ( 9/57) Installing libcurl (8.22.0-r0)
+#8 6.092 (10/57) Installing curl (8.22.0-r0)
+#8 6.836 (11/57) Installing libpng (1.6.59-r0)
+#8 7.028 (12/57) Installing freetype (2.14.3-r0)
+#8 10.41 (13/57) Installing pkgconf (2.5.1-r0)
+#8 10.59 (14/57) Installing bzip2-dev (1.0.8-r6)
+#8 11.44 (15/57) Installing brotli (1.2.0-r1)
+#8 11.77 (16/57) Installing brotli-dev (1.2.0-r1)
+#8 11.95 (17/57) Installing zlib-dev (1.3.2-r1)
+#8 12.45 (18/57) Installing libpng-dev (1.6.59-r0)
+#8 12.66 (19/57) Installing freetype-dev (2.14.3-r0)
+#8 8.997 (20/57) Installing libgcc (15.2.0-r5)
+#8 13.51 (21/57) Installing jansson (2.15.0-r0)
+#8 13.90 (22/57) Installing libstdc++ (15.2.0-r5)
+#8 14.60 (23/57) Installing binutils (2.45.1-r1)
+#8 16.05 (24/57) Installing libgcc-static (15.2.0-r5)
+#8 17.47 (25/57) Installing libgomp (15.2.0-r5)
+#8 17.80 (26/57) Installing libatomic (15.2.0-r5)
+#8 18.14 (27/57) Installing gmp (6.3.0-r4)
+#8 18.36 (28/57) Installing isl26 (0.26-r2)
+#8 19.15 (29/57) Installing mpfr4 (4.2.2-r0)
+#8 19.67 (30/57) Installing mpc1 (1.3.1-r1)
+#8 19.84 (31/57) Installing gcc (15.2.0-r5)
+#8 37.41 (32/57) Installing musl-dev (1.2.6-r2)
+#8 38.32 (33/57) Installing libjpeg-turbo (3.1.3-r0)
+#8 38.56 (34/57) Installing libturbojpeg (3.1.3-r0)
+#8 38.81 (35/57) Installing libjpeg-turbo-dev (3.1.3-r0)
+#8 38.99 (36/57) Installing libpq (18.6-r0)
+#8 39.24 (37/57) Installing openssl-dev (3.5.9-r0)
+#8 39.50 (38/57) Installing libpq-dev (18.6-r0)
+#8 39.82 (39/57) Installing pcre2 (10.49-r0)
+#8 40.16 (40/57) Installing nginx (1.30.4-r1)
+#8 40.36   Executing nginx-1.30.4-r1.pre-install
+#8 40.48   Executing nginx-1.30.4-r1.post-install
+#8 40.48 (41/57) Installing openssl (3.5.9-r0)
+#8 40.72 (42/57) Installing libexpat (2.8.5-r0)
+#8 40.90 (43/57) Installing mpdecimal (4.0.1-r0)
+#8 41.07 (44/57) Installing python3 (3.14.8-r0)
+#8 38.96 (45/57) Installing python3-pycache-pyc0 (3.14.8-r0)
+#8 44.78 (46/57) Installing pyc (3.14.8-r0)
+#8 44.78 (47/57) Installing python3-pyc (3.14.8-r0)
+#8 44.78 (48/57) Installing python3-dev (3.14.8-r0)
+#8 62.70 (49/57) Installing py3-parsing (3.3.2-r1)
+#8 62.92 (50/57) Installing py3-parsing-pyc (3.3.2-r1)
+#8 63.29 (51/57) Installing py3-packaging (26.2-r0)
+#8 63.59 (52/57) Installing py3-packaging-pyc (26.2-r0)
+#8 63.95 (53/57) Installing py3-setuptools (82.0.1-r1)
+#8 69.31 (54/57) Installing py3-setuptools-pyc (82.0.1-r1)
+#8 70.43 (55/57) Installing supervisor (4.3.0-r1)
+#8 71.07 (56/57) Installing supervisor-pyc (4.3.0-r1)
+#8 71.98 (57/57) Installing unzip (6.0-r16)
+#8 72.40 Executing busybox-1.37.0-r31.trigger
+#8 72.40 OK: 369.8 MiB in 94 packages
+#8 72.44 + pip install --upgrade 'pip==26.2.1' 'setuptools==83.0.0'
+#8 74.08 Collecting pip==26.2.1
+#8 74.62   Downloading pip-26.2.1-py3-none-any.whl.metadata (4.6 kB)
+#8 75.13 Collecting setuptools==83.0.0
+#8 75.68   Downloading setuptools-83.0.0-py3-none-any.whl.metadata (6.6 kB)
+#8 77.16 Downloading pip-26.2.1-py3-none-any.whl (1.8 MB)
+#8 78.11    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 1.9 MB/s eta 0:00:00
+#8 78.47 Downloading setuptools-83.0.0-py3-none-any.whl (1.0 MB)
+#8 78.97    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.0/1.0 MB 2.0 MB/s eta 0:00:00
+#8 78.99 Installing collected packages: setuptools, pip
+#8 79.28   Attempting uninstall: pip
+#8 79.28     Found existing installation: pip 25.0.1
+#8 79.29     Uninstalling pip-25.0.1:
+#8 79.33       Successfully uninstalled pip-25.0.1
+#8 79.71 Successfully installed pip-26.2.1 setuptools-83.0.0
+#8 79.71 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#8 80.32 + pip install -r /app/deploy/requirements.txt
+#8 81.65 Collecting coverage==6.5.0 (from -r /app/deploy/requirements.txt (line 1))
+#8 82.41   Downloading coverage-6.5.0.tar.gz (775 kB)
+#8 82.88      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 775.2/775.2 kB 1.5 MB/s  0:00:00
+#8 82.95   Installing build dependencies: started
+#8 90.88   Installing build dependencies: finished with status 'done'
+#8 90.88   Getting requirements to build wheel: started
+#8 91.06   Getting requirements to build wheel: finished with status 'done'
+#8 91.06   Preparing metadata (pyproject.toml): started
+#8 91.15   Preparing metadata (pyproject.toml): finished with status 'done'
+#8 91.39 Collecting django-cas-ng==5.0.1 (from -r /app/deploy/requirements.txt (line 2))
+#8 91.69   Downloading django_cas_ng-5.0.1-py2.py3-none-any.whl.metadata (3.9 kB)
+#8 92.07 Collecting django-dramatiq==0.11.6 (from -r /app/deploy/requirements.txt (line 3))
+#8 92.30   Downloading django_dramatiq-0.11.6-py3-none-any.whl.metadata (1.1 kB)
+#8 92.50 Collecting django-redis==5.4.0 (from -r /app/deploy/requirements.txt (line 4))
+#8 88.69   Downloading django_redis-5.4.0-py3-none-any.whl.metadata (32 kB)
+#8 89.00 Collecting redis==5.0.8 (from -r /app/deploy/requirements.txt (line 5))
+#8 93.42   Downloading redis-5.0.8-py3-none-any.whl.metadata (9.2 kB)
+#8 94.10 Collecting Django==5.2.18 (from -r /app/deploy/requirements.txt (line 6))
+#8 94.26   Downloading django-5.2.18-py3-none-any.whl.metadata (4.1 kB)
+#8 94.46 Collecting djangorestframework==3.18.3 (from -r /app/deploy/requirements.txt (line 7))
+#8 94.63   Downloading djangorestframework-3.18.3-py3-none-any.whl.metadata (7.8 kB)
+#8 94.85 Collecting dramatiq==1.16.0 (from -r /app/deploy/requirements.txt (line 8))
+#8 95.03   Downloading dramatiq-1.16.0-py3-none-any.whl.metadata (4.8 kB)
+#8 95.20 Collecting entrypoints==0.4 (from -r /app/deploy/requirements.txt (line 9))
+#8 95.37   Downloading entrypoints-0.4-py3-none-any.whl.metadata (2.6 kB)
+#8 95.61 Collecting Envelopes==0.4 (from -r /app/deploy/requirements.txt (line 10))
+#8 95.79   Downloading Envelopes-0.4.tar.gz (33 kB)
+#8 95.81   Installing build dependencies: started
+#8 96.03   Installing build dependencies: finished with status 'done'
+#8 96.03   Getting requirements to build wheel: started
+#8 96.20   Getting requirements to build wheel: finished with status 'done'
+#8 96.20   Preparing metadata (pyproject.toml): started
+#8 96.28   Preparing metadata (pyproject.toml): finished with status 'done'
+#8 96.52 Collecting flake8-coding==1.3.2 (from -r /app/deploy/requirements.txt (line 11))
+#8 96.69   Downloading flake8_coding-1.3.2-py2.py3-none-any.whl.metadata (3.1 kB)
+#8 96.87 Collecting flake8-quotes==3.3.2 (from -r /app/deploy/requirements.txt (line 12))
+#8 97.04   Downloading flake8-quotes-3.3.2.tar.gz (12 kB)
+#8 97.05   Installing build dependencies: started
+#8 97.29   Installing build dependencies: finished with status 'done'
+#8 97.29   Getting requirements to build wheel: started
+#8 97.45   Getting requirements to build wheel: finished with status 'done'
+#8 97.45   Preparing metadata (pyproject.toml): started
+#8 97.53   Preparing metadata (pyproject.toml): finished with status 'done'
+#8 97.70 Collecting flake8==7.0.0 (from -r /app/deploy/requirements.txt (line 13))
+#8 97.97   Downloading flake8-7.0.0-py2.py3-none-any.whl.metadata (3.8 kB)
+#8 98.23 Collecting gunicorn==26.2.0 (from -r /app/deploy/requirements.txt (line 14))
+#8 98.57   Downloading gunicorn-26.2.0-py3-none-any.whl.metadata (5.5 kB)
+#8 98.82 Collecting jsonfield==3.1.0 (from -r /app/deploy/requirements.txt (line 15))
+#8 98.98   Downloading jsonfield-3.1.0-py3-none-any.whl.metadata (5.5 kB)
+#8 99.18 Collecting jsonschema==4.23.0 (from -r /app/deploy/requirements.txt (line 16))
+#8 99.48   Downloading jsonschema-4.23.0-py3-none-any.whl.metadata (7.9 kB)
+#8 99.81 Collecting otpauth==1.0.1 (from -r /app/deploy/requirements.txt (line 17))
+#8 100.1   Downloading otpauth-1.0.1-py2.py3-none-any.whl.metadata (3.2 kB)
+#8 100.9 Collecting pillow==12.3.0 (from -r /app/deploy/requirements.txt (line 18))
+#8 101.1   Downloading pillow-12.3.0-cp312-cp312-musllinux_1_2_aarch64.whl.metadata (9.1 kB)
+#8 101.5 Collecting psycopg2==2.9.9 (from -r /app/deploy/requirements.txt (line 19))
+#8 101.7   Downloading psycopg2-2.9.9.tar.gz (384 kB)
+#8 101.9   Installing build dependencies: started
+#8 102.1   Installing build dependencies: finished with status 'done'
+#8 102.1   Getting requirements to build wheel: started
+#8 102.3   Getting requirements to build wheel: finished with status 'done'
+#8 102.3   Preparing metadata (pyproject.toml): started
+#8 102.4   Preparing metadata (pyproject.toml): finished with status 'done'
+#8 102.5 Collecting python-dateutil==2.8.2 (from -r /app/deploy/requirements.txt (line 20))
+#8 102.7   Downloading python_dateutil-2.8.2-py2.py3-none-any.whl.metadata (8.2 kB)
+#8 98.75 Collecting qrcode==7.4.2 (from -r /app/deploy/requirements.txt (line 21))
+#8 103.2   Downloading qrcode-7.4.2-py3-none-any.whl.metadata (17 kB)
+#8 103.5 Collecting sentry-sdk==2.71.0 (from -r /app/deploy/requirements.txt (line 22))
+#8 103.8   Downloading sentry_sdk-2.71.0-py3-none-any.whl.metadata (11 kB)
+#8 104.2 Collecting XlsxWriter==3.1.9 (from -r /app/deploy/requirements.txt (line 23))
+#8 104.3   Downloading XlsxWriter-3.1.9-py3-none-any.whl.metadata (2.6 kB)
+#8 104.7 Collecting python-cas>=1.6.0 (from django-cas-ng==5.0.1->-r /app/deploy/requirements.txt (line 2))
+#8 104.9   Downloading python_cas-1.7.2-py3-none-any.whl.metadata (4.8 kB)
+#8 105.1 Collecting asgiref>=3.8.1 (from Django==5.2.18->-r /app/deploy/requirements.txt (line 6))
+#8 105.3   Downloading asgiref-3.12.1-py3-none-any.whl.metadata (9.4 kB)
+#8 105.5 Collecting sqlparse>=0.3.1 (from Django==5.2.18->-r /app/deploy/requirements.txt (line 6))
+#8 105.7   Downloading sqlparse-0.6.0-py3-none-any.whl.metadata (6.0 kB)
+#8 105.9 Collecting prometheus-client>=0.2 (from dramatiq==1.16.0->-r /app/deploy/requirements.txt (line 8))
+#8 106.2   Downloading prometheus_client-0.26.0-py3-none-any.whl.metadata (2.1 kB)
+#8 106.4 Collecting mccabe<0.8.0,>=0.7.0 (from flake8==7.0.0->-r /app/deploy/requirements.txt (line 13))
+#8 106.7   Downloading mccabe-0.7.0-py2.py3-none-any.whl.metadata (5.0 kB)
+#8 107.1 Collecting pycodestyle<2.12.0,>=2.11.0 (from flake8==7.0.0->-r /app/deploy/requirements.txt (line 13))
+#8 107.3   Downloading pycodestyle-2.11.1-py2.py3-none-any.whl.metadata (4.5 kB)
+#8 107.5 Collecting pyflakes<3.3.0,>=3.2.0 (from flake8==7.0.0->-r /app/deploy/requirements.txt (line 13))
+#8 107.6   Downloading pyflakes-3.2.0-py2.py3-none-any.whl.metadata (3.5 kB)
+#8 107.8 Collecting attrs>=22.2.0 (from jsonschema==4.23.0->-r /app/deploy/requirements.txt (line 16))
+#8 108.0   Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+#8 108.2 Collecting jsonschema-specifications>=2023.03.6 (from jsonschema==4.23.0->-r /app/deploy/requirements.txt (line 16))
+#8 108.3   Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+#8 108.6 Collecting referencing>=0.28.4 (from jsonschema==4.23.0->-r /app/deploy/requirements.txt (line 16))
+#8 108.7   Downloading referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+#8 109.5 Collecting rpds-py>=0.7.1 (from jsonschema==4.23.0->-r /app/deploy/requirements.txt (line 16))
+#8 109.7   Downloading rpds_py-2026.9.1-cp312-cp312-musllinux_1_2_aarch64.whl.metadata (4.1 kB)
+#8 109.9 Collecting six>=1.5 (from python-dateutil==2.8.2->-r /app/deploy/requirements.txt (line 20))
+#8 110.2   Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+#8 110.4 Collecting typing-extensions (from qrcode==7.4.2->-r /app/deploy/requirements.txt (line 21))
+#8 110.6   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+#8 110.8 Collecting pypng (from qrcode==7.4.2->-r /app/deploy/requirements.txt (line 21))
+#8 110.9   Downloading pypng-0.20220715.0-py3-none-any.whl.metadata (13 kB)
+#8 111.1 Collecting urllib3>=1.26.11 (from sentry-sdk==2.71.0->-r /app/deploy/requirements.txt (line 22))
+#8 111.3   Downloading urllib3-2.8.0-py3-none-any.whl.metadata (7.4 kB)
+#8 111.5 Collecting certifi (from sentry-sdk==2.71.0->-r /app/deploy/requirements.txt (line 22))
+#8 111.7   Downloading certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+#8 112.5 Collecting requests>=2.11.1 (from python-cas>=1.6.0->django-cas-ng==5.0.1->-r /app/deploy/requirements.txt (line 2))
+#8 112.8   Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+#8 113.5 Collecting lxml>=3.4 (from python-cas>=1.6.0->django-cas-ng==5.0.1->-r /app/deploy/requirements.txt (line 2))
+#8 113.7   Downloading lxml-6.1.3-cp312-cp312-musllinux_1_2_aarch64.whl.metadata (3.3 kB)
+#8 114.1 Collecting charset_normalizer<4,>=2 (from requests>=2.11.1->python-cas>=1.6.0->django-cas-ng==5.0.1->-r /app/deploy/requirements.txt (line 2))
+#8 114.3   Downloading charset_normalizer-3.5.2-cp312-cp312-musllinux_1_2_aarch64.whl.metadata (46 kB)
+#8 114.5 Collecting idna<4,>=2.5 (from requests>=2.11.1->python-cas>=1.6.0->django-cas-ng==5.0.1->-r /app/deploy/requirements.txt (line 2))
+#8 114.8   Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+#8 115.0 Downloading django_cas_ng-5.0.1-py2.py3-none-any.whl (27 kB)
+#8 115.3 Downloading django_dramatiq-0.11.6-py3-none-any.whl (11 kB)
+#8 115.6 Downloading django_redis-5.4.0-py3-none-any.whl (31 kB)
+#8 115.9 Downloading redis-5.0.8-py3-none-any.whl (255 kB)
+#8 116.2 Downloading django-5.2.18-py3-none-any.whl (8.3 MB)
+#8 118.9    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.3/8.3 MB 3.0 MB/s  0:00:02
+#8 119.1 Downloading djangorestframework-3.18.3-py3-none-any.whl (903 kB)
+#8 119.4    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 904.0/904.0 kB 3.8 MB/s  0:00:00
+#8 119.5 Downloading dramatiq-1.16.0-py3-none-any.whl (119 kB)
+#8 119.8 Downloading entrypoints-0.4-py3-none-any.whl (5.3 kB)
+#8 119.9 Downloading flake8_coding-1.3.2-py2.py3-none-any.whl (7.6 kB)
+#8 120.1 Downloading flake8-7.0.0-py2.py3-none-any.whl (57 kB)
+#8 120.5 Downloading gunicorn-26.2.0-py3-none-any.whl (228 kB)
+#8 120.7 Downloading jsonfield-3.1.0-py3-none-any.whl (8.0 kB)
+#8 120.9 Downloading jsonschema-4.23.0-py3-none-any.whl (88 kB)
+#8 121.1 Downloading otpauth-1.0.1-py2.py3-none-any.whl (5.8 kB)
+#8 121.2 Downloading pillow-12.3.0-cp312-cp312-musllinux_1_2_aarch64.whl (6.3 MB)
+#8 124.8    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 1.8 MB/s  0:00:03
+#8 125.2 Downloading python_dateutil-2.8.2-py2.py3-none-any.whl (247 kB)
+#8 125.5 Downloading qrcode-7.4.2-py3-none-any.whl (46 kB)
+#8 125.9 Downloading sentry_sdk-2.71.0-py3-none-any.whl (534 kB)
+#8 126.1    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 534.3/534.3 kB 1.7 MB/s  0:00:00
+#8 126.3 Downloading XlsxWriter-3.1.9-py3-none-any.whl (154 kB)
+#8 126.6 Downloading mccabe-0.7.0-py2.py3-none-any.whl (7.3 kB)
+#8 127.1 Downloading pycodestyle-2.11.1-py2.py3-none-any.whl (31 kB)
+#8 127.3 Downloading pyflakes-3.2.0-py2.py3-none-any.whl (62 kB)
+#8 127.6 Downloading asgiref-3.12.1-py3-none-any.whl (25 kB)
+#8 127.8 Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+#8 128.0 Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+#8 128.2 Downloading prometheus_client-0.26.0-py3-none-any.whl (64 kB)
+#8 128.5 Downloading python_cas-1.7.2-py3-none-any.whl (7.6 kB)
+#8 128.8 Downloading lxml-6.1.3-cp312-cp312-musllinux_1_2_aarch64.whl (5.1 MB)
+#8 132.7    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 1.3 MB/s  0:00:03
+#8 128.8 Downloading referencing-0.37.0-py3-none-any.whl (26 kB)
+#8 129.0 Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+#8 133.4 Downloading charset_normalizer-3.5.2-cp312-cp312-musllinux_1_2_aarch64.whl (248 kB)
+#8 133.8 Downloading idna-3.20-py3-none-any.whl (69 kB)
+#8 134.2 Downloading urllib3-2.8.0-py3-none-any.whl (135 kB)
+#8 134.4 Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+#8 134.7 Downloading rpds_py-2026.9.1-cp312-cp312-musllinux_1_2_aarch64.whl (550 kB)
+#8 135.0    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 550.3/550.3 kB 1.4 MB/s  0:00:00
+#8 135.3 Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+#8 135.4 Downloading sqlparse-0.6.0-py3-none-any.whl (50 kB)
+#8 135.6 Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+#8 135.9 Downloading pypng-0.20220715.0-py3-none-any.whl (58 kB)
+#8 136.0 Building wheels for collected packages: coverage, Envelopes, flake8-quotes, psycopg2
+#8 136.0   Building wheel for coverage (pyproject.toml): started
+#8 136.4   Building wheel for coverage (pyproject.toml): finished with status 'done'
+#8 136.4   Created wheel for coverage: filename=coverage-6.5.0-cp312-cp312-linux_aarch64.whl size=216919 sha256=7636d351f6b2838267456026b9a88392084b2b60a6d9de60981fd484d50540fa
+#8 136.4   Stored in directory: /root/.cache/pip/wheels/a7/85/79/1888edb87e446075e2d1d011f7470ac992016bc1fc7f65ed38
+#8 136.4   Building wheel for Envelopes (pyproject.toml): started
+#8 136.5   Building wheel for Envelopes (pyproject.toml): finished with status 'done'
+#8 136.5   Created wheel for Envelopes: filename=envelopes-0.4-py3-none-any.whl size=16707 sha256=fd20c9e8eb3ecc6ac2630817cdfd65a01756e4135184bce699c2024a39126a50
+#8 136.5   Stored in directory: /root/.cache/pip/wheels/ea/cf/51/0cb5ba4ddeca8bdcfdd646ad151ebdc058a8b04c9073ae3491
+#8 136.5   Building wheel for flake8-quotes (pyproject.toml): started
+#8 136.6   Building wheel for flake8-quotes (pyproject.toml): finished with status 'done'
+#8 136.6   Created wheel for flake8-quotes: filename=flake8_quotes-3.3.2-py3-none-any.whl size=8697 sha256=8b075e14eeddf58f9f8089121e9c6b5db4700d619588ea63ba0bbaef5780e911
+#8 136.6   Stored in directory: /root/.cache/pip/wheels/8f/c4/71/8670f61b546212d5841784ee8748497014af46aeffb375bcd4
+#8 136.6   Building wheel for psycopg2 (pyproject.toml): started
+#8 140.2   Building wheel for psycopg2 (pyproject.toml): finished with status 'done'
+#8 140.2   Created wheel for psycopg2: filename=psycopg2-2.9.9-cp312-cp312-linux_aarch64.whl size=523359 sha256=475bee39c80055dc3ad4aa062a989134a61be3027e48ebf1d90daae39148d392
+#8 140.2   Stored in directory: /root/.cache/pip/wheels/ff/ac/80/7ccec163e3d05ae2112311b895132409b9abfd7e0c1c6b5183
+#8 140.2 Successfully built coverage Envelopes flake8-quotes psycopg2
+#8 140.2 Installing collected packages: pypng, otpauth, Envelopes, XlsxWriter, urllib3, typing-extensions, sqlparse, six, rpds-py, redis, pyflakes, pycodestyle, psycopg2, prometheus-client, pillow, mccabe, lxml, idna, gunicorn, entrypoints, coverage, charset_normalizer, certifi, attrs, asgiref, sentry-sdk, requests, referencing, qrcode, python-dateutil, flake8, dramatiq, Django, python-cas, jsonschema-specifications, jsonfield, flake8-quotes, flake8-coding, djangorestframework, django-redis, django-dramatiq, jsonschema, django-cas-ng
+#8 142.2 
+#8 142.2 Successfully installed Django-5.2.18 Envelopes-0.4 XlsxWriter-3.1.9 asgiref-3.12.1 attrs-26.1.0 certifi-2026.7.22 charset_normalizer-3.5.2 coverage-6.5.0 django-cas-ng-5.0.1 django-dramatiq-0.11.6 django-redis-5.4.0 djangorestframework-3.18.3 dramatiq-1.16.0 entrypoints-0.4 flake8-7.0.0 flake8-coding-1.3.2 flake8-quotes-3.3.2 gunicorn-26.2.0 idna-3.20 jsonfield-3.1.0 jsonschema-4.23.0 jsonschema-specifications-2025.9.1 lxml-6.1.3 mccabe-0.7.0 otpauth-1.0.1 pillow-12.3.0 prometheus-client-0.26.0 psycopg2-2.9.9 pycodestyle-2.11.1 pyflakes-3.2.0 pypng-0.20220715.0 python-cas-1.7.2 python-dateutil-2.8.2 qrcode-7.4.2 redis-5.0.8 referencing-0.37.0 requests-2.34.2 rpds-py-2026.9.1 sentry-sdk-2.71.0 six-1.17.0 sqlparse-0.6.0 typing-extensions-4.16.0 urllib3-2.8.0
+#8 142.2 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#8 142.2 + apk del gcc libc-dev python3-dev libpq-dev libjpeg-turbo-dev zlib-dev freetype-dev
+#8 142.4 ( 1/23) Purging freetype-dev (2.14.3-r0)
+#8 142.4 ( 2/23) Purging gcc (15.2.0-r5)
+#8 142.4 ( 3/23) Purging binutils (2.45.1-r1)
+#8 142.4 ( 4/23) Purging libgcc-static (15.2.0-r5)
+#8 142.4 ( 5/23) Purging libatomic (15.2.0-r5)
+#8 142.4 ( 6/23) Purging libgomp (15.2.0-r5)
+#8 142.4 ( 7/23) Purging isl26 (0.26-r2)
+#8 142.4 ( 8/23) Purging jansson (2.15.0-r0)
+#8 142.4 ( 9/23) Purging libjpeg-turbo-dev (3.1.3-r0)
+#8 142.4 (10/23) Purging libturbojpeg (3.1.3-r0)
+#8 142.4 (11/23) Purging libpng-dev (1.6.59-r0)
+#8 142.4 (12/23) Purging libpq-dev (18.6-r0)
+#8 142.4 (13/23) Purging mpc1 (1.3.1-r1)
+#8 142.4 (14/23) Purging mpfr4 (4.2.2-r0)
+#8 142.4 (15/23) Purging musl-dev (1.2.6-r2)
+#8 142.4 (16/23) Purging openssl-dev (3.5.9-r0)
+#8 142.4 (17/23) Purging python3-dev (3.14.8-r0)
+#8 142.4 (18/23) Purging zlib-dev (1.3.2-r1)
+#8 142.4 (19/23) Purging brotli-dev (1.2.0-r1)
+#8 142.4 (20/23) Purging brotli (1.2.0-r1)
+#8 142.4 (21/23) Purging bzip2-dev (1.0.8-r6)
+#8 142.4 (22/23) Purging gmp (6.3.0-r4)
+#8 142.4 (23/23) Purging pkgconf (2.5.1-r0)
+#8 142.4 Executing busybox-1.37.0-r31.trigger
+#8 142.4 OK: 76.6 MiB in 71 packages
+#8 DONE 142.5s
+
+#9 [stage-0 5/7] COPY backend/ /app/
+#9 DONE 0.1s
+
+#10 [stage-0 6/7] COPY frontend/dist/ /app/dist/
+#10 DONE 0.0s
+
+#11 [stage-0 7/7] RUN chmod -R u=rwX,go=rX ./ && chmod +x ./deploy/entrypoint.sh
+#11 DONE 0.2s
+
+#12 exporting to image
+#12 exporting layers
+#12 exporting layers 2.9s done
+#12 exporting manifest sha256:a6049cf476302f0d1d7399105003f20148faca05216bad01731dea2f5ff29a40 done
+#12 exporting config sha256:23877da9a0f12a86d4b14504a685d26e0e2bc1b954adcd678c99300abbfdc7ff done
+#12 exporting attestation manifest sha256:2cdc96cdc1709d48577c0e00bf5e073de0817d00f6dbefc2a7fd8319c57311d9 done
+#12 exporting manifest list sha256:edb734cb8a2a1858c587bb67961d493ba5ce8688b9f03ebf4081c04c35b52299 done
+#12 naming to docker.io/library/xmuoj-ai:acceptance-20261012-r2 done
+#12 unpacking to docker.io/library/xmuoj-ai:acceptance-20261012-r2
+#12 unpacking to docker.io/library/xmuoj-ai:acceptance-20261012-r2 0.9s done
+#12 DONE 3.8s
+
+ [33m1 warning found (use docker --debug to expand):
+[0m - LegacyKeyValueFormat: "ENV key=value" should be used instead of legacy "ENV key value" format (line 5)

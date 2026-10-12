@@ -1,8 +1,8 @@
 # OnlineJudge 2.0
 
-[![Python](https://img.shields.io/badge/python-3.8.0-blue.svg?style=flat-square)](https://www.python.org/downloads/release/python-362/)
-[![Django](https://img.shields.io/badge/django-3.2.9-blue.svg?style=flat-square)](https://www.djangoproject.com/)
-[![Django Rest Framework](https://img.shields.io/badge/django_rest_framework-3.12.0-blue.svg?style=flat-square)](http://www.django-rest-framework.org/)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg?style=flat-square)](https://www.python.org/downloads/)
+[![Django](https://img.shields.io/badge/django-5.2.18-blue.svg?style=flat-square)](https://www.djangoproject.com/)
+[![Django Rest Framework](https://img.shields.io/badge/django_rest_framework-3.18.3-blue.svg?style=flat-square)](http://www.django-rest-framework.org/)
 [![Build Status](https://travis-ci.org/QingdaoU/OnlineJudge.svg?branch=master)](https://travis-ci.org/QingdaoU/OnlineJudge)
 
 > #### An onlinejudge system based on Python and Vue. [Demo](https://qduoj.com)

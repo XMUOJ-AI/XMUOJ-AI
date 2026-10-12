@@ -3,11 +3,12 @@ from django.db import close_old_connections
 from concurrent.futures import ThreadPoolExecutor
 import json
 import threading
+from copy import deepcopy
 from datetime import timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from unittest.mock import patch
 from uuid import uuid4
-from django.test import Client, TestCase, override_settings
+from django.test import Client, SimpleTestCase, TestCase, override_settings
 from django.utils import timezone
 from account.models import User
 from knowledge.tests import make_user, make_point, make_problem
@@ -18,6 +19,7 @@ from utils.contract_api import ContractError
 from . import services, runtime
 from .contracts import SIGNATURES, model_tools, validate_api
 from .models import AgentRun, AgentConversation, AgentMessage, AgentDispatch, AgentToolCall, ErrorPattern
+from .safety import check_output
 from .tools import ToolContext, dispatch
 
 FEEDBACK = {"verdict_summary": "答案不符合题意", "likely_causes": [{"cause": "检查边界", "confidence": .5, "check_first": "考虑空输入"}],
@@ -28,6 +30,99 @@ CODE = {"summary": "逐行分析", "sections": [{"title": "输入", "explanation
 
 def response(result):
     return {"content": json.dumps(result, ensure_ascii=False)}, {"prompt_tokens": 20, "completion_tokens": 30}
+
+
+class AgentOutputSafetyTests(SimpleTestCase):
+    def test_programs_and_disguises_are_blocked_even_with_false_flag(self):
+        python = "a, b = map(int, input().split())\nprint(a + b)"
+        attacks = (
+            python, "先观察输入：\n" + python, "```text\n" + python + "\n```",
+            json.dumps({"hint": python, "contains_full_solution": False}),
+            json.dumps(python), r"\u0070\u0072\u0069\u006e\u0074\u0028\u0031\u0029",
+            "ｐｒｉｎｔ（１）", "pr\u200bint(1)", "print(1)", "int answer;",
+            '#include <stdio.h>\nint main(){int a,b; scanf("%d%d",&a,&b); printf("%d",a+b);}',
+            "#include <iostream>\nint main(){int a,b;std::cin>>a>>b;std::cout<<a+b;}",
+            "class Main { public static void main(String[] args) { System.out.println(3); } }",
+            "const [a,b] = require('fs').readFileSync(0,'utf8').trim().split(/\\s+/).map(Number); console.log(a+b);",
+            'package main\nimport "fmt"\nfunc main(){var a,b int;fmt.Scan(&a,&b);fmt.Println(a+b)}',
+            'fn main() { let a = 1; println!("{}", a + 2); }',
+            "using System; class P { static void Main(){Console.WriteLine(3);} }",
+            "a,b = gets.split.map(&:to_i)\nputs a+b", "<?php echo array_sum(explode(' ', trim(fgets(STDIN)))); ?>",
+            "#!/bin/sh\nread a b\necho $((a+b))", "values.append(total)", "print 1 + 2", "import sys # 读取输入",
+            "for x in [1, 2, 3]:\n    x", "p eval gets.tr ' ', '+'", "p +eval gets.tr ' ', '+'",
+            "(print)(\n    (sum)(\n        (map)(\n            int,\n            (str.split)((input)())\n        )\n    )\n)",
+            "(print)( # 输出结果\n    (sum)(\n        (map)(\n            int,\n            (str.split)((input)())\n        )\n    )\n)",
+            "如果暂时没有思路，可先看 print(1)", "当 n = print(1) 时，继续检查。",
+        )
+        for text in attacks:
+            with self.subTest(text=text), self.assertRaises(ContractError) as caught:
+                check_output(dict(FEEDBACK, next_question=text))
+            self.assertEqual(caught.exception.code, "AGENT_OUTPUT_BLOCKED")
+
+    def test_each_free_text_field_is_checked_without_blocking_teaching(self):
+        hint = {"hint_level": 1, "question": "队列非空时，下一步检查什么？", "focus": "先进先出",
+                "next_hint_available_at": None, "contains_full_solution": False}
+        path = {"path_id": str(uuid4()), "overview": "先理解队列，再练习遍历", "steps": [
+            {"order": 1, "knowledge_code": "bfs_basic", "reason": "先理解逐层访问"}],
+            "next_action": "描述访问顺序", "contains_full_solution": False}
+        cases = (("SubmissionFeedbackResult", FEEDBACK, (("verdict_summary",), ("likely_causes", 0, "cause"),
+                  ("likely_causes", 0, "check_first"), ("next_question",), ("knowledge_refs",))),
+                 ("CodeExplanationResult", CODE, (("summary",), ("sections", 0, "title"), ("sections", 0, "explanation"),
+                  ("complexity", "time"), ("complexity", "space"), ("complexity", "assumptions"), ("improvement_directions",))),
+                 ("SocraticHintResult", hint, (("question",), ("focus",))),
+                 ("LearningPathExplanationResult", path, (("overview",), ("steps", 0, "reason"), ("next_action",))))
+        for schema, result, fields in cases:
+            validate_api(schema, result, output=True)
+            check_output(result)
+            for field in fields:
+                attack = deepcopy(result)
+                target = attack
+                for key in field[:-1]:
+                    target = target[key]
+                target[field[-1]] = ["print(1)"] if isinstance(target[field[-1]], list) else "print(1)"
+                with self.subTest(schema=schema, field=field), self.assertRaises(ContractError):
+                    check_output(attack)
+        for text in ("a", "left", "L1-L3", "a + b", "p + q", "O(n log n)", "O(n^2)", "O(1)",
+                     "变量 `left` 表示区间左端点。", "检查边界（包括空输入）。", "队列（FIFO）用于逐层访问。",
+                     "Use a queue (FIFO) to track the nodes.", "当 n = 0 时，循环是否应该执行？", "用 f(n) 表示前 n 项的最优值。",
+                     "提示：检查边界", "Note: boundaries", "给定 a + b，思考如何比较大小。",
+                     "伪代码：\n1. 初始化待访问队列\n2. 队列非空时取出首项\n3. 检查尚未访问的邻居", "Keep the interval invariant."):
+            with self.subTest(text=text):
+                check_output(text)
+
+    def test_saved_result_projection_is_rechecked(self):
+        from types import SimpleNamespace
+        with self.assertRaises(ContractError) as caught:
+            services.run_data(SimpleNamespace(status="succeeded", output_payload=dict(FEEDBACK, next_question="print(1)")))
+        self.assertEqual(caught.exception.code, "AGENT_OUTPUT_BLOCKED")
+        nested = {"text": "提示"}
+        for _ in range(10):
+            nested = {"payload": nested}
+        with self.assertRaises(ContractError):
+            check_output(nested)
+
+    def test_internal_addresses_and_paths_are_blocked(self):
+        for text in ("http://172.16.0.5:8000/v1", "https://172.31.255.255/", "http://127.0.0.2/", "http://169.254.169.254/",
+                     "http://[::1]:8000/", "http://[fd00::1]/", "http://[fe80::1]/", "http://judge-server:8080/",
+                     "https://judge.local/", "https://judge.internal/", "http://judge.default.svc.cluster.local/",
+                     "http://localhost:8000/", "http://[invalid", "/etc/secrets/model.key", "/tmp/judge/input",
+                     "/test_case/private/1.in", r"C:\Users\teacher\secret.txt", r"\\judge-server\private\testcase"):
+            with self.subTest(text=text):
+                with self.assertRaises(ContractError) as caught:
+                    check_output(dict(FEEDBACK, next_question=text))
+                self.assertEqual(caught.exception.code, "AGENT_OUTPUT_BLOCKED")
+        for text in ("https://example.com/guide", "https://172.32.0.1/", "https://8.8.8.8/", "比较两个变量的值"):
+            with self.subTest(text=text):
+                check_output(dict(FEEDBACK, next_question=text))
+
+    def test_encoded_addresses_paths_and_credentials_share_text_normalization(self):
+        for text in ("地址为 http:&#47;&#47;172.16.0.5:8000/v1", "&#47;etc&#47;secrets&#47;model.key",
+                     "／etc／secrets／model.key", "http：／／127.0.0.1:8080/model", "test&#45;secret&#45;123456",
+                     "test&amp;#45;secret&amp;#45;123456", "test－secret－123456"):
+            with self.subTest(text=text), override_settings(AGENT_MODEL_API_KEY="test-secret-123456"):
+                with self.assertRaises(ContractError) as caught:
+                    check_output(dict(FEEDBACK, next_question=text))
+                self.assertEqual(caught.exception.code, "AGENT_OUTPUT_BLOCKED")
 
 
 class Fixture:
@@ -97,6 +192,7 @@ class AgentTests(Fixture, TestCase):
             runtime.execute(key)
         run = AgentRun.objects.get(pk=key)
         self.assertEqual(run.status, "succeeded", run.error_code)
+        self.assertEqual(run.prompt_version, "agent-v2-hints-only")
         validate_api("Run", services.run_data(run))
         self.assertTrue(self.post("runs", self.payload(), 200, key="cache")["data"]["cached"])
         self.post("runs/" + key + "/feedback", {"rating": "helpful"})
@@ -172,6 +268,37 @@ class AgentTests(Fixture, TestCase):
         run3.refresh_from_db()
         self.assertEqual(run3.status, "blocked")
         self.assertIsNone(run3.output_payload)
+
+    def test_unfenced_python_is_blocked_before_result_or_conversation_publication(self):
+        conversation, _ = services.start_conversation(self.user, {"problem_id": self.problem._id, "service_type": "socratic_hint"})
+        payload = {"service_type": "socratic_hint", "problem_id": self.problem._id, "conversation_id": str(conversation.pk),
+                   "student_explanation": "先理解输入和输出", "options": {"language": "zh-CN"}}
+        run = self.create(payload)
+        output = {"hint_level": 1, "question": "a,b=map(int,input().split())\nprint(a+b)", "focus": "输入",
+                  "next_hint_available_at": None, "contains_full_solution": False}
+        with patch("agent_service.provider.complete", return_value=response(output)):
+            runtime.execute(run.pk)
+        run.refresh_from_db()
+        conversation.refresh_from_db()
+        self.assertEqual((run.status, run.error_code), ("blocked", "AGENT_OUTPUT_BLOCKED"))
+        self.assertIsNone(run.output_payload)
+        self.assertEqual(conversation.current_hint_level, 0)
+        self.assertFalse(conversation.messages.filter(role="assistant").exists())
+
+    def test_old_unsafe_results_cannot_be_read_replayed_or_cached(self):
+        run = self.create(key="old-unsafe-output")
+        with patch("agent_service.provider.complete", return_value=response(FEEDBACK)):
+            runtime.execute(run.pk)
+        AgentRun.objects.filter(pk=run.pk).update(output_payload=dict(FEEDBACK, next_question="a,b=map(int,input().split())\nprint(a+b)"))
+        reply = self.client.get("/api/agent/v1/runs/" + str(run.pk))
+        self.assertEqual(reply.status_code, 422)
+        self.assertNotIn("print(a+b)", reply.content.decode())
+        with self.assertRaises(ContractError) as caught:
+            self.create(key="old-unsafe-output")
+        self.assertEqual(caught.exception.code, "AGENT_OUTPUT_BLOCKED")
+        fresh = self.create(key="fresh-safe-attempt")
+        self.assertEqual(fresh.status, "queued")
+        self.assertIsNone(fresh.cached_from_id)
 
     def test_learning_path_immutable_and_tools(self):
         path = LearningPath.objects.create(user=self.user, target_knowledge=self.point, expires_time=timezone.now() + timedelta(days=1))

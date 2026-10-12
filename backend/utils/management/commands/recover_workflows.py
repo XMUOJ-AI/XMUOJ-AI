@@ -13,7 +13,7 @@ class Command(BaseCommand):
     help = "Run one workflow recovery pass, or poll under a process supervisor."
 
     def add_arguments(self, parser):
-        parser.add_argument("workflow", choices=("learning", "agent", "import", "credentials"))
+        parser.add_argument("workflow", choices=("learning", "agent", "import", "credentials", "judge"))
         parser.add_argument("--interval", type=int, default=0)
 
     def handle(self, *args, **options):
@@ -29,6 +29,8 @@ class Command(BaseCommand):
                     call_command("dispatch_agent_runs")
                 elif options["workflow"] == "credentials":
                     call_command("cleanup_user_credentials")
+                elif options["workflow"] == "judge":
+                    call_command("dispatch_judge_tasks")
                 else:
                     call_command("recover_problem_imports")
             except Exception as exc:

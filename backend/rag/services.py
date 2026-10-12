@@ -17,18 +17,12 @@ from knowledge.services import knowledge_write
 from problem.models import Problem
 from .adapters import MilvusAdapter, config, embeddings, unavailable, validate_url
 from .models import RagChunk, RagDocument
+from .safety import unsafe_content
 
 
 def token_count(text):
     # Declared deterministic lexical tokenizer; not a fabricated provider usage count.
     return len(re.findall(r"[\u3400-\u9fff]|\w+|[^\w\s]", text))
-
-
-def unsafe_content(text):
-    return bool(re.search(
-        r"(?is)(#include\s*[<\"]|\bint\s+main\s*\(|if\s+__name__\s*==|\bdef\s+(?:solve|main)\s*\("
-        r"|\bclass\s+Solution\b|```(?:cpp|c\+\+|python|java|go|rust)\b|BEGIN [A-Z ]*PRIVATE KEY"
-        r"|(?:api[_-]?key|authorization)\s*[:=]\s*[^\s]{8,})", text))
 
 
 @knowledge_write()
@@ -86,8 +80,8 @@ def ingest_document(actor, payload):
     if not content:
         raise ContractError("AGENT_INPUT_INVALID", "清洗后的正文为空")
     if scope in ("public", "student") and (payload["source_type"] == "solution" or unsafe_content(content)
-                                           or unsafe_content(title) or unsafe_content(str(metadata))):
-        raise ContractError("AGENT_OUTPUT_BLOCKED", "完整解答或敏感资料不能进入学生检索范围", 422)
+                                           or unsafe_content(title) or unsafe_content(metadata)):
+        raise ContractError("AGENT_OUTPUT_BLOCKED", "学生资料仅允许提示和自然语言伪代码，代码或敏感内容已阻断", 422)
     digest = hashlib.sha256(content.encode()).hexdigest()
     transaction_lock("rag-source", payload["source_type"] + ":" + payload["source_id"])
     existing = RagDocument.objects.filter(source_type=payload["source_type"], source_id=payload["source_id"], content_hash=digest).first()
@@ -230,5 +224,6 @@ def search(query, knowledge_id, problem_id=None, timeout=None):
     else:
         raise unavailable("检索后端未配置")
     return {"hits": [{"chunk_id": str(c.pk), "source_type": c.document.source_type, "title": c.document.title,
-                      "excerpt": c.content[:1200], "score": score} for c, score in ranked[:5] if not unsafe_content(c.content)],
+                      "excerpt": c.content[:1200], "score": score} for c, score in ranked[:5]
+                     if not unsafe_content((c.content, c.document.title, c.document.metadata))],
             "retrieval_version": version}

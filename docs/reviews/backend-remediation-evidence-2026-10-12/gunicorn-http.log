@@ -1,0 +1,14 @@
+[2026-10-12 11:16:26 +0800] [83668] [INFO] Starting gunicorn 26.2.0
+[2026-10-12 11:16:26 +0800] [83668] [INFO] Listening at: http://127.0.0.1:57714 (83668)
+[2026-10-12 11:16:26 +0800] [83668] [INFO] Using worker: gthread
+[2026-10-12 11:16:26 +0800] [83669] [INFO] Booting worker with pid: 83669
+[2026-10-12 11:16:26 +0800] [83668] [INFO] Control socket listening at /Users/jingweihao/.gunicorn/gunicorn.ctl
+Forbidden (CSRF token missing.): /api/plugin/login
+[2026-10-12 03:16:27] - [WARNING] - [django.security.csrf:253]  - Forbidden (CSRF token missing.): /api/plugin/login
+Forbidden (CSRF token from the 'X-Csrftoken' HTTP header incorrect.): /api/plugin/logout
+[2026-10-12 03:16:27] - [WARNING] - [django.security.csrf:253]  - Forbidden (CSRF token from the 'X-Csrftoken' HTTP header incorrect.): /api/plugin/logout
+[2026-10-12 03:16:27 +0000] [83669] [WARNING] Invalid request from ip=127.0.0.1: Invalid HTTP Header: 'CONTENT-LENGTH'
+[2026-10-12 03:16:27 +0000] [83669] [WARNING] Invalid request from ip=127.0.0.1: Invalid HTTP Header: 'CONTENT-LENGTH'
+[2026-10-12 11:16:27 +0800] [83668] [INFO] Handling signal: term
+[2026-10-12 03:16:27 +0000] [83669] [INFO] Worker exiting (pid: 83669)
+[2026-10-12 11:16:27 +0800] [83668] [INFO] Shutting down: Master

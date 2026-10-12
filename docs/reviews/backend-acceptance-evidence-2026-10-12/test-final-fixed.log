@@ -1,0 +1,111 @@
+Creating test database for alias 'default'...
+Django VERSION (3, 2, 25, 'final', 0)
+System check identified no issues (0 silenced).
+.........................................................................................[2026-10-12 02:46:56] - [ERROR] - [django.request:224]  - Service Unavailable: /api/agent/v1/runs
+[2026-10-12 02:46:56] - [ERROR] - [django.request:224]  - Service Unavailable: /api/agent/v1/runs
+.....1 reviewed error patterns imported
+....................................................................................................Recovered 0 learning events
+Recovered 1 learning events
+Recovered 0 learning events
+.Recovered 0 learning events
+Recovered 1 learning events
+.Recovered 1 learning events
+Recovered 1 learning events
+Recovered 1 learning events
+Recovered 1 learning events
+.Recovered 1 learning events
+.Updated class owned (2ba93685-63d0-4720-9ba9-fbfc332b10a2); merged 1 teachers and 1 students
+....Updated class test-class (07edd18d-f185-48f0-b4fd-e932da6c446e); merged 1 teachers and 1 students
+......[2026-10-12 02:47:05] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF cookie not set.): /api/admin/test_case
+[2026-10-12 02:47:05] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF token missing or incorrect.): /api/admin/import_problem
+[2026-10-12 02:47:05] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF token missing or incorrect.): /api/admin/import_fps
+......[2026-10-12 02:47:06] - [ERROR] - [root:162]  - legacy_api_error type=RuntimeError
+[2026-10-12 02:47:06] - [ERROR] - [root:162]  - legacy_api_error type=RuntimeError
+.............................Problem Tag Audit
+- total tags: 2
+- active tags: 2
+- duplicate groups: 1
+- zero problem tags: 2
+- low frequency tags: 0
+
+Duplicate groups:
+- greedy => Greedy, greedy
+
+Zero problem tags:
+- Greedy (38)
+- greedy (39)
+.......................................[2026-10-12 02:47:13] - [ERROR] - [django.request:224]  - Internal Server Error: /api/test-failure
+[2026-10-12 02:47:13] - [ERROR] - [django.request:224]  - Internal Server Error: /api/test-failure
+.....[2026-10-12 02:47:13] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF cookie not set.): /api/admin/upload_file
+[2026-10-12 02:47:13] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF cookie not set.): /api/admin/upload_image/
+.......[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'agent_fixture'.
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):248]  - Running consumer thread...
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'agent_fixture.DQ'.
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):248]  - Running consumer thread...
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.WorkerThread:449]  - Running worker thread...
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message 'cf4d5cd6-a431-4131-b372-1539974c9019' on queue 'agent_fixture'.
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):326]  - Pushing message 'cf4d5cd6-a431-4131-b372-1539974c9019' onto work queue.
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message fixture_agent_execute('d8425135-fe99-4528-97e2-768b043906a5') with id 'cf4d5cd6-a431-4131-b372-1539974c9019'.
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):350]  - Acknowledging message 'cf4d5cd6-a431-4131-b372-1539974c9019'.
+[2026-10-12 02:47:15] - [INFO] - [dramatiq.worker.Worker:128]  - Shutting down...
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.Worker:133]  - Stopping workers...
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.WorkerThread:548]  - Stopping worker thread...
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.WorkerThread:465]  - Worker thread stopped.
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.Worker:138]  - Workers stopped.
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.Worker:139]  - Stopping consumers...
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):411]  - Stopping consumer thread...
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):411]  - Stopping consumer thread...
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):294]  - Consumer thread stopped.
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):294]  - Consumer thread stopped.
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.Worker:144]  - Consumers stopped.
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.Worker:146]  - Requeueing in-memory messages...
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.Worker:156]  - Done requeueing in-progress messages.
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.Worker:158]  - Closing consumers...
+[2026-10-12 02:47:15] - [DEBUG] - [dramatiq.worker.Worker:162]  - Consumers closed.
+[2026-10-12 02:47:15] - [INFO] - [dramatiq.worker.Worker:164]  - Worker has been shut down.
+.............................[2026-10-12 02:47:23] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF cookie not set.): /api/admin/submission/rejudge
+............................[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'default'.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'default': not whitelisted.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'problem_import'.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):248]  - Running consumer thread...
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'agent'.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'agent': not whitelisted.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'default.DQ'.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'default.DQ': not whitelisted.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'problem_import.DQ'.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):248]  - Running consumer thread...
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'agent.DQ'.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'agent.DQ': not whitelisted.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.WorkerThread:449]  - Running worker thread...
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message '6e4b8bb2-6e2b-4b06-ba17-0e4193a7d875' on queue 'problem_import'.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):326]  - Pushing message '6e4b8bb2-6e2b-4b06-ba17-0e4193a7d875' onto work queue.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message validate_import_batch('ebab15fd-3096-4081-8d8e-83ea8bbfb3d4') with id '6e4b8bb2-6e2b-4b06-ba17-0e4193a7d875'.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):350]  - Acknowledging message '6e4b8bb2-6e2b-4b06-ba17-0e4193a7d875'.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message 'ab339a14-fd51-4f5c-806e-b8a36818a471' on queue 'problem_import'.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):326]  - Pushing message 'ab339a14-fd51-4f5c-806e-b8a36818a471' onto work queue.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message commit_import_batch('ebab15fd-3096-4081-8d8e-83ea8bbfb3d4') with id 'ab339a14-fd51-4f5c-806e-b8a36818a471'.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):350]  - Acknowledging message 'ab339a14-fd51-4f5c-806e-b8a36818a471'.
+[2026-10-12 02:47:30] - [INFO] - [dramatiq.worker.Worker:128]  - Shutting down...
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.Worker:133]  - Stopping workers...
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.WorkerThread:548]  - Stopping worker thread...
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.WorkerThread:465]  - Worker thread stopped.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.Worker:138]  - Workers stopped.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.Worker:139]  - Stopping consumers...
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):411]  - Stopping consumer thread...
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):411]  - Stopping consumer thread...
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):294]  - Consumer thread stopped.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):294]  - Consumer thread stopped.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.Worker:144]  - Consumers stopped.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.Worker:146]  - Requeueing in-memory messages...
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.Worker:156]  - Done requeueing in-progress messages.
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.Worker:158]  - Closing consumers...
+[2026-10-12 02:47:30] - [DEBUG] - [dramatiq.worker.Worker:162]  - Consumers closed.
+[2026-10-12 02:47:30] - [INFO] - [dramatiq.worker.Worker:164]  - Worker has been shut down.
+.......[2026-10-12 02:47:32] - [ERROR] - [django.request:224]  - Service Unavailable: /api/admin/problem-import/batches
+[2026-10-12 02:47:32] - [ERROR] - [django.request:224]  - Service Unavailable: /api/admin/problem-import/batches
+.....................
+----------------------------------------------------------------------
+Ran 379 tests in 46.204s
+
+OK
+Destroying test database for alias 'default'...

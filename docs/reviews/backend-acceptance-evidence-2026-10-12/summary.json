@@ -1,0 +1,30 @@
+{
+  "branch": "duduking19",
+  "base_commit": "e5341ee",
+  "date": "2026-10-12",
+  "backend_tests": {
+    "count": 379,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 46.204,
+    "exit_code": 0
+  },
+  "frontend_tests": {
+    "files": 21,
+    "count": 96,
+    "exit_code": 0
+  },
+  "backend_lint_exit_code": 0,
+  "frontend_lint_exit_code": 0,
+  "frontend_build_exit_code": 0,
+  "contracts": "passed",
+  "problem_batch_tests": 6,
+  "deployment_tests": 11,
+  "fresh_migrations": "passed",
+  "migration_drift": "none",
+  "nginx_syntax_checks": 2,
+  "nginx_http_checks": 4,
+  "production_deployed": false,
+  "committed_or_pushed": false,
+  "temporary_environment_stopped": true
+}

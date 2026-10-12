@@ -1,0 +1,115 @@
+Creating test database for alias 'default'...
+Django VERSION (3, 2, 25, 'final', 0)
+System check identified no issues (0 silenced).
+..............................................................................[2026-10-12 02:18:23] - [ERROR] - [django.request:224]  - Service Unavailable: /api/agent/v1/runs
+[2026-10-12 02:18:23] - [ERROR] - [django.request:224]  - Service Unavailable: /api/agent/v1/runs
+.....1 reviewed error patterns imported
+...............................................................................................Recovered 0 learning events
+Recovered 1 learning events
+Recovered 0 learning events
+.Recovered 0 learning events
+Recovered 1 learning events
+.Recovered 1 learning events
+Recovered 1 learning events
+Recovered 1 learning events
+Recovered 1 learning events
+.Recovered 1 learning events
+.Updated class owned (1f744627-c194-47e4-ad74-d0afd8032b33); merged 1 teachers and 1 students
+....Updated class test-class (f4cda34f-04fb-4394-9233-ee032b7f2401); merged 1 teachers and 1 students
+............................Problem Tag Audit
+- total tags: 2
+- active tags: 2
+- duplicate groups: 1
+- zero problem tags: 2
+- low frequency tags: 0
+
+Duplicate groups:
+- greedy => Greedy, greedy
+
+Zero problem tags:
+- Greedy (25)
+- greedy (26)
+....................................[2026-10-12 02:18:39] - [ERROR] - [django.request:224]  - Internal Server Error: /api/test-failure
+[2026-10-12 02:18:39] - [ERROR] - [django.request:224]  - Internal Server Error: /api/test-failure
+...........[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'agent_fixture'.
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):248]  - Running consumer thread...
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'agent_fixture.DQ'.
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):248]  - Running consumer thread...
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.WorkerThread:449]  - Running worker thread...
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message '7a85c452-7e16-4afc-ab60-33bbca80f4b4' on queue 'agent_fixture'.
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):326]  - Pushing message '7a85c452-7e16-4afc-ab60-33bbca80f4b4' onto work queue.
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message fixture_agent_execute('02370aab-ac36-479f-b66a-37425827f92f') with id '7a85c452-7e16-4afc-ab60-33bbca80f4b4'.
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):350]  - Acknowledging message '7a85c452-7e16-4afc-ab60-33bbca80f4b4'.
+[2026-10-12 02:18:41] - [INFO] - [dramatiq.worker.Worker:128]  - Shutting down...
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.Worker:133]  - Stopping workers...
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.WorkerThread:548]  - Stopping worker thread...
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.WorkerThread:465]  - Worker thread stopped.
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.Worker:138]  - Workers stopped.
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.Worker:139]  - Stopping consumers...
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):411]  - Stopping consumer thread...
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):411]  - Stopping consumer thread...
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture.DQ):294]  - Consumer thread stopped.
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.ConsumerThread(agent_fixture):294]  - Consumer thread stopped.
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.Worker:144]  - Consumers stopped.
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.Worker:146]  - Requeueing in-memory messages...
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.Worker:156]  - Done requeueing in-progress messages.
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.Worker:158]  - Closing consumers...
+[2026-10-12 02:18:41] - [DEBUG] - [dramatiq.worker.Worker:162]  - Consumers closed.
+[2026-10-12 02:18:41] - [INFO] - [dramatiq.worker.Worker:164]  - Worker has been shut down.
+..................[2026-10-12 02:18:47] - [WARNING] - [django.security.csrf:224]  - Forbidden (CSRF cookie not set.): /api/admin/submission/rejudge
+......................[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'problem_import'.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):248]  - Running consumer thread...
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'agent'.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'agent': not whitelisted.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:223]  - Adding consumer for queue 'default'.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'default': not whitelisted.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'problem_import.DQ'.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):248]  - Running consumer thread...
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'agent.DQ'.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'agent.DQ': not whitelisted.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker._WorkerMiddleware:227]  - Adding consumer for delay queue 'default.DQ'.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.Worker:194]  - Dropping consumer for queue 'default.DQ': not whitelisted.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.WorkerThread:449]  - Running worker thread...
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message '742a5e68-1e30-40cb-9311-7cbcbbfede00' on queue 'problem_import'.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):326]  - Pushing message '742a5e68-1e30-40cb-9311-7cbcbbfede00' onto work queue.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message validate_import_batch('2153de69-b521-42b5-a367-8e3fb453c041') with id '742a5e68-1e30-40cb-9311-7cbcbbfede00'.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):350]  - Acknowledging message '742a5e68-1e30-40cb-9311-7cbcbbfede00'.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.broker.RedisBroker:184]  - Enqueueing message 'c544ff14-e364-402f-9c54-73268ecbb51a' on queue 'problem_import'.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):326]  - Pushing message 'c544ff14-e364-402f-9c54-73268ecbb51a' onto work queue.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.WorkerThread:479]  - Received message commit_import_batch('2153de69-b521-42b5-a367-8e3fb453c041') with id 'c544ff14-e364-402f-9c54-73268ecbb51a'.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):350]  - Acknowledging message 'c544ff14-e364-402f-9c54-73268ecbb51a'.
+[2026-10-12 02:18:53] - [INFO] - [dramatiq.worker.Worker:128]  - Shutting down...
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.Worker:133]  - Stopping workers...
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.WorkerThread:548]  - Stopping worker thread...
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.WorkerThread:465]  - Worker thread stopped.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.Worker:138]  - Workers stopped.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.Worker:139]  - Stopping consumers...
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):411]  - Stopping consumer thread...
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):411]  - Stopping consumer thread...
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import.DQ):294]  - Consumer thread stopped.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.ConsumerThread(problem_import):294]  - Consumer thread stopped.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.Worker:144]  - Consumers stopped.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.Worker:146]  - Requeueing in-memory messages...
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.Worker:156]  - Done requeueing in-progress messages.
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.Worker:158]  - Closing consumers...
+[2026-10-12 02:18:53] - [DEBUG] - [dramatiq.worker.Worker:162]  - Consumers closed.
+[2026-10-12 02:18:53] - [INFO] - [dramatiq.worker.Worker:164]  - Worker has been shut down.
+.......[2026-10-12 02:18:55] - [ERROR] - [django.request:224]  - Service Unavailable: /api/admin/problem-import/batches
+[2026-10-12 02:18:55] - [ERROR] - [django.request:224]  - Service Unavailable: /api/admin/problem-import/batches
+...E......
+======================================================================
+ERROR: test_upload_dedup_batch_conflict_and_size_stream (problem_import.tests.ImportTests.test_upload_dedup_batch_conflict_and_size_stream)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem_import/tests.py", line 123, in test_upload_dedup_batch_conflict_and_size_stream
+    again, created = receive_archive(package(), self.admin)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jingweihao/大创/XMUOJ-AI/backend/problem_import/services.py", line 98, in receive_archive
+    raise ContractError("IMPORT_BATCH_CONFLICT", "数据包或批次标识已存在", 409)
+utils.contract_api.ContractError: IMPORT_BATCH_CONFLICT
+
+----------------------------------------------------------------------
+Ran 318 tests in 40.442s
+
+FAILED (errors=1)
+Destroying test database for alias 'default'...

@@ -30,7 +30,10 @@ class JSONParser(object):
 
     @staticmethod
     def parse(body):
-        return json.loads(body.decode("utf-8"))
+        data = json.loads(body.decode("utf-8"))
+        if not isinstance(data, dict):
+            raise ValueError("JSON body must be an object")
+        return data
 
 
 class URLEncodedParser(object):
@@ -144,8 +147,8 @@ class APIView(View):
         if self.request_parsers:
             try:
                 request.data = self._get_request_data(self.request)
-            except ValueError as e:
-                return self.error(err="invalid-request", msg=str(e))
+            except ValueError:
+                return self.error(err="invalid-request", msg="Invalid request body or content type")
         try:
             return super(APIView, self).dispatch(request, *args, **kwargs)
         except APIError as e:
@@ -156,7 +159,7 @@ class APIView(View):
         except ProtectedError:
             return self.error(err="resource-in-use", msg="Resource has retained history or references; disable or archive it instead")
         except Exception as e:
-            logger.exception(e)
+            logger.error("legacy_api_error type=%s", type(e).__name__)
             return self.server_error()
 
 

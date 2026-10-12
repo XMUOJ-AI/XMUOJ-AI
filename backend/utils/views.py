@@ -1,16 +1,18 @@
 import os
 from django.conf import settings
 from account.serializers import ImageUploadForm, FileUploadForm
+from account.decorators import admin_role_required
 from utils.shortcuts import rand_str
-from utils.api import CSRFExemptAPIView
+from utils.api import APIView
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class SimditorImageUploadAPIView(CSRFExemptAPIView):
+class SimditorImageUploadAPIView(APIView):
     request_parsers = ()
 
+    @admin_role_required
     def post(self, request):
         form = ImageUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -33,7 +35,7 @@ class SimditorImageUploadAPIView(CSRFExemptAPIView):
                 for chunk in img:
                     imgFile.write(chunk)
         except IOError as e:
-            logger.error(e)
+            logger.error("image_upload_failed type=%s", type(e).__name__)
             return self.response({
                 "success": False,
                 "msg": "Upload Error",
@@ -44,9 +46,10 @@ class SimditorImageUploadAPIView(CSRFExemptAPIView):
             "file_path": f"{settings.UPLOAD_PREFIX}/{img_name}"})
 
 
-class SimditorFileUploadAPIView(CSRFExemptAPIView):
+class SimditorFileUploadAPIView(APIView):
     request_parsers = ()
 
+    @admin_role_required
     def post(self, request):
         form = FileUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -64,7 +67,7 @@ class SimditorFileUploadAPIView(CSRFExemptAPIView):
                 for chunk in file:
                     f.write(chunk)
         except IOError as e:
-            logger.error(e)
+            logger.error("file_upload_failed type=%s", type(e).__name__)
             return self.response({
                 "success": False,
                 "msg": "Upload Error"})

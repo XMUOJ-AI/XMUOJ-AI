@@ -1,6 +1,7 @@
 from django.db import transaction
 
-from judge.tasks import judge_task
+from judge.dispatcher import submission_worker_lock
+from judge.services import request_judge
 # from judge.dispatcher import JudgeDispatcher
 from utils.api import APIView
 from ..models import JudgeStatus, Submission
@@ -24,7 +25,9 @@ class SubmissionRejudgeAPI(APIView):
         elif not request.user.is_super_admin():
             return self.error("Permission denied")
 
-        with transaction.atomic():
+        with submission_worker_lock(submission.pk) as acquired, transaction.atomic():
+            if not acquired:
+                return self.error("Submission is already being judged")
             submission = Submission.objects.select_for_update().get(pk=submission.pk)
             if submission.result == JudgeStatus.JUDGING:
                 return self.error("Submission is already being judged")
@@ -32,6 +35,5 @@ class SubmissionRejudgeAPI(APIView):
             # Clearing a terminal OI score here emits a false zero-score event.
             submission.statistic_info = dict(submission.statistic_info or {}, _rejudge_pending=True)
             submission.save(update_fields=["statistic_info"])
-
-        judge_task.send(submission.id, submission.problem.id)
+            request_judge(submission)
         return self.success()

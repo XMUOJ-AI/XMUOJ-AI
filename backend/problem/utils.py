@@ -90,6 +90,11 @@ def clone_test_case(test_case_id):
         raise FileNotFoundError("Test case does not exist")
     new_test_case_id = rand_str()
     target_dir = os.path.join(settings.TEST_CASE_DIR, new_test_case_id)
-    shutil.copytree(source_dir, target_dir)
-    os.chmod(target_dir, 0o710)
+    os.mkdir(target_dir, 0o710)
+    try:
+        shutil.copytree(source_dir, target_dir, dirs_exist_ok=True)
+        os.chmod(target_dir, 0o710)
+    except Exception:
+        shutil.rmtree(target_dir, ignore_errors=True)
+        raise
     return new_test_case_id

@@ -64,9 +64,15 @@ class ContestAPI(APIView):
             cache_key = f"{CacheKey.contest_rank_cache}:{contest.id}"
             cache.delete(cache_key)
 
-        for k, v in data.items():
-            setattr(contest, k, v)
-        contest.save()
+        from contest.scoring import rebuild_contest_scores
+        with transaction.atomic():
+            contest = Contest.objects.select_for_update().get(pk=contest.pk)
+            changed_window = contest.start_time != data["start_time"] or contest.end_time != data["end_time"]
+            for k, v in data.items():
+                setattr(contest, k, v)
+            contest.save()
+            if changed_window:
+                rebuild_contest_scores(contest.pk)
         return self.success(ContestAdminSerializer(contest).data)
 
     def get(self, request):
@@ -216,6 +222,7 @@ class ContestAnnouncementAPI(APIView):
 class ACMContestHelper(APIView):
     @check_contest_permission(check_type="ranks")
     def get(self, request):
+        ensure_created_by(self.contest, request.user)
         ranks = ACMContestRank.objects.filter(contest=self.contest, accepted_number__gt=0) \
             .values("id", "user__username", "user__userprofile__real_name", "submission_info")
         results = []
@@ -236,16 +243,19 @@ class ACMContestHelper(APIView):
     @check_contest_permission(check_type="ranks")
     @validate_serializer(ACMContesHelperSerializer)
     def put(self, request):
+        ensure_created_by(self.contest, request.user)
         data = request.data
-        try:
-            rank = ACMContestRank.objects.get(pk=data["rank_id"])
-        except ACMContestRank.DoesNotExist:
-            return self.error("Rank id does not exist")
-        problem_rank_status = rank.submission_info.get(data["problem_id"])
-        if not problem_rank_status:
-            return self.error("Problem id does not exist")
-        problem_rank_status["checked"] = data["checked"]
-        rank.save(update_fields=("submission_info",))
+        with transaction.atomic():
+            Contest.objects.select_for_update().get(pk=self.contest.pk)
+            try:
+                rank = ACMContestRank.objects.get(pk=data["rank_id"], contest=self.contest)
+            except ACMContestRank.DoesNotExist:
+                return self.error("Rank id does not exist")
+            problem_rank_status = rank.submission_info.get(data["problem_id"])
+            if not problem_rank_status:
+                return self.error("Problem id does not exist")
+            problem_rank_status["checked"] = data["checked"]
+            rank.save(update_fields=("submission_info",))
         return self.success()
 
 

@@ -30,8 +30,8 @@ XMUOJ-AI/
 ## 技术与环境
 
 - 前端：Vue 3、Vue Router 4、Vuex 4、Vite；学生端使用 View UI Plus，管理端使用 Element Plus。命令定义在 `frontend/package.json`。
-- 后端：Django 3.2.25、Django REST Framework 3.14、Dramatiq，依赖清单为 `backend/deploy/requirements.txt`。
-- 后端 Dockerfile 当前采用 Python 3.12 Alpine 基础镜像。
+- 后端：Django 5.2.18 LTS、Django REST Framework 3.18.3、Gunicorn 26.2.0、Dramatiq，依赖清单为 `backend/deploy/requirements.txt`。
+- 后端使用 Python 3.10+、PostgreSQL 14+；本机验收使用 Python 3.11，Dockerfile 使用 Python 3.12 Alpine。Redis 开发环境使用 7。
 
 前端统一使用 Node.js 24 和 npm，按 `frontend/package-lock.json` 安装锁定依赖。无需 DLL 构建或 OpenSSL 兼容参数。浏览器范围为 Chrome、Edge、Firefox 最近两个版本及 Safari 16.4+，不支持 IE。CodeMirror 5、ECharts 3 和 Simditor 核心保留；Simditor 的三个历史 Git 依赖及其许可固定在 `frontend/vendor/`。
 
@@ -135,6 +135,8 @@ docker build -f backend/Dockerfile -t xmuoj-ai .
 ```
 
 Dockerfile 从根构建上下文复制 `backend/` 和 `frontend/dist/`。镜像构建不等于完整部署，数据库、Redis、持久化数据及判题组件仍需单独配置。
+
+从旧版升级前备份数据库与文件，停止旧 web/worker 写入，执行迁移后再启动新版本；不要混跑旧判题 worker。对需要修正的历史比赛执行 `python manage.py rebuild_contest_scores <contest_id>`。插件客户端需保存 Session Cookie 并发送 CSRF header，详见[插件协议](backend/plugin/README.md)。依赖兼容、迁移和验收限制见[本轮整改报告](docs/reviews/backend-remediation-2026-10-12.md)。
 
 构建需要 Docker BuildKit/buildx（Dockerfile 使用缓存挂载）。生产镜像默认采用 HTTPS 安全 Cookie 与 1 小时 HSTS；证书、TLS 网关及可信代理设置见 [HTTPS 部署配置](docs/deployment-https.md)。批量导入的随机账号凭据采用私有临时导出，详见 [账号导入与凭据交付](docs/account-import-credentials.md)；镜像中的清理进程每分钟删除过期文件。
 

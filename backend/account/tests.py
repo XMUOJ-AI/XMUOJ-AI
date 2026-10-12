@@ -1071,7 +1071,8 @@ class CredentialExportConcurrencyTest(TransactionTestCase):
 
         def simultaneous_check(decorator, *args):
             # Both requests have reached the SAME decorator before either checks its user.
-            barrier.wait(timeout=10)
+            if not disabled:
+                barrier.wait(timeout=10)
             return original(decorator, *args)
 
         def read_exports(user):
@@ -1079,7 +1080,16 @@ class CredentialExportConcurrencyTest(TransactionTestCase):
             try:
                 client = APIClient()
                 client.force_login(user)
-                return client.get(reverse("generate_user_api"), {"list": 1}).data
+                session = client.session
+                session_key = session.session_key
+                # Disabled sessions are rejected by middleware before the decorator.
+                if disabled:
+                    barrier.wait(timeout=10)
+                response = client.get(reverse("generate_user_api"), {"list": 1})
+                if disabled and user.pk == denied.pk:
+                    self.assertNotIn(auth.SESSION_KEY, client.session)
+                    self.assertFalse(session.exists(session_key))
+                return response.data
             finally:
                 connections.close_all()
 
@@ -1087,4 +1097,4 @@ class CredentialExportConcurrencyTest(TransactionTestCase):
             with ThreadPoolExecutor(max_workers=2) as pool:
                 allowed, forbidden = list(pool.map(read_exports, [owner, denied]))
         self.assertIsNone(allowed["error"])
-        self.assertEqual(forbidden["error"], "permission-denied")
+        self.assertEqual(forbidden["error"], "login-required" if disabled else "permission-denied")

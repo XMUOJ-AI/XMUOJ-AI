@@ -1,12 +1,15 @@
 """Real HTTP adapters. No synthetic vectors or model completions are produced."""
 import json
+import io
 import math
 import os
 import re
 import time
+from functools import partial
+from http.client import HTTPConnection, HTTPSConnection, HTTPResponse
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
-from urllib.request import HTTPRedirectHandler, Request, build_opener
+from urllib.request import HTTPHandler, HTTPSHandler, HTTPRedirectHandler, Request, build_opener
 
 from django.conf import settings
 from utils.contract_api import ContractError
@@ -25,6 +28,50 @@ class NoRedirect(HTTPRedirectHandler):
         return None
 
 
+class DeadlineReader(io.RawIOBase):
+    def __init__(self, raw, deadline):
+        self.raw = raw
+        self.deadline = deadline
+
+    def readable(self):
+        return True
+
+    def readinto(self, buffer):
+        remaining = self.deadline - time.monotonic()
+        if remaining <= 0:
+            raise TimeoutError("Dependency request deadline exceeded")
+        self.raw._sock.settimeout(remaining)
+        return self.raw.readinto(buffer)
+
+    def close(self):
+        self.raw.close()
+        super().close()
+
+
+class DeadlineResponse(HTTPResponse):
+    def __init__(self, *args, deadline, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Header readline and body read must share the same budget, even for byte-at-a-time peers.
+        self.fp = io.BufferedReader(DeadlineReader(self.fp.detach(), deadline))
+
+
+class DeadlineHandler(HTTPSHandler, HTTPHandler):
+    def __init__(self, deadline):
+        super().__init__()
+        self.deadline = deadline
+
+    def connection(self, connection_type, *args, **kwargs):
+        connection = connection_type(*args, **kwargs)
+        connection.response_class = partial(DeadlineResponse, deadline=self.deadline)
+        return connection
+
+    def http_open(self, request):
+        return self.do_open(partial(self.connection, HTTPConnection), request)
+
+    def https_open(self, request):
+        return self.do_open(partial(self.connection, HTTPSConnection), request, context=self._context)
+
+
 def validate_url(url):
     if not isinstance(url, str) or any(ord(char) < 33 for char in url):
         raise ValueError("Invalid URL")
@@ -41,7 +88,7 @@ def post_json(url, body, token="", timeout=15):
     try:
         validate_url(url)
         timeout = float(timeout)
-        if not math.isfinite(timeout):
+        if not math.isfinite(timeout) or timeout <= 0:
             raise ValueError()
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
         if token:
@@ -49,17 +96,20 @@ def post_json(url, body, token="", timeout=15):
         request = Request(url, json.dumps(body, ensure_ascii=False, allow_nan=False).encode(), headers, method="POST")
     except (ValueError, TypeError, UnicodeError):
         raise unavailable("依赖服务配置或请求不合法") from None
-    deadline = time.monotonic() + max(0.1, min(timeout, 30))
+    deadline = time.monotonic() + min(timeout, 30)
     for attempt in range(2):
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise unavailable("依赖服务请求超时")
         try:
-            with build_opener(NoRedirect()).open(request, timeout=remaining) as response:
+            with build_opener(NoRedirect(), DeadlineHandler(deadline)).open(request, timeout=remaining) as response:
                 chunks, size = [], 0
                 while True:
-                    if time.monotonic() >= deadline:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
                         raise unavailable("依赖服务请求超时")
+                    if response.isclosed():
+                        break
                     chunk = response.read1(65536)
                     if not chunk:
                         break
@@ -82,7 +132,10 @@ def post_json(url, body, token="", timeout=15):
         if not retryable or attempt:
             # Never echo provider exceptions/bodies: they may contain secrets.
             raise unavailable("依赖服务暂时不可用") from None
-        time.sleep(0.1)
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise unavailable("依赖服务请求超时")
+        time.sleep(min(0.1, remaining))
 
 
 def embeddings(texts, timeout=15):

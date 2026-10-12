@@ -87,10 +87,10 @@
     <el-dialog v-model="editVisible" title="编辑知识点" width="680px">
       <el-form :model="editing" label-width="100px">
         <el-form-item label="编码"><el-input :model-value="point && point.code" disabled /></el-form-item>
-        <el-form-item label="名称"><el-input v-model="editing.name" /></el-form-item>
+        <el-form-item label="名称"><el-input v-model="editing.name" :disabled="point && point.status === 'deprecated'" /></el-form-item>
         <el-form-item label="描述"><el-input v-model="editing.description" type="textarea" :rows="4" /></el-form-item>
-        <el-form-item label="分类"><el-select v-model="editing.category"><el-option v-for="item in categories" :key="item[0]" :label="item[1]" :value="item[0]" /></el-select></el-form-item>
-        <el-form-item label="层级"><el-input-number v-model="editing.level" :min="1" :max="5" /></el-form-item>
+        <el-form-item label="分类"><el-select v-model="editing.category" :disabled="point && point.status === 'deprecated'"><el-option v-for="item in categories" :key="item[0]" :label="item[1]" :value="item[0]" /></el-select></el-form-item>
+        <el-form-item label="层级"><el-input-number v-model="editing.level" :min="1" :max="5" :disabled="point && point.status === 'deprecated'" /></el-form-item>
         <el-form-item label="别名"><el-select v-model="editing.aliases" multiple filterable allow-create default-first-option style="width: 100%" /></el-form-item>
       </el-form>
       <template #footer><el-button @click="editVisible = false">取消</el-button><el-button type="primary" :loading="saving" @click="saveEdit">保存</el-button></template>
@@ -180,7 +180,10 @@
       },
       async saveEdit () {
         if (!this.editing.name.trim()) return this.$error('名称不能为空')
-        if (await this.update({ ...this.editing })) this.editVisible = false
+        const changes = this.point.status === 'deprecated'
+          ? { description: this.editing.description, aliases: this.editing.aliases }
+          : { ...this.editing }
+        if (await this.update(changes)) this.editVisible = false
       },
       async changeStatus (status) {
         const action = status === 'active' ? '设为生效' : '废弃'

@@ -1,0 +1,42 @@
+[
+  {
+    "check": "anonymous_bootstrap",
+    "passed": true,
+    "detail": "HTTP 200; anonymous user; CSRF token issued"
+  },
+  {
+    "check": "csrf_required",
+    "passed": true,
+    "detail": "HTTP 403 for login without CSRF header"
+  },
+  {
+    "check": "session_login",
+    "passed": true,
+    "detail": "HTTP login and subsequent Cookie-based identity; CSRF rotated"
+  },
+  {
+    "check": "old_csrf_rejected",
+    "passed": true,
+    "detail": "HTTP 403 after login token rotation"
+  },
+  {
+    "check": "invalid_json_root",
+    "passed": true,
+    "detail": "Array body produces controlled API error"
+  },
+  {
+    "check": "conflicting_framing",
+    "passed": true,
+    "detail": "Gunicorn rejects ambiguous framing with HTTP 400"
+  },
+  {
+    "check": "duplicate_content_length",
+    "passed": true,
+    "detail": "Gunicorn rejects ambiguous framing with HTTP 400"
+  },
+  {
+    "check": "session_logout",
+    "passed": true,
+    "detail": "Session invalidated after HTTP logout"
+  }
+]

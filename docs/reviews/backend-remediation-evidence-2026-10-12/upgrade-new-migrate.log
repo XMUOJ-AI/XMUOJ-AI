@@ -1,0 +1,5 @@
+Django VERSION (5, 2, 18, 'final', 0)
+Operations to perform:
+  Apply all migrations: account, agent_service, announcement, auth, conf, contenttypes, contest, django_dramatiq, judge, knowledge, learning, options, problem, problem_import, rag, sessions, submission
+Running migrations:
+  Applying contest.0014_rename_contestparticipation_user_last_enter_time_contest_part_user_enter_idx... OK

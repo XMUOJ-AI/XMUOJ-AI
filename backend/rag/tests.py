@@ -14,7 +14,7 @@ from uuid import UUID, uuid4
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.db import close_old_connections, connection
-from django.test import TestCase, TransactionTestCase, override_settings
+from django.test import SimpleTestCase, TestCase, TransactionTestCase, override_settings
 from django.utils.timezone import now
 
 from account.models import AdminType
@@ -24,7 +24,7 @@ from knowledge.services import update_point
 from utils.contract_api import ContractError
 
 from .adapters import embeddings, post_json
-from .models import RagDocument
+from .models import RagDocument, RagChunk
 from .services import index_document, ingest_document, search
 
 
@@ -47,6 +47,33 @@ def provider_fixture():
                 self.send_response(302)
                 self.send_header("Location", "/embeddings")
                 self.end_headers()
+                return
+            if self.path == "/slow-headers":
+                try:
+                    self.wfile.write(b"HTTP/1.1 200 OK\r\nX-Slow: ")
+                    self.wfile.flush()
+                    for _ in range(10):
+                        time.sleep(.075)
+                        self.wfile.write(b"x")
+                        self.wfile.flush()
+                    self.wfile.write(b"\r\nContent-Length: 2\r\n\r\n{}")
+                except (BrokenPipeError, ConnectionResetError):
+                    pass
+                return
+            if self.path == "/trickle":
+                time.sleep(.25)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", "2")
+                self.end_headers()
+                try:
+                    self.wfile.write(b"{")
+                    self.wfile.flush()
+                    time.sleep(.35)
+                    self.wfile.write(b"}")
+                    self.wfile.flush()
+                except (BrokenPipeError, ConnectionResetError):
+                    pass
                 return
             if self.path == "/slow":
                 time.sleep(.25)
@@ -107,6 +134,28 @@ def provider_fixture():
         worker.join(timeout=2)
 
 
+class RagHTTPDeadlineTests(SimpleTestCase):
+    def test_trickling_headers_cannot_reset_the_http_deadline(self):
+        with provider_fixture() as (url, state):
+            started = time.monotonic()
+            with self.assertRaises(ContractError) as caught:
+                post_json(url + "/slow-headers", {}, timeout=.2)
+            elapsed = time.monotonic() - started
+            self.assertEqual(caught.exception.code, "AGENT_DEPENDENCY_NOT_READY")
+            self.assertLess(elapsed, .35, "Header reads must share the remaining deadline")
+            self.assertEqual(len(state["requests"]), 1)
+
+    def test_body_reads_share_the_remaining_http_deadline(self):
+        with provider_fixture() as (url, state):
+            started = time.monotonic()
+            with self.assertRaises(ContractError) as caught:
+                post_json(url + "/trickle", {}, timeout=.4)
+            elapsed = time.monotonic() - started
+            self.assertEqual(caught.exception.code, "AGENT_DEPENDENCY_NOT_READY")
+            self.assertLess(elapsed, .55, "Each body read must use the remaining deadline")
+            self.assertEqual(len(state["requests"]), 1)
+
+
 class RagTests(TestCase):
     def setUp(self):
         self.admin = make_user("rag_admin")
@@ -164,7 +213,8 @@ class RagTests(TestCase):
         self.assertIsNone(locked.chunks.get().embedding_id)
 
     def test_unsafe_solutions_metadata_and_urls_are_rejected(self):
-        for text in ("#include <iostream>\nint main() {}", "def solve():\n    print(input())", "api_key=abcdefghijk"):
+        for text in ("#include <iostream>\nint main() {}", "def solve():\n    print(input())", "api_key=abcdefghijk",
+                     "a,b=map(int,input().split())\nprint(a+b)", '{"hint":"print(1)","contains_full_solution":false}'):
             self.assert_error("AGENT_OUTPUT_BLOCKED", lambda: ingest_document(self.admin, self.payload(content=text)))
         self.assert_error("AGENT_OUTPUT_BLOCKED", lambda: ingest_document(self.admin, self.payload(
             source_type="solution", metadata={"problem_id": self.problem._id})))
@@ -172,6 +222,19 @@ class RagTests(TestCase):
             self.assert_error("AGENT_INPUT_INVALID", lambda: ingest_document(self.admin, self.payload(source_url=url)))
         self.assert_error("AGENT_INPUT_INVALID", lambda: ingest_document(self.admin, self.payload(metadata={"knowledge_id": True})))
         self.assertFalse(RagDocument.objects.exists())
+
+    def test_code_remains_admin_only_and_legacy_student_hits_are_filtered(self):
+        code = "a,b=map(int,input().split())\nprint(a+b)"
+        private, _ = ingest_document(self.admin, self.payload(access_scope="admin", content=code))
+        self.assertEqual(private.content, code)
+        self.assert_error("AGENT_OUTPUT_BLOCKED", lambda: ingest_document(self.admin, self.payload(
+            metadata={"knowledge_id": self.point.pk, "algorithm_template": code})))
+        doc, _ = ingest_document(self.admin, self.payload(source_id="legacy-student"))
+        RagChunk.objects.filter(document=doc).update(content="二分查找\n" + code)
+        self.assertEqual(search("二分", self.point.pk)["hits"], [])
+        RagChunk.objects.filter(document=doc).update(content="二分查找保持区间不变式")
+        RagDocument.objects.filter(pk=doc.pk).update(title=code)
+        self.assertEqual(search("二分", self.point.pk)["hits"], [])
 
     @skipUnless(connection.vendor == "postgresql", "Real PostgreSQL full-text search")
     @override_settings(RAG_RETRIEVAL_BACKEND="postgres")

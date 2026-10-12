@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import timedelta
 from importlib import import_module
@@ -5,7 +6,8 @@ from importlib import import_module
 import qrcode
 from django.conf import settings
 from django.contrib import auth
-from django.db.models import Q, Count
+from django.db import transaction
+from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
 from django.utils.timezone import now
@@ -14,13 +16,13 @@ from otpauth import OtpAuth
 
 from contest.models import Contest, ACMContestRank, OIContestRank, ContestParticipation
 from problem.models import Problem
-from submission.models import Submission, JudgeStatus
-from utils.constants import ContestRuleType
+from submission.models import JudgeStatus
+from utils.constants import ContestRuleType, ContestStatus
 from options.options import SysOptions
 from utils.api import APIView, validate_serializer, CSRFExemptAPIView
 from utils.captcha import Captcha
 from utils.shortcuts import rand_str, img2base64, datetime2str
-from ..decorators import login_required
+from ..decorators import login_required, check_contest_permission
 from ..models import User, UserProfile, AdminType
 from ..serializers import (ApplyResetPasswordSerializer, ResetPasswordSerializer,
                            UserChangePasswordSerializer, UserLoginSerializer,
@@ -29,6 +31,8 @@ from ..serializers import (ApplyResetPasswordSerializer, ResetPasswordSerializer
 from ..serializers import (TwoFactorAuthCodeSerializer, UserProfileSerializer,
                            EditUserProfileSerializer, ImageUploadForm)
 from ..tasks import send_email_async
+
+logger = logging.getLogger(__name__)
 
 
 class UserProfileAPI(APIView):
@@ -346,13 +350,12 @@ class SessionManagementAPI(APIView):
         current_session = request.session.session_key
         session_keys = request.user.session_keys
         result = []
-        modified = False
+        expired_keys = []
         for key in session_keys[:]:
             session = session_store(key)
             # session does not exist or is expiry
             if not session._session:
-                session_keys.remove(key)
-                modified = True
+                expired_keys.append(key)
                 continue
 
             s = {}
@@ -363,8 +366,11 @@ class SessionManagementAPI(APIView):
             s["last_activity"] = datetime2str(session["last_activity"])
             s["session_key"] = key
             result.append(s)
-        if modified:
-            request.user.save()
+        if expired_keys:
+            with transaction.atomic():
+                user = User.objects.select_for_update().only("session_keys").get(pk=request.user.pk)
+                user.session_keys = [key for key in user.session_keys if key not in expired_keys]
+                user.save(update_fields=["session_keys"])
         return self.success(result)
 
     @login_required
@@ -372,13 +378,17 @@ class SessionManagementAPI(APIView):
         session_key = request.GET.get("session_key")
         if not session_key:
             return self.error("Parameter Error")
-        request.session.delete(session_key)
-        if session_key in request.user.session_keys:
-            request.user.session_keys.remove(session_key)
-            request.user.save()
-            return self.success("Succeeded")
-        else:
-            return self.error("Invalid session_key")
+        with transaction.atomic():
+            user = User.objects.select_for_update().only("session_keys").get(pk=request.user.pk)
+            if session_key not in user.session_keys:
+                return self.error("Invalid session_key")
+            user.session_keys.remove(session_key)
+            user.save(update_fields=["session_keys"])
+            if session_key == request.session.session_key:
+                auth.logout(request)
+            else:
+                request.session.delete(session_key)
+        return self.success("Succeeded")
 
 
 class UserRankAPI(APIView):
@@ -465,9 +475,7 @@ class ProfileProblemDisplayIDRefreshAPI(APIView):
 
 class UserContestSummaryAPI(APIView):
     """
-    Contest submissions within each experiment are recorded exclusively in the
-    ACMContestRank / OIContestRank tables (via submission_info JSON). The global
-    submission table is NOT used here — it only covers public-problem submissions.
+    Read contest projections maintained by durable-verdict scoring and explicit historical rebuilds.
     """
 
     @staticmethod
@@ -501,6 +509,7 @@ class UserContestSummaryAPI(APIView):
         ).count()
         return better_count + 1
 
+    @login_required
     def get(self, request):
         if not request.GET.get("username") and not request.user.is_authenticated:
             return self.error("Please login first", "permission-denied")
@@ -533,42 +542,16 @@ class UserContestSummaryAPI(APIView):
             "contest_id", "submission_number", "total_score", "submission_info"
         ))
 
-        # Some historical data only exists in submission table (without rank/participation).
-        submission_fallback_rows = list(
-            Submission.objects.filter(user_id=target_user.id, contest_id__isnull=False)
-            .order_by()
-            .values("contest_id")
-            .annotate(submission_number=Count("id"))
-        )
-        accepted_fallback_rows = list(
-            Submission.objects.filter(
-                user_id=target_user.id,
-                contest_id__isnull=False,
-                result=JudgeStatus.ACCEPTED
-            )
-            .order_by()
-            .values("contest_id")
-            .annotate(accepted_number=Count("problem_id", distinct=True))
-        )
-        submission_fallback_map = {
-            item["contest_id"]: {
-                "submission_number": item["submission_number"],
-                "accepted_number": 0
-            }
-            for item in submission_fallback_rows
-        }
-        for item in accepted_fallback_rows:
-            contest_id = item["contest_id"]
-            if contest_id not in submission_fallback_map:
-                submission_fallback_map[contest_id] = {"submission_number": 0, "accepted_number": 0}
-            submission_fallback_map[contest_id]["accepted_number"] = item["accepted_number"]
-
         acm_rank_map = {item["contest_id"]: item for item in acm_ranks}
         oi_rank_map = {item["contest_id"]: item for item in oi_ranks}
-
-        contest_ids = set(participation_map.keys()) | set(acm_rank_map.keys()) | set(oi_rank_map.keys()) | set(submission_fallback_map.keys())
+        contest_ids = set(participation_map) | set(acm_rank_map) | set(oi_rank_map)
 
         contests = Contest.objects.filter(id__in=contest_ids, visible=True).order_by("-end_time", "-id")
+        if not request.user.is_super_admin():
+            current_time = now()
+            contests = contests.exclude(
+                Q(rule_type=ContestRuleType.OI, real_time_rank=False,
+                  start_time__lte=current_time, end_time__gte=current_time) & ~Q(created_by=request.user))
         total = contests.count()
         contests = list(contests[offset: offset + limit])
 
@@ -590,11 +573,6 @@ class UserContestSummaryAPI(APIView):
                 item["submission_count"] = participation["submission_number"]
                 item["ac_count"] = participation["accepted_number"]
                 item["total_score"] = participation["total_score"]
-
-            fallback = submission_fallback_map.get(contest.id)
-            if fallback:
-                item["submission_count"] = max(item["submission_count"], fallback["submission_number"])
-                item["ac_count"] = max(item["ac_count"], fallback["accepted_number"])
 
             if contest.rule_type == ContestRuleType.ACM:
                 rank_data = acm_rank_map.get(contest.id)
@@ -619,18 +597,8 @@ class UserContestSummaryAPI(APIView):
                         total_score=rank_data["total_score"]
                     )
                     item["my_rank"] = self._oi_rank_position(contest, rank)
-                    item["total_score"] = max(item["total_score"], rank_data["total_score"])
-                    # OI rank submission_number is often 0 in historical data;
-                    # prefer the Submission-table count already set, or fall back
-                    # to the number of problems attempted (from submission_info).
-                    oi_sub_count = rank_data["submission_number"] or 0
-                    if oi_sub_count == 0 and rank_data.get("submission_info"):
-                        oi_sub_count = len(rank_data["submission_info"])
-                    item["submission_count"] = max(item["submission_count"], oi_sub_count)
-                    # ac_count for OI: problems with score > 0
-                    if rank_data.get("submission_info"):
-                        oi_ac = sum(1 for v in rank_data["submission_info"].values() if (v or 0) > 0)
-                        item["ac_count"] = max(item["ac_count"], oi_ac)
+                    item["total_score"] = rank_data["total_score"]
+                    item["submission_count"] = rank_data["submission_number"]
             results.append(item)
 
         return self.success({"total": total, "results": results})
@@ -642,7 +610,7 @@ class UserContestDetailAPI(APIView):
     ACMContestRank.submission_info or OIContestRank.submission_info JSON fields.
     ACM submission_info format: {"<problem_id>": {"is_ac": bool, "ac_time": int, "error_number": int}}
     OI  submission_info format: {"<problem_id>": <score_int>}
-    The global submission table is NOT used here.
+    Scores come from rank projections; AC flags use eligible durable verdicts.
     """
 
     @staticmethod
@@ -676,6 +644,7 @@ class UserContestDetailAPI(APIView):
         ).count()
         return better_count + 1
 
+    @login_required
     def get(self, request):
         if not request.GET.get("username") and not request.user.is_authenticated:
             return self.error("Please login first", "permission-denied")
@@ -698,6 +667,10 @@ class UserContestDetailAPI(APIView):
         except Contest.DoesNotExist:
             return self.error("Contest does not exist")
 
+        if (contest.rule_type == ContestRuleType.OI and contest.status == ContestStatus.CONTEST_UNDERWAY
+                and not contest.real_time_rank and not request.user.is_contest_admin(contest)):
+            return self.error("No permission to get ranks")
+
         participation = ContestParticipation.objects.filter(contest=contest, user=target_user).first()
         my_rank = None
         submission_count = participation.submission_number if participation else 0
@@ -709,81 +682,16 @@ class UserContestDetailAPI(APIView):
             rank = ACMContestRank.objects.filter(contest=contest, user=target_user).first()
             if rank:
                 my_rank = self._acm_rank_position(contest, rank)
-                submission_count = max(submission_count, rank.submission_number or 0)
-                ac_count = max(ac_count, rank.accepted_number or 0)
+                submission_count = rank.submission_number
+                ac_count = rank.accepted_number
                 submission_info = rank.submission_info or {}
         else:
             rank = OIContestRank.objects.filter(contest=contest, user=target_user).first()
             if rank:
                 my_rank = self._oi_rank_position(contest, rank)
-                total_score = max(total_score, rank.total_score or 0)
+                total_score = rank.total_score
+                submission_count = rank.submission_number
                 submission_info = rank.submission_info or {}
-                # OI rank submission_number is often 0 in historical data;
-                # fall back to number of problems with any entry in submission_info.
-                oi_sub_count = rank.submission_number or 0
-                if oi_sub_count == 0 and submission_info:
-                    oi_sub_count = len(submission_info)
-                submission_count = max(submission_count, oi_sub_count)
-                if submission_info:
-                    oi_ac = sum(1 for v in submission_info.values() if (v or 0) > 0)
-                    ac_count = max(ac_count, oi_ac)
-
-        # Fallback: if rank rows are missing/incomplete, use calibrated contest
-        # problem status cached on user profile.
-        if not submission_info:
-            profile = target_user.userprofile
-            if contest.rule_type == ContestRuleType.ACM:
-                contest_problems = (profile.acm_problems_status or {}).get("contest_problems", {})
-                for pid, item in contest_problems.items():
-                    if isinstance(item, dict):
-                        submission_info[pid] = {
-                            "is_ac": item.get("status") == 0,
-                            "error_number": 0,
-                            "ac_time": None
-                        }
-            else:
-                contest_problems = (profile.oi_problems_status or {}).get("contest_problems", {})
-                for pid, item in contest_problems.items():
-                    if isinstance(item, dict):
-                        submission_info[pid] = item.get("score", 100 if item.get("status") == 0 else 0)
-
-        # Last fallback for historical records: derive from contest submissions.
-        if not submission_info:
-            contest_submissions = list(
-                Submission.objects.filter(user_id=target_user.id, contest_id=contest.id)
-                .values("problem_id", "result", "create_time", "statistic_info")
-                .order_by("create_time")
-            )
-            submission_count = max(submission_count, len(contest_submissions))
-
-            if contest.rule_type == ContestRuleType.ACM:
-                ac_problem_count = 0
-                for row in contest_submissions:
-                    pid = str(row["problem_id"])
-                    if pid not in submission_info:
-                        submission_info[pid] = {"is_ac": False, "error_number": 0, "ac_time": None}
-                    if submission_info[pid]["is_ac"]:
-                        continue
-                    if row["result"] == JudgeStatus.ACCEPTED:
-                        submission_info[pid]["is_ac"] = True
-                        if row["create_time"] and contest.start_time:
-                            submission_info[pid]["ac_time"] = int((row["create_time"] - contest.start_time).total_seconds())
-                        ac_problem_count += 1
-                    else:
-                        submission_info[pid]["error_number"] += 1
-                ac_count = max(ac_count, ac_problem_count)
-            else:
-                for row in contest_submissions:
-                    pid = str(row["problem_id"])
-                    score = 0
-                    stat = row.get("statistic_info") or {}
-                    if isinstance(stat, dict):
-                        score = int(stat.get("score") or 0)
-                    if row["result"] == JudgeStatus.ACCEPTED:
-                        score = max(score, 100)
-                    submission_info[pid] = max(submission_info.get(pid, 0), score)
-                total_score = max(total_score, sum(submission_info.values()))
-                ac_count = max(ac_count, sum(1 for v in submission_info.values() if v > 0))
 
         if not participation and not submission_info:
             return self.error("No participation record in this contest")
@@ -792,6 +700,9 @@ class UserContestDetailAPI(APIView):
                         .values("id", "_id", "title")
                         .order_by("_id"))
 
+        from contest.scoring import eligible_submissions
+        accepted_problems = set(eligible_submissions(contest).filter(user_id=target_user.pk, result=JudgeStatus.ACCEPTED)
+                                .values_list("problem_id", flat=True))
         problem_items = []
         for problem in problems:
             info = submission_info.get(str(problem["id"]))
@@ -811,7 +722,7 @@ class UserContestDetailAPI(APIView):
             else:
                 # info = score (int) or None
                 best_score = info if info is not None else 0
-                is_ac = best_score > 0
+                is_ac = problem["id"] in accepted_problems
                 problem_items.append({
                     "display_id": problem["_id"],
                     "title": problem["title"],
@@ -840,22 +751,14 @@ class ContestCalibrateAPI(APIView):
     """
 
     @login_required
+    @check_contest_permission(check_type="ranks")
     def post(self, request):
-        contest_id = request.data.get("contest_id")
-        if not contest_id:
-            return self.error("Parameter error")
-
-        try:
-            contest = Contest.objects.get(id=contest_id, visible=True)
-        except Contest.DoesNotExist:
-            return self.error("Contest does not exist")
-
         user = request.user
 
         try:
             # Force calibration regardless of previous state. If participation
             # does not exist yet, calibrate_once will create it automatically.
-            participation = ContestParticipation.calibrate_once(user, contest, force=True)
+            participation = ContestParticipation.calibrate_once(user, self.contest, force=True)
             return self.success({
                 "success": True,
                 "is_calibrated": participation.is_calibrated,
@@ -864,7 +767,8 @@ class ContestCalibrateAPI(APIView):
                 "total_score": participation.total_score
             })
         except Exception as e:
-            return self.error(f"Calibration failed: {str(e)}")
+            logger.error("contest_calibration_error type=%s", type(e).__name__)
+            return self.error("Calibration failed; please try again later")
 
 
 class OpenAPIAppkeyAPI(APIView):

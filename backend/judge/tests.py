@@ -9,13 +9,15 @@ from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from django.db import close_old_connections, OperationalError
+from django.db import close_old_connections, connection, OperationalError
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.test import Client, TransactionTestCase
+from django.test import Client, SimpleTestCase, TransactionTestCase
 from django.utils import timezone
 
 from account.models import UserProfile
+from conf.models import JudgeServer
+from conf.test_heartbeat import server_fields
 from contest.models import ACMContestRank, Contest
 from knowledge.models import ProblemKnowledge
 from knowledge.tests import make_point, make_problem, make_user
@@ -23,7 +25,9 @@ from learning.models import LearningSubmissionEvent, RatingHistory, StudentKnowl
 from learning.ratings import process_event
 from submission.models import JudgeStatus, Submission
 
-from .dispatcher import JudgeDispatcher
+from .dispatcher import ChooseJudgeServer, JudgeDispatcher, process_pending_task, submission_worker_lock
+from .models import JudgeDispatch
+from .services import recover_dispatches, request_judge
 
 
 @contextmanager
@@ -72,7 +76,7 @@ class RejudgeIntegrationTests(TransactionTestCase):
 
     def rejudge(self, submission, user=None):
         self.client.force_login(user or self.admin)
-        with patch("submission.views.admin.judge_task.send") as send:
+        with patch("judge.tasks.judge_task.send") as send:
             response = self.client.post("/api/admin/submission/rejudge", json.dumps({"id": submission.pk}),
                                         content_type="application/json")
         return response.json(), send
@@ -196,7 +200,7 @@ class RejudgeIntegrationTests(TransactionTestCase):
         client = Client(enforce_csrf_checks=True)
         client.force_login(self.admin)
         endpoint = "/api/admin/submission/rejudge"
-        with patch("submission.views.admin.judge_task.send") as send:
+        with patch("judge.tasks.judge_task.send") as send:
             self.assertEqual(client.get(endpoint, {"id": submission.pk}).status_code, 405)
             self.assertEqual(client.post(endpoint, json.dumps({"id": submission.pk}),
                                          content_type="application/json").status_code, 403)
@@ -286,11 +290,11 @@ class RejudgeIntegrationTests(TransactionTestCase):
     def test_explicit_operator_recovery_requeues_only_judging(self):
         submission = self.submission()
         Submission.objects.filter(pk=submission.pk).update(result=JudgeStatus.JUDGING)
-        with patch("judge.management.commands.recover_judge.judge_task.send") as send:
+        with patch("judge.tasks.judge_task.send") as send:
             call_command("recover_judge", submission.pk, stdout=io.StringIO())
         send.assert_called_once_with(submission.pk, submission.problem_id)
         Submission.objects.filter(pk=submission.pk).update(result=JudgeStatus.ACCEPTED)
-        with self.assertRaises(CommandError), patch("judge.management.commands.recover_judge.judge_task.send") as send:
+        with self.assertRaises(CommandError), patch("judge.tasks.judge_task.send") as send:
             call_command("recover_judge", submission.pk, stdout=io.StringIO())
         send.assert_not_called()
 
@@ -322,3 +326,166 @@ class RejudgeIntegrationTests(TransactionTestCase):
         with patch("learning.ratings.knowledge_write") as graph_lock:
             self.submission()
         graph_lock.assert_not_called()
+
+
+class JudgeDispatchReliabilityTests(TransactionTestCase):
+    def setUp(self):
+        self.admin = make_user("dispatch-admin")
+        self.student = make_user("dispatch-student", admin_type="Regular User", permission="None")
+        UserProfile.objects.create(user=self.student)
+        self.problem = make_problem(self.admin, "DISPATCH-1")
+        self.submission = Submission.objects.create(problem=self.problem, user_id=self.student.pk,
+                                                    username=self.student.username, language="Python3", code="print(3)")
+        learning = patch("learning.ratings.dispatch_event")
+        learning.start()
+        self.addCleanup(learning.stop)
+
+    def test_no_server_and_failed_pending_delivery_keep_durable_intent(self):
+        with patch("judge.tasks.judge_task.send"):
+            request_judge(self.submission)
+        with patch("judge.dispatcher.ChooseJudgeServer") as choose:
+            choose.return_value.__enter__.return_value = None
+            JudgeDispatcher(self.submission.pk, self.problem.pk).judge()
+        dispatch = JudgeDispatch.objects.get(submission=self.submission)
+        self.assertEqual((dispatch.status, dispatch.delivered_time), ("queued", None))
+        with patch("judge.tasks.judge_task.send", side_effect=RuntimeError("broker unavailable")), self.assertLogs("judge.services", level="WARNING"):
+            self.assertEqual(process_pending_task(), 0)
+        dispatch.refresh_from_db()
+        self.assertEqual((dispatch.status, dispatch.delivered_time), ("queued", None))
+        with patch("judge.tasks.judge_task.send") as send:
+            self.assertEqual(process_pending_task(), 1)
+        send.assert_called_once_with(self.submission.pk, self.problem.pk)
+
+    def test_recovery_backfills_legacy_pending_and_redelivers_lost_messages(self):
+        with patch("judge.tasks.judge_task.send") as send:
+            self.assertEqual(recover_dispatches(), 1)
+            self.assertEqual(recover_dispatches(), 0)
+            JudgeDispatch.objects.filter(submission=self.submission).update(delivered_time=timezone.now() - timedelta(seconds=61))
+            self.assertEqual(recover_dispatches(), 1)
+        self.assertEqual(send.call_count, 2)
+        self.assertEqual(JudgeDispatch.objects.count(), 1)
+        self.assertEqual(Submission.objects.count(), 1)
+
+    def test_recovery_reclaims_interrupted_running_but_skips_explicit_failure(self):
+        Submission.objects.filter(pk=self.submission.pk).update(result=JudgeStatus.JUDGING)
+        dispatch = JudgeDispatch.objects.create(submission=self.submission, status="running")
+        with patch("judge.tasks.judge_task.send") as send:
+            self.assertEqual(recover_dispatches(), 1)
+        send.assert_called_once_with(self.submission.pk, self.problem.pk)
+        dispatch.refresh_from_db()
+        self.assertEqual(dispatch.status, "queued")
+        dispatch.status = "failed"
+        dispatch.save()
+        with patch("judge.tasks.judge_task.send") as send:
+            self.assertEqual(recover_dispatches(), 0)
+        send.assert_not_called()
+
+    def test_explicit_worker_error_is_not_retried_by_recovery_loop(self):
+        with patch("judge.dispatcher.ChooseJudgeServer", side_effect=available_server), \
+                patch.object(JudgeDispatcher, "_request", side_effect=ValueError("invalid worker state")), self.assertRaises(ValueError):
+            JudgeDispatcher(self.submission.pk, self.problem.pk).judge()
+        self.assertEqual(JudgeDispatch.objects.get(submission=self.submission).status, "failed")
+        with patch("judge.tasks.judge_task.send") as send:
+            self.assertEqual(recover_dispatches(), 0)
+        send.assert_not_called()
+
+    def test_recovery_does_not_take_an_active_worker_session_lock(self):
+        Submission.objects.filter(pk=self.submission.pk).update(result=JudgeStatus.JUDGING)
+        JudgeDispatch.objects.create(submission=self.submission, status="running")
+        started, release = threading.Event(), threading.Event()
+
+        def worker():
+            close_old_connections()
+            try:
+                with submission_worker_lock(self.submission.pk) as acquired:
+                    self.assertTrue(acquired)
+                    started.set()
+                    self.assertTrue(release.wait(5))
+            finally:
+                connection.close()
+
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            running = pool.submit(worker)
+            try:
+                self.assertTrue(started.wait(5))
+                with patch("judge.tasks.judge_task.send") as send:
+                    self.assertEqual(recover_dispatches(), 0)
+                send.assert_not_called()
+                self.assertEqual(JudgeDispatch.objects.get(submission=self.submission).status, "running")
+            finally:
+                release.set()
+            running.result(timeout=5)
+
+    def test_slots_obey_capacity_and_ignore_stale_task_counter(self):
+        server = JudgeServer.objects.create(**dict(server_fields("dispatch-capacity"), cpu_core=1), task_number=999)
+        with ChooseJudgeServer() as first, ChooseJudgeServer() as second, ChooseJudgeServer() as full:
+            self.assertEqual((first.pk, second.pk), (server.pk, server.pk))
+            self.assertIsNone(full)
+            server.refresh_from_db()
+            self.assertEqual(server.task_number, 2)
+        server.refresh_from_db()
+        self.assertEqual(server.task_number, 0)
+
+    def test_worker_connection_close_releases_slots_without_context_cleanup(self):
+        server = JudgeServer.objects.create(**server_fields("dispatch-crash"))
+
+        def worker():
+            close_old_connections()
+            try:
+                lease = ChooseJudgeServer()
+                self.assertEqual(lease.__enter__().pk, server.pk)
+            finally:
+                # Simulate the DB session disappearing on worker death; no __exit__ executes.
+                connection.close()
+
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            pool.submit(worker).result(timeout=5)
+        server.refresh_from_db()
+        self.assertEqual(server.task_number, 1)
+        with ChooseJudgeServer() as selected:
+            self.assertEqual(selected.pk, server.pk)
+            server.refresh_from_db()
+            self.assertEqual(server.task_number, 1)
+        server.refresh_from_db()
+        self.assertEqual(server.task_number, 0)
+
+    def test_late_cleanup_cannot_release_a_reconnected_workers_slot(self):
+        server = JudgeServer.objects.create(**server_fields("dispatch-reconnect"))
+        old = ChooseJudgeServer()
+        self.assertEqual(old.__enter__().pk, server.pk)
+        connection.close()
+        with ChooseJudgeServer() as current:
+            self.assertEqual(current.pk, server.pk)
+            with self.assertRaises(OperationalError):
+                old.__exit__(None, None, None)
+            server.refresh_from_db()
+            self.assertEqual(server.task_number, 1)
+
+    def test_lost_worker_session_does_not_publish_verdict_and_can_recover(self):
+        JudgeServer.objects.create(**server_fields("dispatch-lost-session"))
+
+        def lost_session(*args, **kwargs):
+            connection.close()
+            return judge_response()
+
+        with patch.object(JudgeDispatcher, "_request", side_effect=lost_session), self.assertRaises(OperationalError):
+            JudgeDispatcher(self.submission.pk, self.problem.pk).judge()
+        self.submission.refresh_from_db()
+        self.problem.refresh_from_db()
+        self.assertEqual((self.submission.result, self.problem.submission_number), (JudgeStatus.JUDGING, 0))
+        self.assertEqual(JudgeDispatch.objects.get(submission=self.submission).status, "running")
+        with patch("judge.tasks.judge_task.send"):
+            self.assertEqual(recover_dispatches(), 1)
+        with patch.object(JudgeDispatcher, "_request", return_value=judge_response()), patch("judge.dispatcher.process_pending_task"):
+            JudgeDispatcher(self.submission.pk, self.problem.pk).judge()
+            JudgeDispatcher(self.submission.pk, self.problem.pk).judge()
+        self.problem.refresh_from_db()
+        self.assertEqual((self.problem.submission_number, self.problem.accepted_number), (1, 1))
+        self.assertEqual(JudgeDispatch.objects.get(submission=self.submission).status, "done")
+
+
+class JudgeRecoveryCommandTests(SimpleTestCase):
+    def test_supervisor_workflow_dispatches_judge_recovery(self):
+        with patch("utils.management.commands.recover_workflows.call_command") as recover:
+            call_command("recover_workflows", "judge")
+        recover.assert_called_once_with("dispatch_judge_tasks")

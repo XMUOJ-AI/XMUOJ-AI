@@ -150,7 +150,7 @@ class TwoFactorAuthCodeSerializer(serializers.Serializer):
 
 
 class ImageUploadForm(forms.Form):
-    image = forms.FileField()
+    image = forms.ImageField()
 
 
 class FileUploadForm(forms.Form):
@@ -162,4 +162,4 @@ class RankInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = "__all__"
+        fields = ("id", "user", "avatar", "mood", "accepted_number", "total_score", "submission_number")
