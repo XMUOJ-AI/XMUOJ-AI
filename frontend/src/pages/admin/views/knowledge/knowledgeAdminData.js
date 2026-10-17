@@ -28,6 +28,7 @@ export function errorText (error) {
     KNOWLEDGE_DEPENDENCY_CYCLE: '该操作会形成依赖环，无法提交。',
     KNOWLEDGE_SELF_DEPENDENCY: '知识点不能依赖自身。',
     KNOWLEDGE_MAPPING_INVALID: '映射必须包含且只能包含一个主知识点。',
+    KNOWLEDGE_WEIGHT_INVALID: '权重必须大于 0 且不超过 1。',
     KNOWLEDGE_REVIEW_CONFLICT: '该对象已有待审核申请或已经被处理。',
     KNOWLEDGE_SELF_REVIEW_FORBIDDEN: '提交人不能审核自己的申请。'
   }

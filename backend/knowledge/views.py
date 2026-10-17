@@ -11,6 +11,14 @@ from .serializers import (DeleteInput, DependencyChangeInput, KnowledgeCreateInp
                           MappingSetInput, RejectInput, ReviewInput, batch_data, change_data, dependency_data, point_data)
 
 
+def error_codes(errors):
+    if isinstance(errors, dict):
+        errors = list(errors.values())
+    if isinstance(errors, list):
+        return set().union(*map(error_codes, errors))
+    return {getattr(errors, "code", None)}
+
+
 class KnowledgeAPIView(ContractAPIView):
     contract_version = "0.9.9"
     error_prefix = "KNOWLEDGE"
@@ -18,6 +26,8 @@ class KnowledgeAPIView(ContractAPIView):
     def input(self, serializer_class):
         serializer = serializer_class(data=self.request.data)
         if not serializer.is_valid():
+            if error_codes(serializer.errors) == {"weight_range"}:
+                services.error("WEIGHT_INVALID", "权重必须大于 0 且不超过 1", 422, serializer.errors)
             services.error("INPUT_INVALID", "请求字段不合法", 400, serializer.errors)
         return serializer.validated_data
 

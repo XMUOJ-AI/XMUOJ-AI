@@ -54,11 +54,14 @@ class WeightField(serializers.Field):
             raise serializers.ValidationError("Expected a number")
         try:
             value = Decimal(str(data))
-            valid = value.is_finite() and 0 < value <= 1 and value % Decimal("0.001") == 0
+            valid = value.is_finite() and value % Decimal("0.001") == 0
         except (InvalidOperation, ValueError):
             valid = False
         if not valid:
-            raise serializers.ValidationError("Weight must be in (0, 1] in increments of 0.001")
+            raise serializers.ValidationError("Weight must be a finite number in increments of 0.001")
+        # Range is a business rule (PRD AC-16 → 422); the view maps this error code accordingly.
+        if not 0 < value <= 1:
+            raise serializers.ValidationError("Weight must be in (0, 1]", code="weight_range")
         return value
 
     def to_representation(self, value):

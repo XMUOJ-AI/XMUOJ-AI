@@ -14,10 +14,12 @@ flake8==7.0.0
 gunicorn==26.2.0
 jsonfield==3.1.0
 jsonschema==4.23.0
+openapi-schema-validator==0.6.3
 otpauth==1.0.1
 pillow==12.3.0
 psycopg2==2.9.9
 python-dateutil==2.8.2
+PyYAML==6.0.3
 qrcode==7.4.2
 sentry-sdk==2.71.0
 XlsxWriter==3.1.9
