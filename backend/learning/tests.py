@@ -540,7 +540,7 @@ class LearningRecoveryTests(LearningFixture, TestCase):
         from pathlib import Path
         import yaml
         from openapi_schema_validator import OAS30Validator
-        spec = yaml.safe_load((Path(__file__).resolve().parents[2]/"docs/openapi/learning-api-v1.yaml").read_text())
+        spec = yaml.safe_load((Path(__file__).resolve().parents[2]/"docs/openapi/learning-api-v1.yaml").read_text(encoding="utf-8"))
 
         def check(body, name):
             schema = {"$ref": "#/components/schemas/"+name, "components": spec["components"]}

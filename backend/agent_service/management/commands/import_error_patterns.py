@@ -26,7 +26,7 @@ class Command(BaseCommand):
                 raise CommandError("作者与审核人须是两位不同的活动超级管理员")
             if Path(file).stat().st_size > 2 * 1024 * 1024:
                 raise CommandError("文件超过2MiB")
-            rows = json.loads(Path(file).read_text())
+            rows = json.loads(Path(file).read_text(encoding="utf-8"))
             if not isinstance(rows, list) or not 1 <= len(rows) <= 1000:
                 raise CommandError("需要1至1000项JSON数组")
             with knowledge_write():

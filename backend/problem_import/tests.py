@@ -110,7 +110,7 @@ class ImportTests(TransactionTestCase):
         self.assertFalse(problem.visible)
         self.assertEqual(problem._id, "LUOGU-P1001")
         self.assertEqual(list(problem.tags.all()), [self.tag])
-        info = json.loads(Path(self.temp.name, "testcases", problem.test_case_id, "info").read_text())
+        info = json.loads(Path(self.temp.name, "testcases", problem.test_case_id, "info").read_text(encoding="utf-8"))
         self.assertFalse(info["allow_public_test_case_download"])
         self.assertEqual(info["test_cases"]["1"]["stripped_output_md5"], hashlib.md5(b"3").hexdigest())
         self.assertEqual(ExternalProblemBinding.objects.count(), 1)
@@ -526,7 +526,7 @@ class ImportTests(TransactionTestCase):
         output = Path(self.temp.name, "report.json")
         call_command("import_collected_problems", str(filename), "--dry-run", "--uploaded-by", self.admin.username,
                      "--report", str(output), stdout=io.StringIO())
-        validator("problem-import-report-v1").validate(json.loads(output.read_text()))
+        validator("problem-import-report-v1").validate(json.loads(output.read_text(encoding="utf-8")))
         self.assertEqual(Problem.objects.count(), 0)
         with self.assertRaises(CommandError) as failure:
             call_command("import_collected_problems", str(filename), "--commit", "--uploaded-by", self.admin.username,

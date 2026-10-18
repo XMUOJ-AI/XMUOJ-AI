@@ -23,7 +23,7 @@ class Command(BaseCommand):
             path = Path(options["file"])
             if not path.is_file() or path.stat().st_size > 3 * 1024 * 1024:
                 raise CommandError("导入文件须为不超过 3 MiB 的 JSON 文件")
-            payload = json.loads(path.read_text())
+            payload = json.loads(path.read_text(encoding="utf-8"))
             doc, created = ingest_document(actor, payload)
             count = index_document(doc.pk, options["create_collection"]) if options["index"] else 0
             self.stdout.write(json.dumps({"document_id": str(doc.pk), "created": created, "indexed_chunks": count}))

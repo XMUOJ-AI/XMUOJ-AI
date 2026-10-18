@@ -76,7 +76,7 @@ class KnowledgeAPITests(TestCase):
         return body
 
     def assert_snapshots(self):
-        schema = json.loads((Path(__file__).resolve().parents[2] / "docs/schemas/knowledge-snapshot-schema-v1.json").read_text())
+        schema = json.loads((Path(__file__).resolve().parents[2] / "docs/schemas/knowledge-snapshot-schema-v1.json").read_text(encoding="utf-8"))
         validator = Draft202012Validator(schema)
         for event in KnowledgeReviewEvent.objects.all():
             validator.validate(event.snapshot)
@@ -204,9 +204,14 @@ class KnowledgeAPITests(TestCase):
                    (dict(edge_data(self.a, self.a), weight=.5), 422),
                    (dict(edge_data(self.c, self.a), weight=.5), 422),
                    (dict(edge_data(self.a, self.c), weight=.5001), 400),
-                   (dict(edge_data(self.a, self.c), weight=.5, source="ai"), 400)]
+                   (dict(edge_data(self.a, self.c), weight="0.5"), 400),
+                   (dict(edge_data(self.a, self.c), weight=.5, source="ai"), 400),
+                   (dict(edge_data(self.a, self.c), weight=0), 422),
+                   (dict(edge_data(self.a, self.c), weight=1.5), 422)]
         for payload, status in invalid:
-            self.call("post", "admin/knowledge-dependency-change-requests", payload, status)
+            body = self.call("post", "admin/knowledge-dependency-change-requests", payload, status)
+            if payload.get("weight") in (0, 1.5):
+                self.assertEqual(body["error"], "KNOWLEDGE_WEIGHT_INVALID")
         self.assertFalse(KnowledgeDependencyChangeRequest.objects.exists())
         self.assertFalse(KnowledgeReviewEvent.objects.exists())
         create = self.submit_dependency(self.a, self.c)
@@ -259,7 +264,9 @@ class KnowledgeAPITests(TestCase):
         url = "admin/problems/{}/knowledge-mappings".format(self.problem.id)
         for mappings in ([{"knowledge_code": "a", "role": "secondary", "weight": .5}],
                          [{"knowledge_code": "a", "role": "primary", "weight": .5}] * 2,
-                         [{"knowledge_code": "missing", "role": "primary", "weight": .5}]):
+                         [{"knowledge_code": "missing", "role": "primary", "weight": .5}],
+                         [{"knowledge_code": "a", "role": "primary", "weight": 0}],
+                         [{"knowledge_code": "a", "role": "primary", "weight": .5}, {"knowledge_code": "b", "role": "secondary", "weight": 1.5}]):
             self.call("put", url, {"base_version": 0, "mappings": mappings}, 422)
         self.assertFalse(KnowledgeMappingBatch.objects.exists())
         first = self.call("put", url, {"base_version": 0, "mappings": [{"knowledge_code": "a", "role": "primary", "weight": .5}]}, 202)["data"]
@@ -270,7 +277,7 @@ class KnowledgeAPITests(TestCase):
 
     def test_public_projection_filters_and_admin_counts_are_consistent(self):
         hidden = make_problem(self.author, "hidden", visible=False)
-        other = make_problem(self.author, "other")
+        other = make_problem(self.author, "P002")
         draft = make_point("draft", self.author, status="draft")
         for problem in (self.problem, hidden, other):
             ProblemKnowledge.objects.create(problem=problem, knowledge_point=self.a, role="primary", weight=.5, reviewed_by=self.reviewer)
@@ -280,7 +287,7 @@ class KnowledgeAPITests(TestCase):
         detail = self.call("get", "knowledge-points/a")["data"]
         self.assertEqual(set(detail), {"code", "name", "description", "category", "level", "aliases", "prerequisites",
                                        "dependents", "related_problems", "prerequisite_count", "dependent_count"})
-        self.assertEqual([item["display_id"] for item in detail["related_problems"]], ["P001", "other"])
+        self.assertEqual([item["display_id"] for item in detail["related_problems"]], ["P001", "P002"])
         self.call("get", "knowledge-points/" + draft.code, expected=404)
         self.call("get", "knowledge-points?status=draft", expected=400)
         self.call("get", "knowledge-graph?unknown=true", expected=400)
@@ -296,7 +303,7 @@ class KnowledgeAPITests(TestCase):
 
     def assert_public_contract(self, body, schema):
         from openapi_schema_validator import OAS30Validator
-        spec = json.loads((Path(__file__).resolve().parents[2] / "docs/openapi/knowledge-api-v1.yaml").read_text())
+        spec = json.loads((Path(__file__).resolve().parents[2] / "docs/openapi/knowledge-api-v1.yaml").read_text(encoding="utf-8"))
         OAS30Validator({"$ref": "#/components/schemas/" + schema, "components": spec["components"]}).validate(body)
 
     def test_public_detail_preserves_small_arrays_and_requires_explicit_pagination_for_large_sets(self):

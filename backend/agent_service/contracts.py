@@ -4,7 +4,7 @@ from pathlib import Path
 from jsonschema import Draft7Validator, FormatChecker
 from utils.contract_api import ContractError
 
-API_SCHEMAS = json.loads(Path(__file__).with_name("api_schemas.json").read_text())
+API_SCHEMAS = json.loads(Path(__file__).with_name("api_schemas.json").read_text(encoding="utf-8"))
 RESULT_SCHEMAS = dict(zip(("submission_feedback", "code_explanation", "socratic_hint", "learning_path_explanation"),
                           ("SubmissionFeedbackResult", "CodeExplanationResult", "SocraticHintResult", "LearningPathExplanationResult")))
 SIGNATURES = {
